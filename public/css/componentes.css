@@ -1,0 +1,610 @@
+/* ---------------- Tablas ---------------- */
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-surface);
+    box-shadow: none;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+/* El contenedor limita el crecimiento de cualquier tabla. En horizontal
+   aparece desplazamiento y, cuando hay muchas filas, conserva visible la
+   cabecera dentro de un área desplazable. */
+.tabla-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+}
+
+.tabla-scroll::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.tabla-scroll::-webkit-scrollbar-thumb {
+    background: #b9c4d2;
+    border: 3px solid var(--color-surface);
+    border-radius: 999px;
+}
+
+.tabla-scroll::-webkit-scrollbar-thumb:hover {
+    background: #8797aa;
+}
+
+.resolver-aprobacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.resolver-aprobacion-texto {
+    min-width: 0;
+}
+
+.resolver-aprobacion-texto h2 {
+    margin-bottom: 6px;
+}
+
+.resolver-aprobacion-texto p {
+    margin: 0;
+}
+
+.resolver-aprobacion-acciones {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+    .resolver-aprobacion {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .resolver-aprobacion-acciones {
+        justify-content: flex-start;
+    }
+}
+
+.tabla-scroll > .tabla {
+    min-width: 720px;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.tabla-scroll-vertical,
+.tabla-scroll-detalle {
+    overflow: auto;
+}
+
+.tabla-scroll-vertical {
+    max-height: min(68vh, 640px);
+}
+
+.tabla-scroll-vertical > .tabla > thead > tr > th,
+.tabla-scroll-detalle > .tabla > thead > tr > th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.tabla-scroll-compacta {
+    margin: 12px 0 8px;
+}
+
+.tabla-scroll-compacta > .tabla {
+    min-width: 540px;
+    margin: 0;
+}
+
+.tabla-scroll-resumen > .tabla {
+    min-width: 780px;
+}
+
+.tabla-scroll-detalle {
+    max-height: min(55vh, 520px);
+}
+
+/* Esta vista solo tiene título y controles breves antes de la tabla. Usa el
+   espacio restante de la ventana para mostrar más resoluciones de una vez. */
+.tabla-scroll-historial-aprobaciones {
+    max-height: clamp(440px, 76vh, 760px);
+}
+
+.tabla th, .tabla td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+    vertical-align: middle;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+}
+
+.tabla th {
+    background: var(--color-navy-50);
+    font-weight: 600;
+    color: var(--color-navy-700);
+    font-size: 13px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.tabla tbody tr {
+    transition: background var(--dur) var(--ease);
+}
+
+.tabla tbody tr:hover {
+    background: #f7f9fb;
+}
+
+.tabla tbody tr:last-child td { border-bottom: none; }
+
+/* ---------------- Sistema de botones ----------------
+   .boton-primario = ÚNICA acción principal por pantalla (naranja).
+   .boton-secundario = acción neutra/"cancelar" (marino, estilo ghost).
+   .boton-chico = acciones de fila/tabla, mismo lenguaje, más compacto. */
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: var(--radius-btn);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    font-family: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: none;
+    color: var(--text-primary);
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+                box-shadow var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+.boton svg { flex-shrink: 0; }
+
+.boton:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, .3);
+}
+
+.boton:disabled, .boton[disabled] {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* La acción principal usa el acento; el texto oscuro conserva el contraste. */
+.boton-primario {
+    background: var(--color-accent);
+    color: var(--color-navy-900);
+}
+
+.boton-primario:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+}
+
+.boton-primario:active:not(:disabled) {
+    background: var(--color-accent-active);
+}
+
+/* "Tonal": relleno suave en vez de solo un borde — se lee como un botón de
+   verdad (no un estado apagado/deshabilitado) sin competir con el naranja. */
+.boton-secundario {
+    background: #eaf0f7;
+    border-color: #c4d1e1;
+    color: var(--color-navy-700);
+}
+
+.boton-secundario:hover:not(:disabled) {
+    background: #dfe9f4;
+    border-color: #becad8;
+}
+
+.boton-secundario:active:not(:disabled) {
+    background: #e5ebf1;
+}
+
+/* Para el botón "Confirmar" de un modal de advertencia cuando la acción es
+   destructiva (quitar un documento) — distinto del naranja de marca para no
+   confundir "esto borra algo" con la acción principal habitual. */
+.boton-peligro {
+    background: #dc2626;
+    color: white;
+}
+.boton-peligro:hover:not(:disabled) { background: #b91c1c; }
+.boton-peligro:active:not(:disabled) { background: #991b1b; }
+
+.texto-ayuda-guardar {
+    margin-top: 8px;
+    text-align: right;
+    font-size: 12.5px;
+}
+
+.boton-chico {
+    padding: 7px 13px;
+    font-size: 13px;
+}
+
+.boton-chico:not(.boton-primario):not(.boton-peligro) {
+    background: #eaf0f7;
+    border-color: #c4d1e1;
+    color: var(--color-navy-700);
+}
+
+.boton-chico:not(.boton-primario):not(.boton-peligro):hover:not(:disabled) {
+    background: #dfe9f4;
+    border-color: #becad8;
+}
+
+.boton-chico:not(.boton-primario):not(.boton-peligro):active:not(:disabled) {
+    background: #e5ebf1;
+}
+
+.acciones-crear {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+/* La primera fila de acciones dentro de un panel abierto (ej. "+ Añadir
+   comprobante") separa suficiente de la tabla de items de arriba. */
+section .acciones-crear:first-of-type,
+td .acciones-crear:first-of-type {
+    margin-top: 12px;
+}
+
+/* ---------------- Estados de un Resumen ---------------- */
+.estado {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    border: 1px solid transparent;
+}
+
+.estado-borrador, .estado-anulado, .estado-cerrado {
+    background: var(--color-neutro-bg);
+    color: var(--color-neutro);
+    border-color: var(--color-neutro-borde);
+}
+.estado-en_revision {
+    background: var(--color-info-bg);
+    color: var(--color-info);
+    border-color: var(--color-info-borde);
+}
+.estado-rechazado {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border-color: var(--color-error-borde);
+}
+.estado-visado, .estado-activo {
+    background: var(--color-exito-bg);
+    color: var(--color-exito);
+    border-color: var(--color-exito-borde);
+}
+.estado-pendiente, .estado-pendiente_desembolso {
+    background: var(--color-aviso-bg);
+    color: var(--color-aviso);
+    border-color: var(--color-aviso-borde);
+}
+
+/* ---------------- Volver ----------------
+   Antes: enlace de texto azul subrayado, sin feedback. Ahora: chip con
+   flecha, feedback de hover/foco consistente con el resto de la app. */
+.volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 6px 12px 6px 8px;
+    margin: -6px 0 8px -8px;
+    border-radius: var(--radius-btn);
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.volver svg { flex-shrink: 0; }
+
+.volver:hover {
+    background: var(--color-navy-50);
+    color: var(--color-navy-700);
+}
+
+.volver:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, .3);
+}
+
+.motivo-rechazo, .aviso-rechazo {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+.ficha {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+}
+
+.ficha-fila {
+    display: grid;
+    grid-template-columns: 160px 1fr 160px 1fr;
+    gap: 8px;
+    padding: 7px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.ficha-fila:last-child { border-bottom: none; }
+
+.ficha-label, .ficha-etiqueta {
+    color: var(--text-muted);
+}
+
+.ficha-valor {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.ficha-valor-edicion { display: flex; align-items: center; gap: 6px; }
+.ficha-valor-edicion input[type="date"] { max-width: 130px; }
+
+.ficha-cabecera { position: relative; }
+
+.ficha-cabecera-acciones {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    max-width: 260px;
+    z-index: 2;
+}
+
+.ficha-cabecera-botones { 
+    display: flex;
+    gap: 8px;
+}
+
+.ficha-cabecera-acciones .error {
+    margin: 0;
+    text-align: right;
+}
+
+.ficha-cabecera-error {
+    text-align: right;
+    margin: -8px 0 10px;
+}
+
+.celda-total, .texto-derecha {
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.lista-adjuntos {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lista-adjuntos li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+}
+
+.lista-adjuntos li:last-child { border-bottom: none; }
+
+.lista-adjuntos a, dialog a {
+    color: var(--color-navy-700);
+}
+
+.etiqueta-item {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: var(--color-navy-50);
+    border-radius: 10px;
+    font-size: 11px;
+    color: var(--color-navy-700);
+}
+
+.marca-validado {
+    color: var(--color-exito);
+    font-weight: bold;
+    margin-left: 4px;
+}
+
+.barra-superior-derecha {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.caja-motivo {
+    background: var(--color-aviso-bg);
+    border: 1px solid var(--color-aviso-borde);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+}
+
+.caja-motivo h2 { margin-top: 0; color: var(--color-aviso); }
+.caja-motivo .boton { margin-top: 12px; }
+
+.ficha-formulario {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.tabla-fondo-resumenes {margin: 12px 0 8px;}
+
+.campo { display: flex; flex-direction: column; }
+
+.campo label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.campo input, .campo select {
+    margin-bottom: 0;
+}
+
+.campo input:disabled {
+    background: var(--color-bg);
+    color: var(--text-muted);
+}
+
+/* ---------------- Modales de item ---------------- */
+dialog {
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    box-shadow: 0 20px 60px -18px rgba(20, 40, 63, .3);
+    padding: 24px;
+    width: 420px;
+    max-width: 90vw;
+    animation: aparecerModal var(--dur) var(--ease);
+}
+
+dialog::backdrop {
+    background: rgba(20, 40, 63, .35);
+}
+
+@keyframes aparecerModal {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+dialog h2 {
+    margin-top: 0;
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+dialog label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+dialog input, dialog select, dialog textarea {
+    margin-bottom: 0;
+}
+
+dialog textarea {
+    min-height: 90px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.dialogo-cerrar {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.dialogo-cerrar:hover {
+    color: var(--text-primary);
+}
+
+/* Acciones de edición dentro de documentos: añadir se mantiene junto a la
+   colección de ítems; cancelar y guardar cierran el formulario aparte. */
+.acciones-edicion-documento-items {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding: 4px 18px 0;
+}
+
+.acciones-edicion-documento-cierre {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 16px 18px 2px;
+    border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 620px) {
+    .acciones-edicion-documento-items,
+    .acciones-edicion-documento-cierre {
+        padding-inline: 0;
+    }
+
+    .acciones-edicion-documento-cierre .boton {
+        flex: 1;
+        justify-content: center;
+    }
+}
+.acciones-modal {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.lista-planillas {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.lista-planillas li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+}
+
+.lista-planillas li:last-child { border-bottom: none; }

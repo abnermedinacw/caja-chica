@@ -1,0 +1,171 @@
+body.pagina-login {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    position: relative;
+    overflow-x: hidden;
+    font-family: Manrope, 'Segoe UI', sans-serif;
+    background: #f0f3f8;
+    color: var(--color-navy-900);
+}
+.pagina-login ::selection { background: var(--color-aviso-bg); color: var(--color-navy-900); }
+
+.fondo-login {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.fondo-red { width: 100%; height: 100%; }
+.fondo-lineas line { stroke: #57779a; stroke-width: 1; opacity: .07; }
+.fondo-puntos circle { fill: #57779a; opacity: .15; }
+.moneda-suelta { position: absolute; opacity: .7; }
+.moneda-suelta-1 { top: 8%; right: 8%; transform: rotate(14deg); }
+.moneda-suelta-2 { top: 23%; right: 17%; transform: rotate(-18deg); }
+.moneda-suelta-3 { top: 32%; right: 5%; transform: rotate(10deg); }
+.moneda-suelta-4 { bottom: 10%; left: 8%; transform: rotate(-16deg); }
+.moneda-juego {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+    perspective: 700px;
+    -webkit-tap-highlight-color: transparent;
+}
+.moneda-juego svg {
+    display: block;
+    overflow: visible;
+    filter: drop-shadow(0 12px 9px rgba(41, 61, 87, .17));
+}
+.moneda-juego:hover svg { filter: drop-shadow(0 15px 11px rgba(41, 61, 87, .23)); }
+.moneda-juego:focus-visible { outline: 2px solid var(--color-navy-600); outline-offset: 5px; }
+.moneda-juego:active { opacity: .85; }
+.punto-suelto { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #92a7c1; opacity: .3; }
+.punto-suelto-1 { top: 18%; right: 26%; }
+.punto-suelto-2 { top: 40%; right: 11%; }
+.punto-suelto-3 { bottom: 20%; left: 16%; }
+
+.tarjeta-login {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    width: 100%;
+    max-width: 880px;
+    min-height: 500px;
+    background: var(--color-surface);
+    border: 1px solid #dce4ee;
+    border-radius: 28px;
+    box-shadow: 0 28px 70px -28px rgba(26, 47, 75, .26), 0 3px 8px rgba(26, 47, 75, .035);
+    overflow: hidden;
+}
+.tarjeta-login > section { margin: 0; }
+.panel-marca {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 76px 40px 70px;
+    background: #e9eff7;
+    border-right: 1px solid #dce4ee;
+    isolation: isolate;
+}
+.marca-empresa {
+    position: absolute;
+    top: 32px;
+    left: 40px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .025em;
+    color: #405b7a;
+}
+.marca-grabado {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: #c7d5e6;
+    stroke-width: .7;
+    opacity: .7;
+    pointer-events: none;
+    z-index: -1;
+}
+.marca-monedas { position: relative; width: 180px; height: 152px; margin: 8px 0 22px; }
+.marca-monedas .moneda { position: absolute; }
+.marca-monedas .moneda-plata { top: 0; left: 0; transform: rotate(-14deg); }
+.marca-monedas .moneda-cobre { top: 42px; left: 66px; transform: rotate(12deg); }
+.marca-titulo { margin: 0 0 12px; font-size: 43px; font-weight: 800; letter-spacing: -.04em; line-height: 1.12; color: var(--color-navy-900); }
+.marca-descripcion { max-width: 22ch; margin: 0; font-size: 14px; line-height: 1.7; color: #4c6582; }
+.marca-juego-ayuda { position: absolute; bottom: 28px; left: 40px; margin: 0; color: #4c6582; font-size: 12px; }
+
+.panel-form { min-width: 0; padding: 56px 48px; display: flex; flex-direction: column; justify-content: center; }
+.marca-compacta { display: none; font-weight: 800; color: var(--color-navy-700); }
+.form-titulo { margin: 0 0 9px; font-size: 27px; font-weight: 800; letter-spacing: -.035em; line-height: 1.25; color: var(--color-navy-900); }
+.form-subtitulo { margin: 0 0 32px; max-width: 30ch; font-size: 13px; color: #56687d; line-height: 1.65; }
+.panel-form label { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #344d68; }
+.panel-form input {
+    height: 48px;
+    padding: 12px 14px;
+    margin-bottom: 22px;
+    border: 1px solid #cdd7e4;
+    border-radius: 11px;
+    background: #fbfcfe;
+    color: var(--color-navy-900);
+    font-size: 14px;
+    caret-color: var(--color-navy-700);
+}
+.panel-form input:hover { border-color: #9eb1c9; }
+.panel-form input:focus { background: #fff; border-color: var(--color-navy-600); box-shadow: 0 0 0 3px rgba(44, 80, 121, .1); }
+.panel-form input:autofill { color: var(--color-navy-900); }
+.campo-password { position: relative; margin-bottom: 26px; }
+.panel-form .campo-password input { margin-bottom: 0; padding-right: 52px; }
+.campo-password .boton-ojo {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    padding: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #59708c;
+    cursor: pointer;
+}
+.boton-ojo svg { width: 17px; height: 17px; }
+.boton-ojo:hover { color: var(--color-navy-700); background: #eaf0f7; }
+.boton-ojo:focus-visible { outline: 2px solid var(--color-navy-600); outline-offset: -2px; }
+.panel-form .boton-primario { width: 100%; min-height: 48px; border-radius: 11px; font-size: 14px; font-weight: 800; color: var(--color-navy-900); box-shadow: 0 3px 8px rgba(188, 97, 70, .12); }
+.panel-form .boton-primario:hover:not(:disabled) { background: var(--color-accent-hover); box-shadow: 0 5px 12px rgba(188, 97, 70, .18); transform: none; }
+.panel-form .boton-primario:active:not(:disabled) { background: var(--color-accent); transform: scale(.99); }
+.panel-form .boton-primario:focus-visible { outline: 2px solid var(--color-navy-600); outline-offset: 3px; }
+.panel-form .error { margin: -12px 0 22px; padding: 12px 14px; border: 1px solid #f2c7c7; border-radius: 10px; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+
+@media (max-width: 760px) {
+    .tarjeta-login { grid-template-columns: minmax(0, 1fr); max-width: 420px; min-height: 0; border-radius: 24px; }
+    .panel-marca { display: none; }
+    .panel-form { padding: 36px 32px 40px; }
+    .marca-compacta { display: block; margin-bottom: 32px; font-size: 15px; }
+    .moneda-suelta-2, .moneda-suelta-3, .punto-suelto-1, .punto-suelto-2 { display: none; }
+}
+@media (max-width: 420px) {
+    body.pagina-login { padding: 24px 16px; }
+    .panel-form { padding: 30px 24px 34px; }
+    .panel-form input { font-size: 16px; }
+    .moneda-suelta-1 { top: 3%; right: 4%; }
+    .moneda-suelta-4 { bottom: 3%; left: 4%; }
+}

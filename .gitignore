@@ -1,0 +1,22 @@
+# 1. Archivos temporales y de credenciales                                                                                                                                                           
+cookies.txt                                                                                                                                                                                          
+/config/correo.php                                                                                                                                                                                   
+                                                                                                                                                                                                     
+# 2. Base de datos y backups                                                                                                                                                                         
+/backups/                                                                                                                                                                                            
+*.sql                                                                                                                                                                                                
+                                                                                                                                                                                                     
+# 3. Archivos subidos por los usuarios (mantener carpetas, ignorar archivos)                                                                                                                         
+/storage/uploads/*                                                                                                                                                                                   
+!/storage/uploads/.gitkeep                                                                                                                                                                           
+/storage/logs/*                                                                                                                                                                                      
+!/storage/logs/.gitkeep                                                                                                                                                                              
+/storage/correo/*                                                                                                                                                                                    
+!/storage/correo/.gitkeep                                                                                                                                                                            
+                                                                                                                                                                                                     
+# 4. Carpetas del sistema y herramientas de desarrollo                                                                                                                                               
+.claude/                                                                                                                                                                                             
+.vscode/                                                                                                                                                                                             
+.idea/                                                                                                                                                                                               
+Thumbs.db                                                                                                                                                                                            
+.DS_Store  

@@ -1,0 +1,155 @@
+@font-face {
+    font-family: Manrope;
+    src: url('../fonts/manrope.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+}
+
+/* Color y medidas compartidos por las vistas del sistema. */
+:root {
+    --color-navy-900: #14283f;
+    --color-navy-700: #1e3a5f;
+    --color-navy-600: #2c5079;
+    --color-navy-50:  #e4ecf6;
+
+    --color-accent: #f2a16e;
+    --color-accent-hover: #eb955d;
+    --color-accent-active: #e58b50;
+
+    --color-info: #285780;
+    --color-info-bg: #dce8f6;
+    --color-info-borde: #adc6e2;
+    --color-aviso: #8a481c;
+    --color-aviso-bg: #fbe6d5;
+    --color-aviso-borde: #e6b78f;
+    --color-exito: #246044;
+    --color-exito-bg: #dceee3;
+    --color-exito-borde: #a8cdb7;
+    --color-error: #963c3c;
+    --color-error-bg: #f7dfe0;
+    --color-error-borde: #deb0b4;
+    --color-neutro: #4c5a6a;
+    --color-neutro-bg: #e2e7ee;
+    --color-neutro-borde: #bec9d6;
+
+    --color-bg: #f5f6f8;
+    --color-surface: #ffffff;
+    --color-border: #dfe4eb;
+    --color-border-input: #c3cad4;
+
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #667085;
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-btn: 6px;
+    --shadow-card: 0 1px 2px rgba(20, 40, 63, .025);
+    --shadow-hover: 0 8px 24px -10px rgba(20, 40, 63, .18);
+
+    --dur: 160ms;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    color: var(--text-primary);
+    background: var(--color-bg);
+    margin: 0;
+    line-height: 1.5;
+    scrollbar-color: #b6c0cd transparent;
+    scrollbar-width: thin;
+}
+
+::selection { background: #dce8f5; color: var(--color-navy-900); }
+
+h1, h2, h3 { font-family: Manrope, 'Segoe UI', sans-serif; }
+
+h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    margin: 0 0 24px;
+    color: var(--text-primary);
+}
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 9px 10px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: inherit;
+    background: var(--color-surface);
+    caret-color: var(--color-navy-700);
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-navy-600);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, .15);
+}
+
+.error {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin: 12px 0 16px;
+    font-size: 14px;
+}
+
+body.pagina-ancha {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.barra-superior {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.barra-superior h1 { margin: 0; }
+
+section { margin-bottom: 32px; }
+
+section h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 12px;
+}
+
+.texto-vacio {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+

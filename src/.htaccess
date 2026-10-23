@@ -1,0 +1,10 @@
+# src/ tiene toda la lógica de negocio y las credenciales viajan por
+# config/, no por acá, pero igual nada de esto debe poder pedirse por URL
+# directa — la única puerta de entrada válida es public/index.php.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>
