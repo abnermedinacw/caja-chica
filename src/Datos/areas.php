@@ -17,17 +17,14 @@ function obtenerOcrearAreaPorNombre(int $empresaId, string $nombre): int
     return (int)$pdo->lastInsertId();
 }
 
-function existeJefe(int $areaId): bool
+function listarAreas(): array
 {
-    $pdo = obtenerConexion();
+    return obtenerConexion()->query('SELECT id, empresa_id, nombre FROM area ORDER BY nombre')->fetchAll();
+}
 
-    $stmt = $pdo->prepare(
-        "SELECT 1
-        FROM trabajador
-        WHERE area_id = ? AND es_jefe = 1
-        LIMIT 1"
-    );
-
-    $stmt->execute([$areaId]);
-    return (bool)$stmt->fetchColumn();
+function obtenerAreaPorIdEmpresa(int $areaId, int $empresaId): ?array
+{
+    $stmt = obtenerConexion()->prepare('SELECT id, nombre FROM area WHERE id = ? AND empresa_id = ?');
+    $stmt->execute([$areaId, $empresaId]);
+    return $stmt->fetch() ?: null;
 }

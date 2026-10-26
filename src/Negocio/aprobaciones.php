@@ -4,60 +4,6 @@ require_once __DIR__ . '/../Datos/cargos.php';
 require_once __DIR__ . '/../Datos/cajaChica.php';
 require_once __DIR__ . '/cajaChica.php';
 
-
-// Esta función determina el nivel de aprobación donde se detendrá el flujo de aprobación para un trabajador específico, considerando su rol, 
-// cargo y los usuarios que ya han aprobado previamente
-/*
-function resolverNivelDeParada(
-    int $ordenDesde,
-    string $rolSolicitante,
-    int $areaSolicitanteId,
-    int $usuarioSolicitanteId,
-    array $usuariosAprobadoresPrevios // usuarios que ya aprobaron
-): ?array
-{
-    $orden = $ordenDesde;
-
-    while (true) {
-        $nivel = obtenerNivelPorOrden($orden);
-        if (!$nivel) {
-            return null;
-        }
-
-        // Si el rol requerido del nivel coincide con el rol del solicitante, se continúa al siguiente nivel
-        if ($nivel['rol_requerido'] === $rolSolicitante) {
-            $orden++;
-            continue;
-        }
-
-        // Si el nivel requiere aprobación de jefatura, se verifica si el jefe del área del solicitante ya ha aprobado o es el mismo usuario que está solicitando
-        $jefe = buscarJefeArea($areaSolicitanteId);
-
-        if ($jefe
-            && $jefe['rol'] === $nivel['rol_requerido']
-            && in_array((int)$jefe['usuario_id'], $usuariosAprobadoresPrevios, true)
-        ) {
-            $orden++;
-            continue;
-        }
-
-        if ($nivel['rol_requerido'] === 'JEFATURA') {
-
-            $seSalta = $jefe && (
-                (int)$jefe['usuario_id'] === $usuarioSolicitanteId
-                || in_array((int)$jefe['usuario_id'], $usuariosAprobadoresPrevios, true)
-            );
-
-            if ($seSalta) {
-                $orden++;
-                continue;
-            }
-        }
-
-        return $nivel;
-    }
-}
-*/
 // Funcion intermedia que encapsula la lógica de determinar si se debe avanzar al siguiente nivel o cerrar el resumen, dependiendo de si hay un nivel de parada o no.
 function calcularNivelDeParada(
     int $resumenId,
@@ -66,13 +12,14 @@ function calcularNivelDeParada(
 ): ?array
 {
     $solicitanteId = (int)$resumen['solicitante_usuario_id'];
-    $jefe = buscarJefeArea((int)$resumen['area_id']);
+    $jefe = buscarJefeTrabajador((int)$resumen['trabajador_id']);
     $aprobadoresPrevios = obtenerUsuariosAprobadoresResumen($resumenId);
     $orden = $ordenDesde;
 
     while ($nivel = obtenerNivelPorOrden($orden)) {
-        if ($nivel['rol_requerido'] === 'JEFATURA') $encargadoId = $jefe ? (int) $jefe['usuario_id'] : null;
-        else $encargadoId = $nivel['aprobador_usuario_id'] !== null ? (int)$nivel['aprobador_usuario_id'] : null;
+        $encargadoId = $nivel['rol_requerido'] === 'JEFATURA'
+            ? ($jefe ? (int)$jefe['usuario_id'] : null)
+            : ($nivel['aprobador_usuario_id'] !== null ? (int)$nivel['aprobador_usuario_id'] : null);
 
         // Si no hay una asignación de todas formas no se debe intepretar como un nivel aprobado automaticamente
         if ($encargadoId === null) return $nivel;
@@ -179,15 +126,15 @@ function avanzarOCerrarResumen(int $resumenId, array $resumen, ?array $nivelDest
     }
 }
 
-function esJefeDelArea(int $usuarioId, array $resumen): bool
+function esJefeDelTrabajador(int $usuarioId, array $resumen): bool
 {
-    $jefe = buscarJefeArea((int)$resumen['area_id']);
-    return $jefe && (int)$jefe['usuario_id'] === $usuarioId;
+    $jefe = buscarJefeTrabajador((int)$resumen['trabajador_id']);
+    return $jefe !== null && (int)$jefe['usuario_id'] === $usuarioId;
 }
 
 function puedeAtenderNivel(array $resumen, int $usuarioId, string $rolUsuario): bool
 {
-    if ($resumen['nivel_actual_rol'] === 'JEFATURA') return esJefeDelArea($usuarioId, $resumen);
+    if ($resumen['nivel_actual_rol'] === 'JEFATURA') return esJefeDelTrabajador($usuarioId, $resumen);
 
     return (int)($resumen['nivel_actual_aprobador_id'] ?? 0) === $usuarioId
         && $resumen['nivel_actual_rol'] === $rolUsuario

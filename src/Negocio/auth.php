@@ -5,6 +5,10 @@ require_once __DIR__ . '/../Datos/usuarios.php';
 function requiereSesion(): void
 {
     if (empty($_SESSION['usuario_id'])) manejarPeticion();
+    if (!usuarioActivo((int)$_SESSION['usuario_id'])) {
+        cerrarSesion();
+        manejarPeticion();
+    }
 
     $now = time();
     $ultimaActividad = (int) ($_SESSION['ultima_actividad'] ?? $now);
@@ -15,6 +19,7 @@ function requiereSesion(): void
     }
 
     $_SESSION['ultima_actividad'] = $now;
+    $_SESSION['es_jefe'] = esJefe((int)$_SESSION['usuario_id']);
 }
 
 function manejarPeticion(): never
@@ -35,7 +40,7 @@ function manejarPeticion(): never
         echo json_encode([
             'ok' => false,
             'sesion_expirada' => true,
-            'error' => 'Tu sesión terminó por inactividad.',
+            'error' => 'Tu sesión terminó. Inicia sesión nuevamente.',
         ]);
         exit;
     }
@@ -47,6 +52,13 @@ function manejarPeticion(): never
 function esAdministrador():bool
 {
     return !empty($_SESSION['es_admin']);
+}
+
+function puedeVerHistorialAprobaciones(): bool
+{
+    return in_array($_SESSION['rol'] ?? '', ['CONTABILIDAD', 'GERENCIA', 'TESORERIA'], true)
+        || !empty($_SESSION['es_jefe'])
+        || tieneDecisionesAprobacion((int)($_SESSION['usuario_id'] ?? 0));
 }
 
 

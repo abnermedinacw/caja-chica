@@ -30,7 +30,7 @@ if ($esAprobadorPorRol) {
 if ($esJefe) {
     $resumenesBandeja = array_merge(
         $resumenesBandeja,
-        listarResumenesJefaturas((int)$_SESSION['area_id'])
+        listarResumenesJefaturas((int)$_SESSION['usuario_id'])
     );
 }
 

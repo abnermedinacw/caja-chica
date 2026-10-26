@@ -6,6 +6,7 @@ require_once __DIR__ . '/../Datos/comprobantes.php';
 require_once __DIR__ . '/../Negocio/adjuntos.php';
 require_once __DIR__ . '/aprobaciones.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../Datos/trabajadores.php';
 
 // Crea el resumen en Borrador. El fondo es opcional: cubre al trabajador
 // que gasta de su bolsillo para una empresa del grupo sin tener un fondo
@@ -106,8 +107,8 @@ function enviarResumenAprobacion(int $resumenId, int $trabajadorId, int $usuario
         if ((float)$resumen['total_egresos'] <= 0) {
             return ['ok' => false, 'error' => 'Agrega al menos un documento con montos antes de enviar.'];
         }
-        if (!buscarJefeArea((int)$resumen['area_id'])) {
-            return ['ok' => false, 'error' => 'No hay un jefe activo asignado para el área del solicitante.'];
+        if (!buscarJefeTrabajador((int)$resumen['trabajador_id'])) {
+            return ['ok' => false, 'error' => 'El trabajador no tiene un jefe con usuario activo asignado.'];
         }
         $sinResponsable = obtenerNivelesSinResponsable();
         if ($sinResponsable) {

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../Datos/cargos.php';
 require_once __DIR__ . '/exportarPdf.php';
 require_once __DIR__ . '/correo.php';
 require_once __DIR__ . '/../../config/correo.php';
+require_once __DIR__ . '/../Datos/trabajadores.php';
 
 function notificar(int $resumenId, string $accion): void
 {
@@ -26,7 +27,7 @@ function notificar(int $resumenId, string $accion): void
         $hayNivelPendiente = $resumen['nivel_actual_id'] !== null;
 
         if ($hayNivelPendiente && $resumen['nivel_actual_rol'] === 'JEFATURA') {
-            $jefe = buscarJefeArea((int)$resumen['area_id']);
+            $jefe = buscarJefeTrabajador((int)$resumen['trabajador_id']);
             $destinatarioId = (int)($jefe['usuario_id'] ?? 0);
         } elseif ($hayNivelPendiente) $destinatarioId = (int)($resumen['nivel_actual_aprobador_id'] ?? 0);
         else $destinatarioId = (int)$resumen['solicitante_usuario_id'];

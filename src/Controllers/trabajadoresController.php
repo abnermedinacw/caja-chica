@@ -8,6 +8,7 @@ if (!esAdministrador()) {
 }
 
 require_once __DIR__ . '/../Datos/trabajadores.php';
+require_once __DIR__ . '/../Datos/usuarios.php';
 require_once __DIR__ . '/../Datos/empresas.php';
 require_once __DIR__ . '/../Datos/areas.php';
 require_once __DIR__ . '/../Vistas/helpers.php';
@@ -15,5 +16,7 @@ require_once __DIR__ . '/../Vistas/trabajadoresView.php';
 
 $empresas = listarEmpresas();
 $trabajadores = listarTrabajadores();
+$responsables = listarResponsablesActivos();
+$areas = listarAreas();
 
-vistaTrabajadores($trabajadores, $empresas);
+vistaTrabajadores($trabajadores, $empresas, $responsables, $areas);

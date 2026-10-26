@@ -18,7 +18,9 @@ function buscarUsuarioPorUsername(string $username): ?array
             t.nombres AS trabajador_nombre, 
             t.empresa_id, 
             t.area_id,
-            t.es_jefe,
+            EXISTS (
+                SELECT 1 FROM trabajador j WHERE j.jefe_usuario_id = u.id
+            ) AS es_jefe,
             a.nombre AS area_nombre,
             c.nombre AS cargo_nombre
         FROM usuario u
@@ -68,7 +70,9 @@ function obtenerPerfilUsuario(int $usuarioId): ?array
             t.id AS trabajador_id,
             t.dni,
             t.nombres,
-            t.es_jefe,
+            EXISTS (
+                SELECT 1 FROM trabajador j WHERE j.jefe_usuario_id = u.id
+            ) AS es_jefe,
             t.cuenta_bbva,
 
             e.razon_social AS empresa,
@@ -131,4 +135,77 @@ function obtenerUsuarioNotificacion(int $usuarioId): ?array
 
     $stmt->execute([$usuarioId]);
     return $stmt->fetch() ?:null;
+}
+
+function esJefe(int $usuarioId): bool
+{
+    $stmt = obtenerConexion()->prepare('SELECT 1 FROM trabajador WHERE jefe_usuario_id = ? LIMIT 1');
+    $stmt->execute([$usuarioId]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function usuarioActivo(int $usuarioId): bool
+{
+    $stmt = obtenerConexion()->prepare("SELECT 1 FROM usuario WHERE id = ? AND estado = 'ACTIVO'");
+    $stmt->execute([$usuarioId]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function tieneDecisionesAprobacion(int $usuarioId): bool
+{
+    $stmt = obtenerConexion()->prepare(
+        "SELECT 1 FROM evento_caja_chica
+        WHERE usuario_id = ? AND evento IN ('APROBADO', 'RECHAZADO')
+        LIMIT 1"
+    );
+    $stmt->execute([$usuarioId]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function listarResponsablesActivos(): array
+{
+    return obtenerConexion()->query(
+        "SELECT
+            u.id AS usuario_id,
+            t.nombres,
+            t.dni,
+            e.razon_social AS empresa
+        FROM usuario u
+        JOIN trabajador t ON t.id = u.trabajador_id
+        JOIN empresa e ON e.id = t.empresa_id
+        WHERE u.estado = 'ACTIVO'
+        ORDER BY t.nombres"
+    )->fetchAll();
+}
+
+function obtenerResponsableActivo(int $usuarioId): ?array
+{
+    $stmt = obtenerConexion()->prepare(
+        "SELECT
+            u.id AS usuario_id,
+            t.nombres,
+            t.dni
+        FROM usuario u
+        JOIN trabajador t ON t.id = u.trabajador_id
+        WHERE u.id = ? AND u.estado = 'ACTIVO'"
+    );
+    $stmt->execute([$usuarioId]);
+    return $stmt->fetch() ?: null;
+}
+
+function obtenerResponsableActivoDni(string $dni): ?array
+{
+    $stmt = obtenerConexion()->prepare(
+        "SELECT
+            u.id AS usuario_id,
+            t.nombres,
+            t.dni
+        FROM usuario u
+        JOIN trabajador t ON t.id = u.trabajador_id
+        WHERE t.dni = ? AND u.estado = 'ACTIVO'"
+    );
+    $stmt->execute([$dni]);
+    $filas = $stmt->fetchAll();
+    if (count($filas) > 1) throw new DomainException('El jefe tiene varios usuarios activos para el mismo DNI. Revisar acceso.');
+    return $filas[0] ?? null;
 }

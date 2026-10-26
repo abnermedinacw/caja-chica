@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/layout.php';
 
-function vistaTrabajadores(array $trabajadores, array $empresas): void
+function vistaTrabajadores(array $trabajadores, array $empresas, array $responsables, array $areas): void
 {
     aperturaLayout('Trabajadores', 'trabajadores');
 ?>
@@ -46,6 +46,7 @@ function vistaTrabajadores(array $trabajadores, array $empresas): void
                     <th>Empresa</th>
                     <th>Area</th>
                     <th>Cargo</th>
+                    <th>Jefe</th>
                     <th>Acceso</th>
                 </tr>
             </thead>
@@ -56,9 +57,11 @@ function vistaTrabajadores(array $trabajadores, array $empresas): void
                     <td>{{ t.empresa }}</td>
                     <td>{{ t.area }}</td>
                     <td>{{ t.cargo ?? '-'}}</td>
+                    <td>{{ t.jefe || 'Pendiente de asignar' }}</td>
                     <td>
-                        <span v-if="t.tiene_usuario" class="estado estado-activo">Con acceso</span>
-                        <span v-else class="estado estado-pendiente">Sin acceso</span>
+                        <span v-if="t.acceso === 'ACTIVO'" class="estado estado-activo">Activo</span>
+                        <span v-else-if="t.acceso === 'INACTIVO'" class="estado estado-pendiente">Inactivo</span>
+                        <span v-else class="estado estado-pendiente">Sin usuario</span>
                     </td>
                 </tr>
             </tbody>
@@ -66,7 +69,7 @@ function vistaTrabajadores(array $trabajadores, array $empresas): void
         </div>
         <!-- Modal de sincronización -->
         <dialog ref="refModalSincronizar" @cancel.prevent="cerrarModal">
-            <button type="button" class="dialogo-cerrar" aria-label="Cerrar modal" @click="cerrarModal">&times;</button>
+            <button type="button" class="dialogo-cerrar" aria-label="Cerrar modal" @click="cerrarModal" :disabled="guardando || buscando">&times;</button>
             <h2>Sincronizar Trabajador</h2>
             <div v-if="!trabajadorEncontrado">
                 <div class="campo">
@@ -112,17 +115,37 @@ function vistaTrabajadores(array $trabajadores, array $empresas): void
                     disabled>
                     <small v-if="form.advertencia_cuenta" class="texto-advertencia">{{ form.advertencia_cuenta }}</small>
                 </div>
-                <!-- Si vino área de la bbdd externa, se preselecciona por nombre, pero el usuario puede cambiarla si hace falta. -->  
-                <div class="campo">
-                    <label for="areaSel">Área <span class="requerido">*</span></label>
-                    <select id="areaSel" v-model="form.area">
-                        <option value="">Selecciona un área</option>
-                        <option v-for="a in areasFiltradas" :key="a" :value="a">{{a}}</option>
+                <div class="campo" v-if="form.area_ts">
+                    <label for="areaTs">Área laboral</label>
+                    <input id="areaTs" type="text" :value="form.area" readonly>
+                </div>
+                <div class="campo" v-else>
+                    <label for="areaSel">Área<span class="requerido">*</span></label>
+                    <select id="areaSel" v-model="form.area_id">
+                        <option :value="null">Selecciona un área</option>
+                        <option v-for="a in areasDeMatriz" :key="a.id" :value="Number(a.id)">{{ a.nombre }}</option>
                     </select>
-                    <label class="campo-check">
-                        Es Jefe de Área
-                        <input type="checkbox" v-model="form.es_jefe">
-                    </label>
+                    <small>TS no tiene un área laboral asignada. Selecciona la que corresponde.</small>
+                </div>
+
+                <div class="campo" v-if="form.grupos_a_cargo.length">
+                    <label>Jefatura reconocida en TS</label>
+                    <p>{{ form.grupos_a_cargo.join(', ') }}</p>
+                </div>
+
+                <div class="campo" v-if="form.jefe_ts">
+                    <label for="jefeTs">Jefe</label>
+                    <input id="jefeTs" type="text" :value="form.jefe_nombre + ' · DNI ' + form.jefe_dni" readonly>
+                    <p class="error" v-if="form.error_jefe">{{ form.error_jefe }}</p>
+                </div>
+                <div class="campo" v-else>
+                    <label for="jefeLocal">Jefe<span class="requerido">*</span></label>
+                    <select id="jefeLocal" v-model="form.jefe_usuario_id">
+                        <option :value="null">Selecciona un responsable</option>
+                        <option v-for="j in datos.responsables" :key="j.usuario_id" :value="Number(j.usuario_id)">
+                            {{j.nombres}} - {{ j.dni }} - {{ j.empresa }}
+                        </option>
+                    </select>
                 </div>
 
                 <h3>Acceso al sistema</h3>
@@ -155,7 +178,7 @@ function vistaTrabajadores(array $trabajadores, array $empresas): void
                 <p class="error" v-if="errorGuardado">{{ errorGuardado }}</p>
                 <div class="acciones-modal">
                     <button type="button" class="boton boton-secundario" :disabled="guardando" @click="volverABuscar">Regresar </button>
-                    <button type="button" class="boton boton-primario" :disabled="guardando" @click="guardar">
+                    <button type="button" class="boton boton-primario" :disabled="guardando || !!form.error_jefe" @click="guardar">
                         <span v-if="guardando" class="spinner"></span>
                         {{ guardando ? 'Guardando... ' : 'Registrar Trabajador' }}
                     </button>
@@ -168,7 +191,9 @@ function vistaTrabajadores(array $trabajadores, array $empresas): void
                                         'baseUrl' => BASE_URL,
                                         'trabajadores' => $trabajadores,
                                         'empresas' => $empresas,
-                                    ]) ?>;
+                                        'responsables' => $responsables,
+                                        'areas' => $areas
+                                    ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
     </script>
     <script src="<?= BASE_URL ?>/js/vendor/vue.global.prod.js"></script>
     <script type="module" src="<?= assetUrl('/js/trabajadores.js') ?>"></script>

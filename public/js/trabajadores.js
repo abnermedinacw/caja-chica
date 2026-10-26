@@ -5,14 +5,15 @@ const { createApp, ref, computed, watch } = Vue;
 
 createApp({
     setup() {
-        const datos = window.DATOS_INICIALES || { baseUrl: '', trabajadores: [], empresas: [] };
+        const datos = { baseUrl: '', trabajadores: [], empresas: [], responsables: [], areas: [], ...(window.DATOS_INICIALES || {})
+        };
 
         // Filtros
         const mostrarFiltros = ref(false);
         const filtroTexto = ref('');
         const filtroEmpresa = ref('');
-
         const hayFiltrosActivos = computed(() => !!(filtroTexto.value || filtroEmpresa.value));
+
         function limpiarFiltros() {
             filtroTexto.value = '';
             filtroEmpresa.value = '';
@@ -36,7 +37,9 @@ createApp({
 
         const dniBusqueda = ref('');
         const buscando = ref(false);
+        const guardando = ref(false);
         const errorBusqueda = ref(null);
+        const errorGuardado = ref(null);
         const trabajadorEncontrado = ref(false);
 
         //datos precargados de la bbdd externa
@@ -51,6 +54,8 @@ createApp({
                 cliente_razon_social: '',
                 cargo: '',
                 area: '',
+                area_ts: false,
+                area_id: null,
                 username: '',
                 correo: '',
                 password: '',
@@ -58,66 +63,73 @@ createApp({
                 cuenta_bbva: '',
                 advertencia_cuenta: '',
                 es_admin: false,
-                es_jefe: false,
+                jefe_ts: false,
+                jefe_dni: '',
+                jefe_nombre: '',
+                jefe_usuario_id: null,
+                error_jefe: '',
+                grupos_a_cargo: [],
             };
         }
 
         const form = ref(crearFormularioInicial());
 
-        const areasFiltradas = computed(() => {
-            const areas = datos.trabajadores
-                .map(t => t.area)
-                .filter(Boolean);
-
-            if (form.value.area) areas.push(form.value.area);
-            return [...new Set(areas)].sort();
-        })
+        const areasDeMatriz = computed(() => datos.areas.filter(
+            a => Number(a.empresa_id) === Number(form.value.matriz_id)
+        ));
 
         async function buscarPorDni() {
+            if (buscando.value || guardando.value || !dniBusqueda.value.trim()) return;
             errorBusqueda.value = null;
-            if (!dniBusqueda.value.trim()) return;
             buscando.value = true;
 
-            // Llama al endpoint de búsqueda externa
-            const r = await obtenerJson(`${datos.baseUrl}/buscar-trabajador-ts?dni=${dniBusqueda.value.trim()}`);
-            buscando.value = false;
-            if (!r.ok) {
-                errorBusqueda.value = r.error;
-                return;
+            try {
+                const dni = encodeURIComponent(dniBusqueda.value.trim());
+                const r = await obtenerJson(`${datos.baseUrl}/buscar-trabajador-ts?dni=${dni}`);
+                if (!r.ok) {
+                    errorBusqueda.value = r.error;
+                    return;
+                }
+                form.value = {...crearFormularioInicial(), ...r.datos};
+                trabajadorEncontrado.value = true;
+            } finally {
+                buscando.value = false;
             }
-
-            form.value = { ...crearFormularioInicial(), ...r.datos };
-            form.value.area = r.datos.area || '';
-            trabajadorEncontrado.value = true;
         }
 
-        const guardando = ref(false);
-        const errorGuardado = ref(null);
-
         async function guardar() {
-            if (!form.value.area) {
-                errorGuardado.value = 'Debes seleccionar un área.';
-                return;
-            }
-            if (!form.value.correo) {
-                errorGuardado.value = 'Ingresa correo del usuario.';
-                return;
-            }
+            if (guardando.value) return;
             errorGuardado.value = null;
-            guardando.value = true;
-
-            // Llama al endpoint de sincronización
-            const r = await enviarFormulario(`${datos.baseUrl}/sincronizar-trabajador`, form.value);
-            guardando.value = false;
-            if (!r.ok) {
-                errorGuardado.value = r.error;
+            if (!form.value.area_ts && !form.value.area_id) {
+                errorGuardado.value = 'Selecciona un área laboral.';
                 return;
             }
-            // Recarga para que trabajador aparezca en pantalla
-            window.location.reload();
+            if (form.value.error_jefe) {
+                errorGuardado.value = form.value.error_jefe;
+                return;
+            }
+            if (!form.value.jefe_ts && !form.value.jefe_usuario_id) {
+                errorGuardado.value = 'Selecciona el jefe responsable';
+                return;
+            }
+            guardando.value = true;
+            try {
+                const { dni, area_id, jefe_usuario_id, username, correo, password, rol, es_admin } = form.value;
+                const r = await enviarFormulario(`${datos.baseUrl}/sincronizar-trabajador`, {
+                    dni, area_id, jefe_usuario_id, username, correo, password, rol, es_admin,
+                });
+                if (!r.ok) {
+                    errorGuardado.value = r.error;
+                    return;
+                }
+                window.location.reload();
+            } finally {
+                guardando.value = false;
+            }
         }
 
         function volverABuscar() {
+            if (guardando.value || buscando.value) return;
             trabajadorEncontrado.value = false;
             dniBusqueda.value = '';
             errorBusqueda.value = null;
@@ -126,19 +138,18 @@ createApp({
         }
 
         function cerrarModal() {
+            if (guardando.value || buscando.value) return;
             mostrarModalSincronizar.value = false;
             volverABuscar();
         }
 
         return {
-            datos,
-            mostrarFiltros, hayFiltrosActivos, limpiarFiltros,
+            datos, mostrarFiltros, hayFiltrosActivos, limpiarFiltros,
             filtroTexto, filtroEmpresa, empresasEnLista, trabajadoresFiltrados,
             mostrarModalSincronizar, refModalSincronizar,
             dniBusqueda, buscando, errorBusqueda, trabajadorEncontrado,
-            form, areasFiltradas, buscarPorDni,
-            guardando, errorGuardado, guardar,
-            volverABuscar, cerrarModal,
+            form, areasDeMatriz, buscarPorDni,
+            guardando, errorGuardado, guardar, volverABuscar, cerrarModal
         };
     },
 }).mount('#app');

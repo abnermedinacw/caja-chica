@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $fondos = listarFondos();
 
 if ($esJefe && !in_array($_SESSION['rol'], $rolesPermitidos, true)) {
-    $idsACargo = listarIdsTrabajadoresDeArea((int)$_SESSION['area_id']);
+    $idsACargo = listarIdsTrabajadoresDeJefe((int)$_SESSION['usuario_id']);
     $fondos = array_values(array_filter($fondos, fn($f) => in_array((int)$f['trabajador_id'], $idsACargo, true)));
 }
 

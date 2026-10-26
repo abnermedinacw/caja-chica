@@ -12,16 +12,23 @@ function listarTrabajadores(): array
             e.razon_social AS empresa,
             c.nombre AS cargo,
             a.nombre AS area,
-            t.es_jefe,
-            EXISTS (
-                SELECT 1
-                FROM usuario u
-                WHERE u.trabajador_id = t.id
-            ) AS tiene_usuario
+            jefe.nombres AS jefe,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM usuario u
+                    WHERE u.trabajador_id = t.id AND u.estado = 'ACTIVO'
+                ) THEN 'ACTIVO'
+                WHEN EXISTS (
+                    SELECT 1 FROM usuario u WHERE u.trabajador_id = t.id
+                ) THEN 'INACTIVO'
+                ELSE 'SIN_USUARIO'
+            END AS acceso
         FROM trabajador t
         JOIN empresa e ON e.id = t.empresa_id
         JOIN area a ON a.id = t.area_id
         LEFT JOIN cargo c ON c.id = t.cargo_id
+        LEFT JOIN usuario uj ON uj.id = t.jefe_usuario_id
+        LEFT JOIN trabajador jefe ON jefe.id = uj.trabajador_id
         ORDER BY t.nombres";
     $stmt = $pdo->query($sql);
     return $stmt->fetchAll();
@@ -29,44 +36,46 @@ function listarTrabajadores(): array
 
 function obtenerTrabajadorPorId(int $id): ?array
 {
-    $pdo = obtenerConexion();
-    $stmt = $pdo->prepare("SELECT id, nombres FROM trabajador WHERE id = ?");
+    $stmt = obtenerConexion()->prepare("SELECT id, nombres FROM trabajador WHERE id = ?");
     $stmt->execute([$id]);
-    $fila = $stmt->fetch();
-    return $fila ?: null;
+    return $stmt->fetch() ?: null;
 }
 
 function obtenerTrabajadorPorDni(string $dni): ?array
 {
-    $pdo = obtenerConexion();
-    $stmt = $pdo->prepare("SELECT id, nombres FROM trabajador WHERE dni = ?");
+    $stmt = obtenerConexion()->prepare("SELECT id, nombres FROM trabajador WHERE dni = ?");
     $stmt->execute([$dni]);
-    $fila = $stmt->fetch();
-    return $fila ?: null;
+    return $stmt->fetch() ?: null;
 }
 
-// IDs de los trabajadores que reportan a un cargo+área específicos — mismo
-// criterio que ya usa buscarJefeArea() para encontrar AL jefe (cargo_padre_id
-// + area_id), pero acá en la dirección contraria: dado el cargo del jefe,
-// busca a quiénes tiene a cargo.
-function listarIdsTrabajadoresACargoDe(int $cargoJefeId, int $areaId): array
+function buscarJefeTrabajador(int $trabajadorId): ?array
 {
-    $pdo = obtenerConexion();
-    $stmt = $pdo->prepare(
-        "SELECT t.id
+    $stmt = obtenerConexion()->prepare(
+        "SELECT
+            u.id AS usuario_id,
+            u.rol,
+            j.id AS trabajador_id,
+            j.nombres
         FROM trabajador t
-        JOIN cargo c ON c.id = t.cargo_id
-        WHERE c.cargo_padre_id = ? AND t.area_id = ?"
+        JOIN usuario u ON u.id = t.jefe_usuario_id AND u.estado = 'ACTIVO'
+        JOIN trabajador j ON j.id = u.trabajador_id
+        WHERE t.id = ?"
     );
-    $stmt->execute([$cargoJefeId, $areaId]);
-    return array_map('intval', array_column($stmt->fetchAll(), 'id'));
+
+    $stmt->execute([$trabajadorId]);
+    return $stmt->fetch() ?: null;
 }
 
-function listarIdsTrabajadoresDeArea(int $areaId): array
+function asignarJefeTrabajador(int $trabajadorId, int $jefeUsuarioId): void
 {
-    $pdo = obtenerConexion();
-    $stmt = $pdo->prepare("SELECT id FROM trabajador WHERE area_id = ?");
-    $stmt->execute([$areaId]);
+    $stmt = obtenerConexion()->prepare('UPDATE trabajador SET jefe_usuario_id = ? WHERE id = ?');
+    $stmt->execute([$jefeUsuarioId, $trabajadorId]);
+}
+
+function listarIdsTrabajadoresDeJefe(int $jefeUsuarioId): array
+{
+    $stmt = obtenerConexion()->prepare('SELECT id FROM trabajador WHERE jefe_usuario_id = ?');
+    $stmt->execute([$jefeUsuarioId]);
     return array_map('intval', array_column($stmt->fetchAll(), 'id'));
 }
 
@@ -77,28 +86,21 @@ function crearTrabajador(
     ?int $cargoId, 
     string $dni, 
     string $nombres,
-    ?string $cuentaBbva,
-    bool $esJefe
+    ?string $cuentaBbva
 ): int
 {
     $pdo = obtenerConexion();
     $stmt = $pdo->prepare(
-        "INSERT INTO trabajador (empresa_id, empresa_cliente_id, area_id, cargo_id, dni, nombres, cuenta_bbva, cuenta_bbva_fecha_sincronizacion, es_jefe)
-        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)"
+        "INSERT INTO trabajador (empresa_id, empresa_cliente_id, area_id, cargo_id, dni, nombres, cuenta_bbva, cuenta_bbva_fecha_sincronizacion)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())"
     );
 
-    $stmt->execute([$empresaId, $empresaClienteId, $areaId, $cargoId, $dni, $nombres, $cuentaBbva, $esJefe ? 1 : 0]);
+    $stmt->execute([$empresaId, $empresaClienteId, $areaId, $cargoId, $dni, $nombres, $cuentaBbva]);
     return (int)$pdo->lastInsertId();
 }
 
 function actualizarCuentaBbvaTrabajador(int $trabajadorId, string $cuentaBbva): void
 {
-    $pdo = obtenerConexion();
-    $stmt = $pdo->prepare(
-        "UPDATE trabajador
-        SET cuenta_bbva = ?
-        WHERE id = ?"
-    );
-    
+    $stmt = obtenerConexion()->prepare('UPDATE trabajador SET cuenta_bbva = ? WHERE id = ?');
     $stmt->execute([$cuentaBbva, $trabajadorId]);
 }

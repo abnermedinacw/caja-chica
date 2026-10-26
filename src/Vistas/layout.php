@@ -7,7 +7,6 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
     $rol = $_SESSION['rol'] ?? null;
     $tieneTrabajador = !empty($_SESSION['trabajador_id']);
     $esJefe = !empty($_SESSION['es_jefe']);
-    $rolesAprobadores = ['CONTABILIDAD', 'GERENCIA', 'TESORERIA'];
     // Tesorería asigna fondos; Gerencia y Contabilidad los auditan completos;
     // Jefatura ve la misma pantalla pero acotada a su propia gente (el
     // controller decide ese recorte, acá solo importa quién puede entrar).
@@ -21,7 +20,7 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
         'home' => ['ruta' => '/home', 'texto' => 'Inicio', 'disponible' => true],
     ]];
 
-    if (in_array($rol, $rolesAprobadores, true) || $esJefe) {
+    if (puedeVerHistorialAprobaciones()) {
         $secciones[] = ['titulo' => 'Aprobación', 'enlaces' => [
             'historial-aprobaciones' => ['ruta' => '/historial-aprobaciones', 'texto' => 'Historial de aprobaciones', 'disponible' => true],
         ]];

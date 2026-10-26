@@ -245,31 +245,6 @@ function listarResumenesPorNivel(int $nivelId): array
     $stmt->execute([$nivelId]);
     return $stmt->fetchAll();
 }
-/*
-function listarResumenesPorRol(string $rol): array
-{
-    $pdo = obtenerConexion();
-    $sql =
-        "SELECT
-            cc.id,
-            cc.numero,
-            cc.fecha_emision,
-            cc.total_egresos,
-            cc.estado_general,
-            e.razon_social AS empresa,
-            t.nombres AS solicitante
-        FROM caja_chica cc
-        JOIN empresa e ON e.id = cc.empresa_id
-        JOIN trabajador t ON t.id = cc.trabajador_id
-        JOIN nivel_aprobacion na ON na.id = cc.nivel_actual_id
-        WHERE na.rol_requerido = ?
-            AND (cc.estado_general = 'EN_REVISION' OR cc.estado_general = 'RECHAZADO')
-        ORDER BY cc.fecha_emision";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$rol]);
-    return $stmt->fetchAll();
-} 
-*/
 
 function listarResumenesPorUsuario(int $usuarioId, string $rol): array
 {
@@ -320,10 +295,9 @@ function listarResumenesPorFondo(int $fondoId): array
     return $stmt->fetchAll();
 }
 
-function listarResumenesJefaturas(int $areaId): array
+function listarResumenesJefaturas(int $jefeUsuarioId): array
 {
-    $pdo = obtenerConexion();
-    $sql =
+    $stmt = obtenerConexion()->prepare(
         "SELECT
             cc.id,
             cc.numero,
@@ -338,12 +312,11 @@ function listarResumenesJefaturas(int $areaId): array
         JOIN trabajador t ON t.id = cc.trabajador_id
         JOIN nivel_aprobacion na ON na.id = cc.nivel_actual_id
         WHERE na.rol_requerido = 'JEFATURA'
-            AND (cc.estado_general = 'EN_REVISION' OR cc.estado_general = 'RECHAZADO')
-            AND t.area_id = ?
-        ORDER BY cc.fecha_emision";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$areaId]);
+            AND cc.estado_general IN ('EN_REVISION', 'RECHAZADO')
+            AND t.jefe_usuario_id = ?
+        ORDER BY cc.fecha_emision"
+    );
+    $stmt->execute([$jefeUsuarioId]);
     return $stmt->fetchAll();
 }
 
@@ -364,25 +337,6 @@ function obtenerOrdenesAprobadosResumen(int $resumenId): array
     );
     $stmt->execute([$resumenId]);
     return array_map('intval', array_column($stmt->fetchAll(), 'orden'));
-}
-
-function listarResumenesPorNivelYArea(int $nivelId, int $areaId): array
-{
-    $pdo = obtenerConexion();
-    $sql =
-        "SELECT
-            cc.id, cc.numero, cc.fecha_emision, cc.total_egresos,
-            e.razon_social AS empresa,
-            t.nombres AS solicitante
-        FROM caja_chica cc
-        JOIN empresa e ON e.id = cc.empresa_id
-        JOIN trabajador t ON t.id = cc.trabajador_id
-        WHERE cc.estado_general = 'EN_REVISION' AND cc.nivel_actual_id = ? AND t.area_id = ?
-        ORDER BY cc.fecha_emision";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$nivelId, $areaId]);
-    return $stmt->fetchAll();
 }
 
 function obtenerAdjuntosResumen(int $resumenId): array
