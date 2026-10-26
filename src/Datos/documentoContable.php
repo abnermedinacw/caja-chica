@@ -187,7 +187,7 @@ function obtenerDocumentosContablesTrabajador(int $trabajadorId): array
         FROM documento_contable dc
         LEFT JOIN caja_chica cc ON cc.id = dc.resumen_id
         WHERE dc.trabajador_id = ?
-        ORDER BY dc.fecha_rendicion DESC"
+        ORDER BY dc.fecha_rendicion DESC, dc.id DESC"
     );
     $stmt->execute([$trabajadorId]);
     return $stmt->fetchAll();

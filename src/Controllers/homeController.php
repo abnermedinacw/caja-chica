@@ -34,6 +34,11 @@ if ($esJefe) {
     );
 }
 
+// La bandeja combina pendientes del rol y de Jefatura: los mas antiguos primero.
+usort($resumenesBandeja, static fn(array $a, array $b): int =>
+    strcmp($a['fecha_emision'], $b['fecha_emision']) ?: ((int)$a['id'] <=> (int)$b['id'])
+);
+
 $misFondos = [];
 $misResumenes = [];
 if (!empty($_SESSION['trabajador_id'])) {

@@ -74,7 +74,7 @@ function listarFondos(): array
         FROM fondo f
         JOIN empresa e ON e.id = f.empresa_id
         JOIN trabajador t ON t.id = f.trabajador_id
-        ORDER BY f.estado, t.nombres";
+        ORDER BY f.estado, f.fecha_asignacion DESC, f.id DESC";
 
     return $pdo->query($sql)->fetchAll();
 }
@@ -119,7 +119,7 @@ function obtenerFondosActivos(int $trabajadorId): array
         FROM fondo f
         JOIN empresa e ON e.id = f.empresa_id
         WHERE f.trabajador_id = ? AND f.estado = 'ACTIVO'
-        ORDER BY e.razon_social";
+        ORDER BY e.razon_social, f.id DESC";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$trabajadorId]);
@@ -152,7 +152,7 @@ function obtenerFondosTrabajador(int $trabajadorId): array
         FROM fondo f
         JOIN empresa e ON e.id = f.empresa_id
         WHERE f.trabajador_id = ?
-        ORDER BY f.estado, e.razon_social";
+        ORDER BY f.estado, f.fecha_asignacion DESC, f.id DESC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$trabajadorId]);

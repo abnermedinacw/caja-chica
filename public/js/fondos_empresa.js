@@ -83,6 +83,7 @@ createApp({
             if (!termino) return [];
             return datos.trabajadores
                 .filter(t => t.dni.includes(termino) || t.nombres.toLowerCase().includes(termino))
+                .sort((a, b) => a.nombres.localeCompare(b.nombres, 'es') || Number(a.id) - Number(b.id))
                 .slice(0, 8);
         });
 

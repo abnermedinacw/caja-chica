@@ -71,7 +71,7 @@ function listarCajasPagosBbva(int $empresaId): array
         FROM caja_chica cc
         INNER JOIN trabajador t ON t.id = cc.trabajador_id
         WHERE cc.empresa_id = ? AND cc.estado_general = 'VISADO'
-        ORDER BY cc.fecha_emision, cc.numero"
+        ORDER BY cc.txt_bbva_descargado, cc.fecha_emision, cc.id"
     );
 
     $stmt->execute([$empresaId]);

@@ -29,7 +29,7 @@ function listarTrabajadores(): array
         LEFT JOIN cargo c ON c.id = t.cargo_id
         LEFT JOIN usuario uj ON uj.id = t.jefe_usuario_id
         LEFT JOIN trabajador jefe ON jefe.id = uj.trabajador_id
-        ORDER BY t.nombres";
+        ORDER BY t.id DESC";
     $stmt = $pdo->query($sql);
     return $stmt->fetchAll();
 }

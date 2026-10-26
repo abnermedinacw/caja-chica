@@ -216,7 +216,7 @@ function obtenerPlanillaTrabajador(int $trabajadorId): array
         FROM planilla_movilidad pm
         LEFT JOIN caja_chica cc ON cc.id = pm.resumen_id
         WHERE pm.trabajador_id = ?
-        ORDER BY pm.fecha_emision DESC"
+        ORDER BY pm.fecha_emision DESC, pm.id DESC"
     );
     $stmt->execute([$trabajadorId]);
     return $stmt->fetchAll();

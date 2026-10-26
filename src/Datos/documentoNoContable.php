@@ -172,7 +172,7 @@ function obtenerDocumentosNoContablesTrabajador(int $trabajadorId): array
         FROM documento_no_contable dnc
         LEFT JOIN caja_chica cc ON cc.id = dnc.resumen_id
         WHERE dnc.trabajador_id = ?
-        ORDER BY dnc.fecha_rendicion DESC"
+        ORDER BY dnc.fecha_rendicion DESC, dnc.id DESC"
     );
     $stmt->execute([$trabajadorId]);
     return $stmt->fetchAll();

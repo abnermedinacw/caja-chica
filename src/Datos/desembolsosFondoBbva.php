@@ -34,7 +34,7 @@ function listarFondosDesembolsoBbva(int $empresaId): array
         ORDER BY
             f.estado,
             f.fecha_asignacion,
-            t.nombres"
+            f.id"
     );
     $stmt->execute([$empresaId]);
     return $stmt->fetchAll();

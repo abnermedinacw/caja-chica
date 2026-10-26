@@ -221,7 +221,7 @@ function obtenerEventosResumen(int $resumenId): array
             LEFT JOIN trabajador t ON t.id = u.trabajador_id
             WHERE ev.caja_chica_id = ?
                 AND ev.evento NOT IN ('TXT_DESCARGADO', 'TXT_REACTIVADO')
-            ORDER BY ev.fecha"
+            ORDER BY ev.fecha, ev.id"
     );
     $stmt->execute([$resumenId]);
     return $stmt->fetchAll();
@@ -239,7 +239,7 @@ function listarResumenesPorNivel(int $nivelId): array
         JOIN empresa e ON e.id = cc.empresa_id
         JOIN trabajador t ON t.id = cc.trabajador_id
         WHERE cc.estado_general = 'EN_REVISION' AND cc.nivel_actual_id = ?
-        ORDER BY cc.fecha_emision";
+        ORDER BY cc.fecha_emision, cc.id";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$nivelId]);
@@ -268,7 +268,7 @@ function listarResumenesPorUsuario(int $usuarioId, string $rol): array
             AND na.rol_requerido = ?
             AND u.estado = 'ACTIVO'
             AND cc.estado_general IN ('EN_REVISION', 'RECHAZADO')
-        ORDER BY cc.fecha_emision" 
+        ORDER BY cc.fecha_emision, cc.id"
     );
 
     $stmt->execute([$usuarioId, $rol]);
@@ -288,7 +288,7 @@ function listarResumenesPorFondo(int $fondoId): array
             estado_general
         FROM caja_chica
         WHERE fondo_id = ?
-        ORDER BY fecha_emision DESC"
+        ORDER BY fecha_emision DESC, id DESC"
     );
 
     $stmt->execute([$fondoId]);
@@ -314,7 +314,7 @@ function listarResumenesJefaturas(int $jefeUsuarioId): array
         WHERE na.rol_requerido = 'JEFATURA'
             AND cc.estado_general IN ('EN_REVISION', 'RECHAZADO')
             AND t.jefe_usuario_id = ?
-        ORDER BY cc.fecha_emision"
+        ORDER BY cc.fecha_emision, cc.id"
     );
     $stmt->execute([$jefeUsuarioId]);
     return $stmt->fetchAll();
@@ -368,7 +368,7 @@ function listarResumenesResueltosPorUsuario(int $usuarioId): array
         JOIN empresa e ON e.id = cc.empresa_id
         JOIN trabajador t ON t.id = cc.trabajador_id
         WHERE ev.usuario_id = ? AND ev.evento IN ('APROBADO', 'RECHAZADO')
-        ORDER BY ev.fecha DESC";
+        ORDER BY ev.fecha DESC, ev.id DESC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$usuarioId]);
