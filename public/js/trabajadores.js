@@ -1,33 +1,18 @@
-import { coincideEnAlguno, coincideExacto } from './utils/filtros.js';
 import { enviarFormulario, obtenerJson } from './utils/api.js';
 
 const { createApp, ref, computed, watch } = Vue;
 
 createApp({
     setup() {
-        const datos = { baseUrl: '', trabajadores: [], empresas: [], responsables: [], areas: [], ...(window.DATOS_INICIALES || {})
+        const datos = { baseUrl: '', trabajadores: [], empresas: [], responsables: [], areas: [], paginacion: {}, ...(window.DATOS_INICIALES || {})
         };
 
         // Filtros
-        const mostrarFiltros = ref(false);
-        const filtroTexto = ref('');
-        const filtroEmpresa = ref('');
+        const filtroTexto = ref(datos.paginacion.buscar || '');
+        const filtroEmpresa = ref(String(datos.paginacion.empresa_id || ''));
+        const porPagina = ref(datos.paginacion.por_pagina || 25);
         const hayFiltrosActivos = computed(() => !!(filtroTexto.value || filtroEmpresa.value));
-
-        function limpiarFiltros() {
-            filtroTexto.value = '';
-            filtroEmpresa.value = '';
-        }
-
-        //Empresas en lista
-        const empresasEnLista = computed(() => [...new Set(datos.trabajadores.map(t => t.empresa))].sort());
-
-        const trabajadoresFiltrados = computed(() =>
-            datos.trabajadores.filter(t =>
-                coincideEnAlguno(t, ['dni', 'nombres'], filtroTexto.value) &&
-                coincideExacto(t.empresa, filtroEmpresa.value)
-            )
-        );
+        const mostrarFiltros = ref(hayFiltrosActivos.value || porPagina.value !== 25);
 
         const mostrarModalSincronizar = ref(false);
         const refModalSincronizar = ref(null);
@@ -122,7 +107,7 @@ createApp({
                     errorGuardado.value = r.error;
                     return;
                 }
-                window.location.reload();
+                window.location.assign(`${datos.baseUrl}/trabajadores`);
             } finally {
                 guardando.value = false;
             }
@@ -144,8 +129,8 @@ createApp({
         }
 
         return {
-            datos, mostrarFiltros, hayFiltrosActivos, limpiarFiltros,
-            filtroTexto, filtroEmpresa, empresasEnLista, trabajadoresFiltrados,
+            datos, mostrarFiltros, hayFiltrosActivos,
+            filtroTexto, filtroEmpresa, porPagina,
             mostrarModalSincronizar, refModalSincronizar,
             dniBusqueda, buscando, errorBusqueda, trabajadorEncontrado,
             form, areasDeMatriz, buscarPorDni,

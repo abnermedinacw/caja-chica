@@ -1,8 +1,19 @@
 <?php
 require_once __DIR__ . '/layout.php';
 
-function vistaTrabajadores(array $trabajadores, array $empresas, array $responsables, array $areas): void
+function vistaTrabajadores(array $trabajadores, array $empresas, array $responsables, array $areas, array $paginacion): void
 {
+    $pagina = $paginacion['pagina'];
+    $totalPaginas = $paginacion['total_paginas'];
+    $total = $paginacion['total'];
+    $inicio = max(1, min($pagina - 2, $totalPaginas - 4));
+    $fin = min($totalPaginas, $inicio + 4);
+    $urlPagina = static fn(int $numero): string => BASE_URL . '/trabajadores?' . http_build_query([
+        'buscar' => $paginacion['buscar'],
+        'empresa_id' => $paginacion['empresa_id'],
+        'por_pagina' => $paginacion['por_pagina'],
+        'pagina' => $numero,
+    ]);
     aperturaLayout('Trabajadores', 'trabajadores');
 ?>
     <div id="app">
@@ -20,24 +31,39 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $responsa
                 <?= icono('filtro') ?> Filtros<span v-if="hayFiltrosActivos" class="filtros-badge"></span>
             </button>
         </div>
-        <section class="ficha ficha-formulario filtros-historial" v-if="mostrarFiltros">
+        <form class="ficha ficha-formulario filtros-historial" v-if="mostrarFiltros" method="get" action="<?= BASE_URL ?>/trabajadores">
             <div class="campo">
                 <label for="filtroTexto">DNI o nombre</label>
-                <input type="text" id="filtroTexto" v-model="filtroTexto" placeholder="Buscar...">
+                <input type="search" id="filtroTexto" name="buscar" v-model="filtroTexto" maxlength="100" placeholder="Buscar...">
             </div>
             <div class="campo">
                 <label for="filtroEmpresa">Empresa</label>
-                <select id="filtroEmpresa" v-model="filtroEmpresa">
+                <select id="filtroEmpresa" name="empresa_id" v-model="filtroEmpresa">
                     <option value="">Todas</option>
-                    <option v-for="e in empresasEnLista" :key="e" :value="e">{{ e }}</option>
+                    <option v-for="e in datos.empresas" :key="e.id" :value="String(e.id)">{{ e.razon_social }}</option>
                 </select>
             </div>
-        </section>
+            <div class="campo">
+                <label for="porPagina">Filas por página</label>
+                <select id="porPagina" name="por_pagina" v-model.number="porPagina">
+                    <option :value="10">10</option>
+                    <option :value="25">25</option>
+                    <option :value="50">50</option>
+                </select>
+            </div>
+            <div class="filtros-trabajadores-acciones">
+                <a class="boton boton-chico" href="<?= BASE_URL ?>/trabajadores">Limpiar filtros</a>
+                <button type="submit" class="boton boton-secundario boton-chico">Aplicar</button>
+            </div>
+        </form>
 
         <!-- Tabla trabajadores -->
-        <p class="texto-vacio" v-if="datos.trabajadores.length === 0">No hay trabajadores registrados</p>
-        <p class="texto-vacio" v-else-if="trabajadoresFiltrados.length === 0">Ningun trabajador coincide con los filtros de búsqueda.</p>
-        <div class="tabla-scroll tabla-scroll-vertical" v-else>
+        <?php if ($total === 0): ?>
+        <p class="texto-vacio"><?= $paginacion['buscar'] !== '' || $paginacion['empresa_id'] > 0
+            ? 'Ningún trabajador coincide con los filtros de búsqueda.'
+            : 'No hay trabajadores registrados.' ?></p>
+        <?php else: ?>
+        <div class="tabla-scroll tabla-scroll-vertical">
         <table class="tabla">
             <thead>
                 <tr>
@@ -51,7 +77,7 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $responsa
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="t in trabajadoresFiltrados" :key="t.id">
+                <tr v-for="t in datos.trabajadores" :key="t.id">
                     <td>{{ t.nombres }}</td>
                     <td>{{ t.dni }}</td>
                     <td>{{ t.empresa }}</td>
@@ -67,6 +93,37 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $responsa
             </tbody>
         </table>
         </div>
+        <div class="paginacion-trabajadores">
+            <p>Mostrando <?= ($pagina - 1) * $paginacion['por_pagina'] + 1 ?>–<?= min($pagina * $paginacion['por_pagina'], $total) ?> de <?= $total ?> trabajadores</p>
+            <nav aria-label="Páginas de trabajadores">
+                <?php if ($pagina > 1): ?>
+                    <a class="boton boton-secundario boton-chico" rel="prev" href="<?= htmlspecialchars($urlPagina($pagina - 1)) ?>">Anterior</a>
+                <?php else: ?>
+                    <button type="button" class="boton boton-secundario boton-chico" disabled>Anterior</button>
+                <?php endif; ?>
+                <?php if ($inicio > 1): ?>
+                    <a class="boton boton-secundario boton-chico" aria-label="Ir a la página 1" href="<?= htmlspecialchars($urlPagina(1)) ?>">1</a>
+                    <?php if ($inicio > 2): ?><span aria-hidden="true">…</span><?php endif; ?>
+                <?php endif; ?>
+                <?php for ($numero = $inicio; $numero <= $fin; $numero++): ?>
+                    <?php if ($numero === $pagina): ?>
+                        <span class="boton boton-chico pagina-actual" aria-current="page" aria-label="Página <?= $numero ?>"><?= $numero ?></span>
+                    <?php else: ?>
+                        <a class="boton boton-secundario boton-chico" aria-label="Ir a la página <?= $numero ?>" href="<?= htmlspecialchars($urlPagina($numero)) ?>"><?= $numero ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+                <?php if ($fin < $totalPaginas): ?>
+                    <?php if ($fin < $totalPaginas - 1): ?><span aria-hidden="true">…</span><?php endif; ?>
+                    <a class="boton boton-secundario boton-chico" aria-label="Ir a la página <?= $totalPaginas ?>" href="<?= htmlspecialchars($urlPagina($totalPaginas)) ?>"><?= $totalPaginas ?></a>
+                <?php endif; ?>
+                <?php if ($pagina < $totalPaginas): ?>
+                    <a class="boton boton-secundario boton-chico" rel="next" href="<?= htmlspecialchars($urlPagina($pagina + 1)) ?>">Siguiente</a>
+                <?php else: ?>
+                    <button type="button" class="boton boton-secundario boton-chico" disabled>Siguiente</button>
+                <?php endif; ?>
+            </nav>
+        </div>
+        <?php endif; ?>
         <!-- Modal de sincronización -->
         <dialog ref="refModalSincronizar" @cancel.prevent="cerrarModal">
             <button type="button" class="dialogo-cerrar" aria-label="Cerrar modal" @click="cerrarModal" :disabled="guardando || buscando">&times;</button>
@@ -192,7 +249,8 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $responsa
                                         'trabajadores' => $trabajadores,
                                         'empresas' => $empresas,
                                         'responsables' => $responsables,
-                                        'areas' => $areas
+                                        'areas' => $areas,
+                                        'paginacion' => $paginacion,
                                     ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
     </script>
     <script src="<?= BASE_URL ?>/js/vendor/vue.global.prod.js"></script>

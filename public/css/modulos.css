@@ -605,6 +605,46 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
    número de filtros que Resúmenes. */
 .filtros-historial { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
 
+.filtros-trabajadores-acciones {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    grid-column: 1 / -1;
+}
+
+.paginacion-trabajadores {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.paginacion-trabajadores p { margin: 0; }
+
+.paginacion-trabajadores nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.paginacion-trabajadores .boton {
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.paginacion-trabajadores .pagina-actual {
+    color: var(--color-surface);
+    background: var(--color-navy-700);
+    cursor: default;
+}
+
 .spinner {
     display: inline-block;
     width: 14px;

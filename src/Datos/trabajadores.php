@@ -1,9 +1,39 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 
-function listarTrabajadores(): array
+function filtrosTrabajadores(string $busqueda, int $empresaId): array
+{
+    $condiciones = [];
+    $parametros = [];
+    if ($busqueda !== '') {
+        $texto = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $busqueda) . '%';
+        $condiciones[] = "(t.nombres LIKE ? ESCAPE '!' OR t.dni LIKE ? ESCAPE '!')";
+        $parametros[] = $texto;
+        $parametros[] = $texto;
+    }
+    if ($empresaId > 0) {
+        $condiciones[] = 't.empresa_id = ?';
+        $parametros[] = $empresaId;
+    }
+    return [$condiciones ? ' WHERE ' . implode(' AND ', $condiciones) : '', $parametros];
+}
+
+function contarTrabajadores(string $busqueda = '', int $empresaId = 0): int
+{
+    [$where, $parametros] = filtrosTrabajadores($busqueda, $empresaId);
+    $stmt = obtenerConexion()->prepare(
+        'SELECT COUNT(*) FROM trabajador t
+         JOIN empresa e ON e.id = t.empresa_id
+         JOIN area a ON a.id = t.area_id' . $where
+    );
+    $stmt->execute($parametros);
+    return (int)$stmt->fetchColumn();
+}
+
+function listarTrabajadores(string $busqueda = '', int $empresaId = 0, ?int $limite = null, int $desplazamiento = 0): array
 {
     $pdo = obtenerConexion();
+    [$where, $parametros] = filtrosTrabajadores($busqueda, $empresaId);
     $sql = 
         "SELECT 
             t.id,
@@ -28,9 +58,18 @@ function listarTrabajadores(): array
         JOIN area a ON a.id = t.area_id
         LEFT JOIN cargo c ON c.id = t.cargo_id
         LEFT JOIN usuario uj ON uj.id = t.jefe_usuario_id
-        LEFT JOIN trabajador jefe ON jefe.id = uj.trabajador_id
+        LEFT JOIN trabajador jefe ON jefe.id = uj.trabajador_id" . $where . "
         ORDER BY t.id DESC";
-    $stmt = $pdo->query($sql);
+    if ($limite !== null) {
+        $sql .= ' LIMIT ? OFFSET ?';
+        $parametros[] = max(1, min(100, $limite));
+        $parametros[] = max(0, $desplazamiento);
+    }
+    $stmt = $pdo->prepare($sql);
+    foreach ($parametros as $indice => $valor) {
+        $stmt->bindValue($indice + 1, $valor, is_int($valor) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
     return $stmt->fetchAll();
 }
 
