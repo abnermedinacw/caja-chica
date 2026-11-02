@@ -802,7 +802,7 @@ function vistaVerResumen(
                     Estado: {{ nuevoItemContable.proveedor_estado }} · Condición: {{ nuevoItemContable.proveedor_condicion }}
                 </p>
 
-                <label>Razón social (opcional)</label>
+                <label>Razón social</label>
                 <input type="text" v-model="nuevoItemContable.proveedor_razon_social">
 
                 <label>Sustento (PDF o imagen)</label>

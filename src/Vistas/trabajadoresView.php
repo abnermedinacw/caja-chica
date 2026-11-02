@@ -184,12 +184,12 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $responsa
                     </select>
                     <small>TS no tiene un área laboral asignada. Selecciona la que corresponde.</small>
                 </div>
-
+                <!--
                 <div class="campo" v-if="form.grupos_a_cargo.length">
                     <label>Jefatura reconocida en TS</label>
                     <p>{{ form.grupos_a_cargo.join(', ') }}</p>
                 </div>
-
+                -->
                 <div class="campo" v-if="form.jefe_ts">
                     <label for="jefeTs">Jefe</label>
                     <input id="jefeTs" type="text" :value="form.jefe_nombre + ' · DNI ' + form.jefe_dni" readonly>

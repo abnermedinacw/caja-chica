@@ -47,7 +47,7 @@ function vistaHome(array $fondos, array $resumenes): void
             <h2>Mis Resúmenes</h2>
             <div class="cabecera-mis-resumenes-acciones">
                 <a href="<?= BASE_URL ?>/historial" class="boton boton-secundario">Ver historial</a>
-                <a href="<?= BASE_URL ?>/crear-resumen" class="boton boton-primario"><?= icono('mas') ?> Crear Resumen</a>
+                <a href="<?= BASE_URL ?>/crear-resumen" class="boton boton-primario"><?= icono('mas') ?> Rendir Caja</a>
             </div>
         </div>
         <?php if (empty($resumenes)): ?>
