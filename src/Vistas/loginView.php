@@ -117,7 +117,6 @@ function vistaLogin(?string $error): void
                 </div>
                 <h1 class="marca-titulo">Caja Chica</h1>
                 <p class="marca-descripcion">Gestión de fondos y rendiciones.</p>
-                <p class="marca-juego-ayuda">Haz clic en las monedas</p>
             </section>
 
             <section class="panel-form" aria-labelledby="titulo-login">
