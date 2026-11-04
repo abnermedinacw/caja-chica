@@ -16,7 +16,7 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
         </div>
 
         <section>
-            <h2>Resúmenes pendientes</h2>
+            <h2>Cajas pendientes</h2>
             <?php if (empty($resumenes)): ?>
                 <p class="texto-vacio">No tienes Resúmenes pendientes de aprobación por ahora.</p>
             <?php else: ?>

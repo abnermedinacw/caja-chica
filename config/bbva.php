@@ -1,6 +1,6 @@
 <?php
 return [
-    'tipo_registro_cabecera' => '700',
+    'tipo_registro_cabecera' => '800',
     'tipo_registro_detalle' => '002',
     'moneda' => 'PEN',
     'tipo_proceso' => 'A',

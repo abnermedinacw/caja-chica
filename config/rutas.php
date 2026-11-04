@@ -33,6 +33,7 @@ return[
     'fondos-empresa' => 'fondosEmpresaController.php',
     'actualizar-monto-fondo' => 'actualizarMontoFondoController.php',
     'buscar-trabajador-ts' => 'buscarTrabajadorTsController.php',
+    'buscar-responsable' => 'buscarResponsableController.php',
     'sincronizar-trabajador' => 'sincronizarTrabajadorTsController.php',
     'trabajadores' => 'trabajadoresController.php',
     'perfil' => 'perfilController.php',

@@ -162,9 +162,22 @@ function tieneDecisionesAprobacion(int $usuarioId): bool
     return (bool)$stmt->fetchColumn();
 }
 
-function listarResponsablesActivos(): array
-{
-    return obtenerConexion()->query(
+// Búsqueda acotada de responsables para el autocompletar del alta de trabajador.
+// La empresa preferida solo define el orden (misma matriz primero); no restringe
+// el resultado, porque una jefatura puede pertenecer a otra matriz.
+function buscarResponsablesActivos(
+    string $busqueda,
+    int $empresaPreferida = 0,
+    string $excluirDni = '',
+    int $limite = 20
+): array {
+    $busqueda = trim($busqueda);
+    if ($busqueda === '') return [];
+
+    $limite = max(1, min(50, $limite));
+    $texto = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $busqueda) . '%';
+
+    $stmt = obtenerConexion()->prepare(
         "SELECT
             u.id AS usuario_id,
             t.nombres,
@@ -174,8 +187,41 @@ function listarResponsablesActivos(): array
         JOIN trabajador t ON t.id = u.trabajador_id
         JOIN empresa e ON e.id = t.empresa_id
         WHERE u.estado = 'ACTIVO'
-        ORDER BY t.nombres"
-    )->fetchAll();
+            AND t.dni <> ?
+            AND (t.nombres LIKE ? ESCAPE '!' OR t.dni LIKE ? ESCAPE '!')
+        ORDER BY (t.empresa_id = ?) DESC, t.nombres, t.id
+        LIMIT ?"
+    );
+    $stmt->bindValue(1, $excluirDni, PDO::PARAM_STR);
+    $stmt->bindValue(2, $texto, PDO::PARAM_STR);
+    $stmt->bindValue(3, $texto, PDO::PARAM_STR);
+    $stmt->bindValue(4, $empresaPreferida, PDO::PARAM_INT);
+    $stmt->bindValue(5, $limite, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+// Revalida en servidor el jefe elegido en el selector manual: debe ser un
+// usuario activo y distinto del trabajador que se está registrando.
+function obtenerResponsableJefeValido(int $usuarioId, string $excluirDni = ''): ?array
+{
+    if ($usuarioId <= 0) return null;
+
+    $stmt = obtenerConexion()->prepare(
+        "SELECT
+            u.id AS usuario_id,
+            t.nombres,
+            t.dni,
+            e.razon_social AS empresa
+        FROM usuario u
+        JOIN trabajador t ON t.id = u.trabajador_id
+        JOIN empresa e ON e.id = t.empresa_id
+        WHERE u.id = ?
+            AND u.estado = 'ACTIVO'
+            AND t.dni <> ?"
+    );
+    $stmt->execute([$usuarioId, $excluirDni]);
+    return $stmt->fetch() ?: null;
 }
 
 function obtenerResponsableActivo(int $usuarioId): ?array

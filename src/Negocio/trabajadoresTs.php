@@ -107,7 +107,7 @@ function sincronizarTrabajador(array $formulario, int $creador): array
     $jefeUsuarioId = $datos['jefe_usuario_id'];
     if (!$datos['jefe_ts']) {
         $jefeUsuarioId = (int)($formulario['jefe_usuario_id'] ?? 0);
-        if (!obtenerResponsableActivo($jefeUsuarioId)) {
+        if (!obtenerResponsableJefeValido($jefeUsuarioId, (string)$datos['dni'])) {
             return ['ok' => false, 'error' => 'Selecciona un jefe con usuario activo.'];
         }
     }

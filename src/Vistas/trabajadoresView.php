@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/layout.php';
 
-function vistaTrabajadores(array $trabajadores, array $empresas, array $responsables, array $areas, array $paginacion): void
+function vistaTrabajadores(array $trabajadores, array $empresas, array $areas, array $paginacion): void
 {
     $pagina = $paginacion['pagina'];
     $totalPaginas = $paginacion['total_paginas'];
@@ -195,14 +195,42 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $responsa
                     <input id="jefeTs" type="text" :value="form.jefe_nombre + ' · DNI ' + form.jefe_dni" readonly>
                     <p class="error" v-if="form.error_jefe">{{ form.error_jefe }}</p>
                 </div>
-                <div class="campo" v-else>
-                    <label for="jefeLocal">Jefe<span class="requerido">*</span></label>
-                    <select id="jefeLocal" v-model="form.jefe_usuario_id">
-                        <option :value="null">Selecciona un responsable</option>
-                        <option v-for="j in datos.responsables" :key="j.usuario_id" :value="Number(j.usuario_id)">
-                            {{j.nombres}} - {{ j.dni }} - {{ j.empresa }}
-                        </option>
-                    </select>
+                <div class="campo campo-autocompletar" v-else>
+                    <label for="jefeBusqueda">Jefe<span class="requerido">*</span></label>
+                    <div v-if="jefeSeleccionado" class="trabajador-seleccionado">
+                        <div>
+                            <strong>{{ jefeSeleccionado.nombres }}</strong>
+                            <span>DNI {{ jefeSeleccionado.dni }} · {{ jefeSeleccionado.empresa }}</span>
+                        </div>
+                        <button
+                            type="button"
+                            class="boton-limpiar-archivo"
+                            aria-label="Cambiar jefe"
+                            title="Cambiar jefe"
+                            @click="limpiarJefe">
+                            &times;
+                        </button>
+                    </div>
+                    <template v-else>
+                        <input
+                            type="text"
+                            id="jefeBusqueda"
+                            v-model="busquedaJefe"
+                            @input="programarBusquedaJefe"
+                            @focus="mostrarSugerenciasJefe = true"
+                            @blur="ocultarSugerenciasJefeConRetraso"
+                            placeholder="Busca por DNI o nombre..."
+                            autocomplete="off">
+                        <ul class="sugerencias-trabajador" v-if="mostrarSugerenciasJefe && sugerenciasJefe.length">
+                            <li v-for="j in sugerenciasJefe" :key="j.usuario_id" @mousedown.prevent="elegirJefe(j)">
+                                {{ j.nombres }} — DNI {{ j.dni }} · {{ j.empresa }}
+                            </li>
+                        </ul>
+                        <small v-if="buscandoJefe" class="texto-advertencia">Buscando...</small>
+                        <small v-else-if="busquedaJefe.trim().length >= 2 && !sugerenciasJefe.length" class="texto-advertencia">
+                            Sin responsables activos que coincidan.
+                        </small>
+                    </template>
                 </div>
 
                 <h3>Acceso al sistema</h3>
@@ -248,7 +276,6 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $responsa
                                         'baseUrl' => BASE_URL,
                                         'trabajadores' => $trabajadores,
                                         'empresas' => $empresas,
-                                        'responsables' => $responsables,
                                         'areas' => $areas,
                                         'paginacion' => $paginacion,
                                     ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;

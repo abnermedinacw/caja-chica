@@ -35,7 +35,6 @@ $paginacion = [
 ];
 
 $empresas = listarEmpresas();
-$responsables = listarResponsablesActivos();
 $areas = listarAreas();
 
-vistaTrabajadores($trabajadores, $empresas, $responsables, $areas, $paginacion);
+vistaTrabajadores($trabajadores, $empresas, $areas, $paginacion);

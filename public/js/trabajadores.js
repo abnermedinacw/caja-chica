@@ -4,7 +4,7 @@ const { createApp, ref, computed, watch } = Vue;
 
 createApp({
     setup() {
-        const datos = { baseUrl: '', trabajadores: [], empresas: [], responsables: [], areas: [], paginacion: {}, ...(window.DATOS_INICIALES || {})
+        const datos = { baseUrl: '', trabajadores: [], empresas: [], areas: [], paginacion: {}, ...(window.DATOS_INICIALES || {})
         };
 
         // Filtros
@@ -26,6 +26,16 @@ createApp({
         const errorBusqueda = ref(null);
         const errorGuardado = ref(null);
         const trabajadorEncontrado = ref(false);
+
+        // Autocompletar del jefe manual: busca en servidor, sin precargar
+        // todos los responsables de la empresa.
+        const busquedaJefe = ref('');
+        const mostrarSugerenciasJefe = ref(false);
+        const sugerenciasJefe = ref([]);
+        const buscandoJefe = ref(false);
+        const jefeSeleccionado = ref(null);
+        let temporizadorJefe = null;
+        let peticionJefe = 0;
 
         //datos precargados de la bbdd externa
         function crearFormularioInicial() {
@@ -63,6 +73,71 @@ createApp({
             a => Number(a.empresa_id) === Number(form.value.matriz_id)
         ));
 
+        function reiniciarAutocompletarJefe() {
+            if (temporizadorJefe) {
+                clearTimeout(temporizadorJefe);
+                temporizadorJefe = null;
+            }
+            busquedaJefe.value = '';
+            sugerenciasJefe.value = [];
+            mostrarSugerenciasJefe.value = false;
+            buscandoJefe.value = false;
+            jefeSeleccionado.value = null;
+            peticionJefe++;
+        }
+
+        function programarBusquedaJefe() {
+            mostrarSugerenciasJefe.value = true;
+            if (temporizadorJefe) clearTimeout(temporizadorJefe);
+
+            const termino = busquedaJefe.value.trim();
+            if (termino.length < 2 || !form.value.matriz_id) {
+                sugerenciasJefe.value = [];
+                buscandoJefe.value = false;
+                peticionJefe++;
+                return;
+            }
+
+            temporizadorJefe = setTimeout(buscarJefes, 250);
+        }
+
+        async function buscarJefes() {
+            const termino = busquedaJefe.value.trim();
+            if (termino.length < 2 || !form.value.matriz_id) return;
+
+            const peticionActual = ++peticionJefe;
+            buscandoJefe.value = true;
+            try {
+                const params = new URLSearchParams({
+                    q: termino,
+                    empresa_id: String(form.value.matriz_id),
+                    dni: String(form.value.dni || ''),
+                });
+                const r = await obtenerJson(`${datos.baseUrl}/buscar-responsable?${params.toString()}`);
+                if (peticionActual !== peticionJefe) return;
+                sugerenciasJefe.value = r.ok ? (r.responsables || []) : [];
+            } finally {
+                if (peticionActual === peticionJefe) buscandoJefe.value = false;
+            }
+        }
+
+        function elegirJefe(j) {
+            jefeSeleccionado.value = j;
+            form.value.jefe_usuario_id = Number(j.usuario_id);
+            busquedaJefe.value = '';
+            sugerenciasJefe.value = [];
+            mostrarSugerenciasJefe.value = false;
+        }
+
+        function limpiarJefe() {
+            form.value.jefe_usuario_id = null;
+            reiniciarAutocompletarJefe();
+        }
+
+        function ocultarSugerenciasJefeConRetraso() {
+            setTimeout(() => { mostrarSugerenciasJefe.value = false; }, 150);
+        }
+
         async function buscarPorDni() {
             if (buscando.value || guardando.value || !dniBusqueda.value.trim()) return;
             errorBusqueda.value = null;
@@ -77,6 +152,7 @@ createApp({
                 }
                 form.value = {...crearFormularioInicial(), ...r.datos};
                 trabajadorEncontrado.value = true;
+                reiniciarAutocompletarJefe();
             } finally {
                 buscando.value = false;
             }
@@ -120,6 +196,7 @@ createApp({
             errorBusqueda.value = null;
             errorGuardado.value = null;
             form.value = crearFormularioInicial();
+            reiniciarAutocompletarJefe();
         }
 
         function cerrarModal() {
@@ -134,6 +211,8 @@ createApp({
             mostrarModalSincronizar, refModalSincronizar,
             dniBusqueda, buscando, errorBusqueda, trabajadorEncontrado,
             form, areasDeMatriz, buscarPorDni,
+            busquedaJefe, mostrarSugerenciasJefe, sugerenciasJefe, buscandoJefe, jefeSeleccionado,
+            programarBusquedaJefe, elegirJefe, limpiarJefe, ocultarSugerenciasJefeConRetraso,
             guardando, errorGuardado, guardar, volverABuscar, cerrarModal
         };
     },
