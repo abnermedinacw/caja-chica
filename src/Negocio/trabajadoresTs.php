@@ -68,6 +68,7 @@ function prepararDatosTrabajadorTs(string $dni): array
             'jefe_usuario_id' => $jefeLocal ? (int)$jefeLocal['usuario_id'] : null,
             'error_jefe' => $errorJefe,
             'grupos_a_cargo' => array_column($gruposDirigidos, 'nombre'),
+            'codigo_ts' => trim((string)($ts['platra_codigo'] ?? ''))
         ]];
     } catch (DomainException $e) {
         return ['ok' => false, 'error' => $e->getMessage()];
@@ -137,7 +138,8 @@ function sincronizarTrabajador(array $formulario, int $creador): array
             $cargoId,
             $datos['dni'],
             $datos['nombres'],
-            $datos['cuenta_bbva']
+            $datos['cuenta_bbva'],
+            $datos['codigo_ts'] !== '' ? $datos['codigo_ts'] : null
         );
 
         $usuarioId = crearUsuario(

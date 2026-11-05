@@ -1,6 +1,6 @@
 import { formatearFecha, formatearSoles } from './utils/formatos.js';
 import { coincideEnAlguno, coincideExacto, dentroDeRango } from './utils/filtros.js';
-import { descargarTxtDesdeRespuesta } from './utils/descargar_txt.js';
+import { descargarTxtReporte } from './utils/descargar_txt.js';
 
 const { createApp, ref, computed, watch } = Vue;
 
@@ -161,7 +161,7 @@ createApp({
                 return false;
             }
 
-            await descargarTxtDesdeRespuesta(respuesta, 'DESEMBOLSO_FONDO_BBVA.txt');
+            await descargarTxtReporte(respuesta, 'DESEMBOLSO_FONDO_BBVA.txt', 'REPORTE_DESEMBOLSO_FONDO_BBVA.pdf');
 
             return true;
         }

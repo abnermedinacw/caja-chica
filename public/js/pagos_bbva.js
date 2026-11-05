@@ -3,7 +3,7 @@ import {
     formatearSoles,
     numeroDocumento,
 } from './utils/formatos.js';
-import { descargarTxtDesdeRespuesta } from './utils/descargar_txt.js';
+import { descargarTxtReporte } from './utils/descargar_txt.js';
 
 const {
     createApp,
@@ -306,7 +306,7 @@ createApp({
                     return;
                 }
 
-                await descargarTxtDesdeRespuesta(respuesta, 'DESEMBOLSO_FONDOS_BBVA.txt');
+                await descargarTxtReporte(respuesta, 'DESEMBOLSO_FONDOS_BBVA.txt', 'REPORTE_DESEMBOLSO_FONDOS_BBVA.pdf');
 
                 cerrarConfirmacionDesembolso();
                 fondosSeleccionados.value = [];
@@ -344,7 +344,7 @@ createApp({
                     return;
                 }
 
-                await descargarTxtDesdeRespuesta(respuesta, 'PAGO_CAJA_CHICA_BBVA.txt');
+                await descargarTxtReporte(respuesta, 'PAGO_CAJA_CHICA_BBVA.txt', 'REPORTE_PAGO_CAJA_CHICA_BBVA.pdf');
 
                 cerrarConfirmacionDescarga();
                 seleccionadas.value = [];

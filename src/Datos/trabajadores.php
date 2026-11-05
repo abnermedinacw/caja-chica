@@ -125,16 +125,17 @@ function crearTrabajador(
     ?int $cargoId, 
     string $dni, 
     string $nombres,
-    ?string $cuentaBbva
+    ?string $cuentaBbva,
+    ?string $codigoTs = null
 ): int
 {
     $pdo = obtenerConexion();
     $stmt = $pdo->prepare(
-        "INSERT INTO trabajador (empresa_id, empresa_cliente_id, area_id, cargo_id, dni, nombres, cuenta_bbva, cuenta_bbva_fecha_sincronizacion)
-        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())"
+        "INSERT INTO trabajador (empresa_id, empresa_cliente_id, area_id, cargo_id, codigo_ts, dni, nombres, cuenta_bbva, cuenta_bbva_fecha_sincronizacion)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
     );
 
-    $stmt->execute([$empresaId, $empresaClienteId, $areaId, $cargoId, $dni, $nombres, $cuentaBbva]);
+    $stmt->execute([$empresaId, $empresaClienteId, $areaId, $cargoId, $codigoTs, $dni, $nombres, $cuentaBbva]);
     return (int)$pdo->lastInsertId();
 }
 

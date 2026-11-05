@@ -7,6 +7,7 @@ function obtenerTrabajadorTsPorDni(string $dni): ?array
 	$stmt = $pdoTs->prepare(
 		"SELECT DISTINCT
 			pt.platra_iId AS trabajador_ts_id,
+			pt.platra_vcCodigo AS platra_codigo,
 			cp.con_iId AS contrato_ts_id,
 			pt.conarea_iId AS area_ts_id,
 			per.per_vcDocumento AS dni,

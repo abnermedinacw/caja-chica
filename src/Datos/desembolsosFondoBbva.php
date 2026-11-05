@@ -59,9 +59,11 @@ function bloquearFondosDesembolsoBbva(array $fondosIds): array
     $stmt = $pdo->prepare(
         "SELECT
             f.id,
+            t.codigo_ts AS codigo_planilla,
             f.empresa_id,
             f.monto_asignado AS importe,
             f.estado,
+            f.fecha_asignacion,
             f.fecha_desembolso,
             t.nombres AS trabajador,
             t.dni,

@@ -97,7 +97,16 @@ function bloquearCajasPagosBbva(array $cajasIds): array
             t.id AS trabajador_id,
             t.nombres AS trabajador,
             t.dni,
-            t.cuenta_bbva
+            t.cuenta_bbva,
+            t.codigo_ts AS codigo_planilla,
+            (
+                SELECT MIN(ev.fecha)
+                FROM evento_caja_chica ev
+                JOIN nivel_aprobacion na ON na.id = ev.nivel_id
+                WHERE ev.caja_chica_id = cc.id
+                    AND na.rol_requerido = 'TESORERIA'
+                    AND ev.evento = 'APROBADO'
+            ) AS fecha_visado_tesoreria
         FROM caja_chica cc
         INNER JOIN trabajador t ON t.id = cc.trabajador_id
         WHERE cc.id IN ($marcadores)

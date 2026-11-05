@@ -33,6 +33,9 @@ function construirPagoBbva(array $registro, string $descripcion): array
         'trabajador' => $registro['trabajador'],
         'cuenta_bbva' => $registro['cuenta_bbva'],
         'importe_centimos' => $importeCentimos,
+        'codigo_planilla' => $registro['codigo_planilla'] ?? null,
+        'fecha_visado_tesoreria' => $registro['fecha_visado_tesoreria'] ?? null,
+        'fecha_asignacion' => $registro['fecha_asignacion'] ?? null,
     ];
 }
 
@@ -196,7 +199,29 @@ function generarTxtPagosBbva(
             ? prepararPagosCajasBbva($empresaId, $ids)
             : prepararPagosFondosBbva($empresaId, $ids);
         $prefijo = $origen === 'caja' ? 'PAGO_CAJA_CHICA' : 'DESEMBOLSO_FONDOS';
-        $archivo = crearArchivoTxtBbva($empresa, $pagos, $prefijo);
+        $archivoTxt = crearArchivoTxtBbva($empresa, $pagos, $prefijo);
+
+        require_once __DIR__ . '/generarReporteDesembolsoPdf.php';
+        $fechaFin = date('Y-m-d');
+        if ($origen === 'caja') {
+            $fechasVisado = array_filter(array_column($pagos, 'fecha_visado_tesoreria'));
+            $fechaInicio = $fechasVisado ? min($fechasVisado) : $fechaFin;
+            $tipoDesembolso = 'Desembolso';
+        } else {
+            $fechasAsignacion = array_filter(array_column($pagos, 'fecha_asignacion'));
+            $fechaInicio = $fechasAsignacion ? min($fechasAsignacion) : $fechaFin;
+            $tipoDesembolso = 'Asignación de fondo';
+        }
+
+        $contenidoPdf = generarReporteDesembolsoPdf([
+            'empresa' => $empresa,
+            'pagos' => $pagos,
+            'fechaInicio' => $fechaInicio,
+            'fechaFin' => $fechaFin,
+            'tipoDesembolso' => $tipoDesembolso,
+        ]); 
+
+        $nombrePdf = sprintf('REPORTE_%s_%s.pdf', $prefijo, date('Ymd_His'));
 
         if ($origen === 'caja') {
             marcarTxtDescargado($ids);
@@ -215,7 +240,17 @@ function generarTxtPagosBbva(
 
         $pdo->commit();
 
-        return ['ok' => true, ...$archivo];
+        return [
+            'ok' => true,
+            'txt' => [
+                'contenido' => base64_encode($archivoTxt['contenido']),
+                'nombre_archivo' => $archivoTxt['nombre_archivo']
+            ],
+            'pdf' => [
+                'contenido' => base64_encode($contenidoPdf),
+                'nombre_archivo' => $nombrePdf
+            ]
+        ];
     } catch (DomainException | InvalidArgumentException $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         return ['ok' => false, 'error' => $e->getMessage()];

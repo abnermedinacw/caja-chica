@@ -9,6 +9,16 @@ function responderDescargaBbva(array $resultado): never
         exit;
     }
 
+    if (isset($resultado['txt'], $resultado['pdf'])) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'txt' => $resultado['txt'],
+            'pdf' => $resultado['pdf'],
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     $contenido = $resultado['contenido'];
     header('Content-Type: text/plain; charset=US-ASCII');
     header('Content-Disposition: attachment; filename="' . $resultado['nombre_archivo'] . '"');
