@@ -13,7 +13,7 @@ require_once __DIR__ . '/../Vistas/bandejaAprobadorView.php';
 
 $rol = $_SESSION['rol'];
 $esJefe = !empty($_SESSION['es_jefe']);
-$esAprobadorPorRol = in_array($rol, ['CONTABILIDAD', 'GERENCIA', 'TESORERIA'], true);
+$esAprobadorPorRol = in_array($rol, ['CONTABILIDAD', 'CONTROL', 'GERENCIA', 'TESORERIA'], true);
 
 if (!$esAprobadorPorRol && !$esJefe) {
     $trabajadorId = $_SESSION['trabajador_id'];

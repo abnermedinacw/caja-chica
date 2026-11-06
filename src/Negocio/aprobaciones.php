@@ -17,15 +17,37 @@ function calcularNivelDeParada(
     $orden = $ordenDesde;
 
     while ($nivel = obtenerNivelPorOrden($orden)) {
-        $encargadoId = $nivel['rol_requerido'] === 'JEFATURA'
-            ? ($jefe ? (int)$jefe['usuario_id'] : null)
-            : ($nivel['aprobador_usuario_id'] !== null ? (int)$nivel['aprobador_usuario_id'] : null);
+        if ($nivel['rol_requerido'] === 'JEFATURA') {
+            $encargadoId = $jefe ? (int)$jefe['usuario_id'] : null;
+            if ($encargadoId === null) return $nivel;
+            $nivelCubierto = $encargadoId === $solicitanteId || in_array($encargadoId, $aprobadoresPrevios, true);
+            if (!$nivelCubierto) return $nivel;
 
-        // Si no hay una asignación de todas formas no se debe intepretar como un nivel aprobado automaticamente
-        if ($encargadoId === null) return $nivel;
-        $nivelCubierto = $encargadoId === $solicitanteId || in_array($encargadoId, $aprobadoresPrevios, true);
+            registrarAutovalidacionNivel(
+                $resumenId,
+                (int)$nivel['id'],
+                $encargadoId
+            );
+            $aprobadoresPrevios[] = $encargadoId;
+            $orden++;
+            continue;
+        }
 
-        if (!$nivelCubierto) return $nivel;
+        $encargados = obtenerEncargadosNivel((int)$nivel['id']);
+        if (empty($encargados)) {
+            return $nivel;
+        }
+
+        $encargadosIds = array_map('intval', array_column($encargados, 'id'));
+        $disponibles = array_diff($encargadosIds, array_merge([$solicitanteId], $aprobadoresPrevios));
+
+        if (!empty($disponibles)) {
+            return $nivel;
+        }
+
+        $encargadoId = in_array($solicitanteId, $encargadosIds, true)
+            ? $solicitanteId
+            : (array_values(array_intersect($aprobadoresPrevios, $encargadosIds))[0] ?? $encargadosIds[0]);
 
         registrarAutovalidacionNivel(
             $resumenId,
@@ -49,10 +71,10 @@ function aprobarResumen(int $resumenId, int $usuarioId, string $rolUsuario): arr
         bloquearResumen($resumenId);
         $resumen = obtenerResumenAprobador($resumenId);
         if (!$resumen || $resumen['estado_general'] !== 'EN_REVISION') {
-            return ['ok' => false, 'error' => 'Este Resumen no está pendiente de aprobación.'];
+            return ['ok' => false, 'error' => 'Este Resumen ya fue atendido por otro aprobador.'];
         }
         if (!puedeAtenderNivel($resumen, $usuarioId, $rolUsuario)) {
-            return ['ok' => false, 'error' => 'No tienes permiso para aprobar este nivel.'];
+            return ['ok' => false, 'error' => 'Este nivel ya fue atendido por otro usuario o no tienes permiso para aprobarlo.'];
         }
         registrarEventoResumen($resumenId, 'APROBADO', $usuarioId, (int)$resumen['nivel_actual_id']);
 
@@ -69,21 +91,31 @@ function aprobarResumen(int $resumenId, int $usuarioId, string $rolUsuario): arr
 
 function rechazarResumen(int $resumenId, int $usuarioId, string $rolUsuario, string $motivo): array
 {
-    $resumen = obtenerResumenAprobador($resumenId);
-    if (!$resumen || $resumen['estado_general'] !== 'EN_REVISION') {
-        return ['ok' => false, 'error' => 'Este Resumen no está pendiente de aprobación.'];
-    }
-    if (!puedeAtenderNivel($resumen, $usuarioId, $rolUsuario)) {
-        return ['ok' => false, 'error' => 'No tienes permiso para rechazar este nivel.'];
-    }
     if (trim($motivo) === '') {
         return ['ok' => false, 'error' => 'Indica motivo de rechazo.'];
     }
 
-    registrarEventoResumen($resumenId, 'RECHAZADO', $usuarioId, (int)$resumen['nivel_actual_id'], $motivo);
+    $pdo = obtenerConexion();
+    $pdo->beginTransaction();
+    try {
+        bloquearResumen($resumenId);
+        $resumen = obtenerResumenAprobador($resumenId);
+        if (!$resumen || $resumen['estado_general'] !== 'EN_REVISION') {
+            return ['ok' => false, 'error' => 'Este Resumen ya fue atendido por otro aprobador.'];
+        }
+        if (!puedeAtenderNivel($resumen, $usuarioId, $rolUsuario)) {
+            return ['ok' => false, 'error' => 'Este nivel ya fue atendido por otro usuario o no tienes permiso para rechazarlo.'];
+        }
 
-    $nivelDestino = calcularSiguienteEscalonCascada((int)$resumen['nivel_actual_orden'], $resumenId);
-    actualizarEstadoResumen($resumenId, 'RECHAZADO', $nivelDestino ? (int)$nivelDestino['id'] : null, $motivo);
+        registrarEventoResumen($resumenId, 'RECHAZADO', $usuarioId, (int)$resumen['nivel_actual_id'], $motivo);
+
+        $nivelDestino = calcularSiguienteEscalonCascada((int)$resumen['nivel_actual_orden'], $resumenId);
+        actualizarEstadoResumen($resumenId, 'RECHAZADO', $nivelDestino ? (int)$nivelDestino['id'] : null, $motivo);
+
+        $pdo->commit();
+    } finally {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+    }
 
     return ['ok' => true];
 }
@@ -100,18 +132,27 @@ function calcularSiguienteEscalonCascada(int $ordenActual, int $resumenId): ?arr
 
 function continuarCascadaRechazo(int $resumenId, int $usuarioId, string $rolUsuario): array
 {
-    $resumen = obtenerResumenAprobador($resumenId);
-    if (!$resumen || $resumen['estado_general'] !== 'RECHAZADO' || $resumen['nivel_actual_id'] === null) {
-        return ['ok' => false, 'error' => 'Este Resumen no tiene un rechazo pendiente de revisión.'];
-    }
-    if (!puedeAtenderNivel($resumen, $usuarioId, $rolUsuario)) {
-        return ['ok' => false, 'error' => 'No te corresponde revisar este rechazo.'];
-    }
+    $pdo = obtenerConexion();
+    $pdo->beginTransaction();
+    try {
+        bloquearResumen($resumenId);
+        $resumen = obtenerResumenAprobador($resumenId);
+        if (!$resumen || $resumen['estado_general'] !== 'RECHAZADO' || $resumen['nivel_actual_id'] === null) {
+            return ['ok' => false, 'error' => 'Este Resumen no tiene un rechazo pendiente de revisión o ya fue atendido.'];
+        }
+        if (!puedeAtenderNivel($resumen, $usuarioId, $rolUsuario)) {
+            return ['ok' => false, 'error' => 'Este nivel ya fue atendido por otro usuario o no te corresponde revisar este rechazo.'];
+        }
 
-    registrarEventoResumen($resumenId, 'RECHAZO_REVISADO', $usuarioId, (int)$resumen['nivel_actual_id']);
+        registrarEventoResumen($resumenId, 'RECHAZO_REVISADO', $usuarioId, (int)$resumen['nivel_actual_id']);
 
-    $nivelDestino = calcularSiguienteEscalonCascada((int)$resumen['nivel_actual_orden'], $resumenId);
-    actualizarEstadoResumen($resumenId, 'RECHAZADO', $nivelDestino ? (int)$nivelDestino['id'] : null, $resumen['motivo_rechazo']);
+        $nivelDestino = calcularSiguienteEscalonCascada((int)$resumen['nivel_actual_orden'], $resumenId);
+        actualizarEstadoResumen($resumenId, 'RECHAZADO', $nivelDestino ? (int)$nivelDestino['id'] : null, $resumen['motivo_rechazo']);
+
+        $pdo->commit();
+    } finally {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+    }
 
     return ['ok' => true];
 }
@@ -134,12 +175,25 @@ function esJefeDelTrabajador(int $usuarioId, array $resumen): bool
 
 function puedeAtenderNivel(array $resumen, int $usuarioId, string $rolUsuario): bool
 {
-    if ($resumen['nivel_actual_rol'] === 'JEFATURA') return esJefeDelTrabajador($usuarioId, $resumen);
+    if ((int)($resumen['solicitante_usuario_id'] ?? 0) === $usuarioId) {
+        return false;
+    }
 
-    return (int)($resumen['nivel_actual_aprobador_id'] ?? 0) === $usuarioId
-        && $resumen['nivel_actual_rol'] === $rolUsuario
-        && $resumen['nivel_actual_aprobador_estado'] === 'ACTIVO'
-        && $resumen['nivel_actual_aprobador_rol'] === $rolUsuario;
+    if (empty($resumen['nivel_actual_rol']) || empty($resumen['nivel_actual_id'])) {
+        return false;
+    }
+
+    if ($resumen['nivel_actual_rol'] === 'JEFATURA') {
+        return esJefeDelTrabajador($usuarioId, $resumen);
+    }
+
+    if ($resumen['nivel_actual_rol'] !== $rolUsuario) {
+        return false;
+    }
+
+    $encargados = obtenerEncargadosNivel((int)$resumen['nivel_actual_id']);
+    $idsEncargados = array_map('intval', array_column($encargados, 'id'));
+    return in_array($usuarioId, $idsEncargados, true);
 }
 
 function puedeVerDocumentosResumen(

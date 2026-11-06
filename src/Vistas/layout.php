@@ -62,7 +62,7 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
     $nombreUsuario = $_SESSION['trabajador_nombre'] ?? $_SESSION['username'];
     $inicialUsuario = mb_strtoupper(mb_substr($nombreUsuario, 0, 1));
     $etiquetasRol = [
-        'SOLICITANTE' => 'Solicitante', 'TESORERIA' => 'Tesorería', 'CONTABILIDAD' => 'Contabilidad', 'GERENCIA' => 'Gerencia', 'ADMIN' => 'Administrador',
+        'SOLICITANTE' => 'Solicitante', 'TESORERIA' => 'Tesorería', 'CONTABILIDAD' => 'Contabilidad', 'CONTROL' => 'Control', 'GERENCIA' => 'Gerencia', 'ADMIN' => 'Administrador',
     ];
     $etiquetaCargo = $_SESSION['cargo_nombre'] ?? ($etiquetasRol[$_SESSION['rol'] ?? ''] ?? '');
 
@@ -103,7 +103,7 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
             </nav>
             <div class="barra-lateral-usuario">
                 <a href="<?= BASE_URL ?>/perfil" class="usuario-chip usuario-chip-enlace" title="Ver mi perfil">
-                    <span class="usuario-avatar"><?= htmlspecialchars($inicialUsuario) ?></span>
+                    <!-- <span class="usuario-avatar"><?= htmlspecialchars($inicialUsuario) ?></span> -->
                     <span class="usuario-datos">
                         <span class="usuario-nombre"><?= htmlspecialchars($nombreUsuario) ?></span>
                         <span class="usuario-cargo"><?= htmlspecialchars($etiquetaCargo) ?></span>

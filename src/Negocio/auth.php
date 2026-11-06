@@ -56,7 +56,7 @@ function esAdministrador():bool
 
 function puedeVerHistorialAprobaciones(): bool
 {
-    return in_array($_SESSION['rol'] ?? '', ['CONTABILIDAD', 'GERENCIA', 'TESORERIA'], true)
+    return in_array($_SESSION['rol'] ?? '', ['CONTABILIDAD', 'CONTROL', 'GERENCIA', 'TESORERIA'], true)
         || !empty($_SESSION['es_jefe'])
         || tieneDecisionesAprobacion((int)($_SESSION['usuario_id'] ?? 0));
 }

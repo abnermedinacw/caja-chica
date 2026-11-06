@@ -24,7 +24,7 @@ try {
 }
 
 if ($resultado['ok']) {
-    notificar($resumenId, 'APROBADO');
+    notificar($resumenId, 'APROBADO', (int)$_SESSION['usuario_id']);
 
     header('Location: ' . BASE_URL . '/home');
     exit;

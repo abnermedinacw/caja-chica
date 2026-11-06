@@ -18,7 +18,7 @@ try {
 
 if ($resultado['ok']) {
     require_once __DIR__ . '/../Negocio/notificacionCorreo.php';
-    notificar($resumenId, 'ENVIADO');
+    notificar($resumenId, 'ENVIADO', (int)$usuarioId);
 }
 
 header('Content-type: application/json');

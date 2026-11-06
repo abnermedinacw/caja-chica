@@ -263,15 +263,19 @@ function listarResumenesPorUsuario(int $usuarioId, string $rol): array
         JOIN empresa e ON e.id = cc.empresa_id
         JOIN trabajador t ON t.id = cc.trabajador_id
         JOIN nivel_aprobacion na ON na.id = cc.nivel_actual_id
-        JOIN usuario u ON u.id = na.aprobador_usuario_id
-        WHERE na.aprobador_usuario_id = ?
-            AND na.rol_requerido = ?
-            AND u.estado = 'ACTIVO'
+        WHERE na.rol_requerido = ?
+            AND EXISTS (
+                SELECT 1 FROM usuario u
+                WHERE u.id = ?
+                    AND u.rol = na.rol_requerido
+                    AND u.estado = 'ACTIVO'
+                    AND (u.trabajador_id IS NULL OR u.trabajador_id <> cc.trabajador_id)
+            )
             AND cc.estado_general IN ('EN_REVISION', 'RECHAZADO')
         ORDER BY cc.fecha_emision, cc.id"
     );
 
-    $stmt->execute([$usuarioId, $rol]);
+    $stmt->execute([$rol, $usuarioId]);
     return $stmt->fetchAll();
 }
 
@@ -428,10 +432,7 @@ function obtenerResumenAprobador(int $id): ?array
             na.nombre AS nivel_actual_nombre,
             na.orden AS nivel_actual_orden,
             na.rol_requerido AS nivel_actual_rol,
-            na.codigo AS nivel_actual_codigo,
-            na.aprobador_usuario_id AS nivel_actual_aprobador_id,
-            encargado.estado AS nivel_actual_aprobador_estado,
-            encargado.rol AS nivel_actual_aprobador_rol
+            na.codigo AS nivel_actual_codigo
         FROM caja_chica cc
         JOIN empresa e ON e.id = cc.empresa_id
         JOIN trabajador t ON t.id = cc.trabajador_id
@@ -439,7 +440,6 @@ function obtenerResumenAprobador(int $id): ?array
         JOIN usuario u ON u.trabajador_id = t.id
         LEFT JOIN fondo f ON f.id = cc.fondo_id
         LEFT JOIN nivel_aprobacion na ON na.id = cc.nivel_actual_id
-        LEFT JOIN usuario encargado ON encargado.id = na.aprobador_usuario_id
         WHERE cc.id = ?";
 
     $stmt = $pdo->prepare($sql);

@@ -9,7 +9,7 @@ $resumenId = (int)($_POST['resumen_id'] ?? 0);
 $resultado = continuarCascadaRechazo($resumenId, (int)$_SESSION['usuario_id'], $_SESSION['rol']);
 
 if ($resultado['ok']) {
-    notificar($resumenId, 'RECHAZO_REVISADO');
+    notificar($resumenId, 'RECHAZO_REVISADO', (int)$_SESSION['usuario_id']);
 
     header('Location: ' . BASE_URL . '/home');
     exit;

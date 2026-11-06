@@ -127,14 +127,14 @@ function obtenerUsuarioNotificacion(int $usuarioId): ?array
         "SELECT
             u.id,
             u.correo,
-            t.nombres
+            COALESCE(t.nombres, u.username) AS nombres
         FROM usuario u
-        INNER JOIN trabajador t ON t.id = u.trabajador_id
+        LEFT JOIN trabajador t ON t.id = u.trabajador_id
         WHERE u.id = ? AND u.estado = 'ACTIVO'"
     );
 
     $stmt->execute([$usuarioId]);
-    return $stmt->fetch() ?:null;
+    return $stmt->fetch() ?: null;
 }
 
 function esJefe(int $usuarioId): bool

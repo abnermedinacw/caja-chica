@@ -10,7 +10,7 @@ $motivo = trim($_POST['motivo'] ?? '');
 $resultado = rechazarResumen($resumenId, (int)$_SESSION['usuario_id'], $_SESSION['rol'], $motivo);
 
 if ($resultado['ok']) {
-    notificar($resumenId, 'RECHAZADO');
+    notificar($resumenId, 'RECHAZADO', (int)$_SESSION['usuario_id']);
 
     header('Location: ' . BASE_URL . '/home');
     exit;
