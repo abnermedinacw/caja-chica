@@ -206,11 +206,11 @@ function generarTxtPagosBbva(
         if ($origen === 'caja') {
             $fechasVisado = array_filter(array_column($pagos, 'fecha_visado_tesoreria'));
             $fechaInicio = $fechasVisado ? min($fechasVisado) : $fechaFin;
-            $tipoDesembolso = 'Desembolso';
+            $tipoDesembolso = 'REEMBOLSO';
         } else {
             $fechasAsignacion = array_filter(array_column($pagos, 'fecha_asignacion'));
             $fechaInicio = $fechasAsignacion ? min($fechasAsignacion) : $fechaFin;
-            $tipoDesembolso = 'Asignación de fondo';
+            $tipoDesembolso = 'ASIGNACIÓN DE FONDO';
         }
 
         $contenidoPdf = generarReporteDesembolsoPdf([

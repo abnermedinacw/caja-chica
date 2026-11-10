@@ -72,7 +72,7 @@ function vistaPerfil(array $perfil, ?array $mensaje): void
         <h2>Correo de notificaciones</h2>
         <p class="perfil-correo-actual"><?= htmlspecialchars($perfil['correo'] ?: 'No registrado', ENT_QUOTES, 'UTF-8') ?></p>
         <details class="perfil-editor" data-editor-correo>
-            <summary class="boton boton-secundario">Modificar correo</summary>
+            <summary class="boton boton-secundario">Editar correo</summary>
             <form action="<?= BASE_URL ?>/actualizar-correo" method="POST" class="formulario-perfil">
                 <div class="campo">
                     <label for="correo">Nuevo correo</label>
@@ -99,7 +99,7 @@ function vistaPerfil(array $perfil, ?array $mensaje): void
             </strong>
         </div>
         <details class="perfil-editor perfil-editar-cuenta" data-editor-cuenta>
-            <summary class="boton boton-secundario">Modificar cuenta</summary>
+            <summary class="boton boton-secundario">Editar cuenta</summary>
             <form action="<?= BASE_URL ?>/actualizar-cuenta-bbva" method="POST" class="formulario-perfil">
                 <div class="campo">
                     <label for="cuenta_bbva">Nueva cuenta BBVA</label>

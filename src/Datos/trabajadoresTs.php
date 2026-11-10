@@ -32,7 +32,15 @@ function obtenerTrabajadorTsPorDni(string $dni): ?array
 
 	$stmt->execute([$dni]);
 	$filas = $stmt->fetchAll();
-	if (count($filas) > 1 ) throw new DomainException('Hay más de una asignación activa para este DNI. Revisar contrato.');
+	// Caso gerencia
+	$dniExcepcion = '25830144';
+
+	if (count($filas) > 1) {
+		if ($dni === $dniExcepcion && count($filas) === 2) return $filas[0]; 
+
+		// Para cualquier otro caso o si tiene más de 2, lanzamos el error
+		throw new DomainException('Hay más de una asignación activa para este DNI. Revisar contrato.');
+	}
 	return $filas[0] ?? null;
 }
 

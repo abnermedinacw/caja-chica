@@ -110,45 +110,36 @@ function notificar(int $resumenId, string $accion, ?int $exceptoUsuarioId = null
             }
 
             $numeroRevision = 0;
-            $mensajeRevision = '';
             if ($hayNivelPendiente) {
                 $numeroRevision = contarRevisionesUsuarioNivel(
                     $resumenId,
                     $destinatarioId,
                     (int)$resumen['nivel_actual_id']
                 ) + 1;
-                $ordinal = [1 => 'primera', 2 => 'segunda', 3 => 'tercera'][$numeroRevision]
-                    ?? "{$numeroRevision}.ª";
-                $mensajeRevision = "Esta es la {$ordinal} vez que te corresponde revisar esta Caja Chica{$enEtapa}.";
             }
 
             if ($resumen['estado_general'] === 'VISADO') {
-                $titulo = 'Caja Chica aprobada';
-                $situacion = 'La revisión de tu Caja Chica ha finalizado.';
+                $situacion = 'La rendición ha sido aprobada y el flujo ha finalizado:';
             } elseif ($resumen['estado_general'] === 'RECHAZADO' && !$hayNivelPendiente) {
-                $titulo = 'Caja Chica rechazada';
-                $situacion = 'Tu Caja Chica fue observada. Abre el resumen para revisar el motivo y corregirlo.';
+                $situacion = 'Tu rendición fue rechazada. Revisa las observaciones.';
             } elseif ($resumen['estado_general'] === 'RECHAZADO') {
-                $titulo = 'Observación pendiente';
-                $situacion = "Hay una observación que requiere tu revisión{$enEtapa}.";
+                $situacion = "Hay una observación que requiere tu revisión.";
             } elseif ($accion === 'ENVIADO' && $numeroRevision > 1) {
-                $titulo = 'Rendición corregida';
-                $situacion = "El solicitante corrigió y necesita tu revisión{$enEtapa}.";
+                $situacion = "El solicitante corrigió y necesita tu revisión.";
             } elseif ($accion === 'ENVIADO') {
-                $titulo = 'Caja Chica pendiente de revisión';
                 $situacion = "Se envió una rendición que requiere tu revisión{$enEtapa}.";
             } else {
-                $titulo = 'Caja Chica pendiente de revisión';
                 $situacion = "La rendición avanzó y ahora requiere tu revisión{$enEtapa}.";
             }
 
             $asunto = "Caja Chica: Resumen N°{$numero} - {$empresa}";
-            $texto = "{$titulo}\n\n"
+            $texto = "Hola, {$destinatario['nombres']}:\n\n"
                 . "{$situacion}\n\n"
-                . ($mensajeRevision !== '' ? "{$mensajeRevision}\n\n" : '')
                 . "Resumen: N.º {$numero}\n"
                 . "Empresa: {$empresa}\n"
                 . "Solicitante: {$solicitante}\n";
+
+            if ($hayNivelPendiente && $numeroRevision > 0) $texto .= "Revisión: {$numeroRevision}ª revisión\n";
 
             if ($correoPrueba !== '') {
                 $correoPrevisto = $correoOriginal !== '' ? $correoOriginal : 'sin correo registrado';
@@ -156,20 +147,19 @@ function notificar(int $resumenId, string $accion, ?int $exceptoUsuarioId = null
                     . " ({$correoPrevisto}).\n";
             }
 
-            $html = '<div style="max-width:600px;font-family:Arial,sans-serif;'
-                . 'color:#14283f;line-height:1.55">'
-                . '<h2 style="margin:0 0 12px;font-size:20px;color:#14283f">'
-                . $seguro($titulo)
-                . '</h2>'
-                . '<p style="margin:0 0 18px">' . $seguro($situacion) . '</p>'
-                . ($mensajeRevision !== ''
-                    ? '<p style="margin:0 0 18px">' . $seguro($mensajeRevision) . '</p>'
-                    : '')
-                . '<p style="margin:0 0 18px;color:#4c5a6a">'
-                . '<strong>Resumen:</strong> N.º ' . $seguro($numero)
-                . '<br><strong>Empresa:</strong> ' . $seguro($empresa)
-                . '<br><strong>Solicitante:</strong> ' . $seguro($solicitante)
-                . '</p>';
+            $html = '<div style="max-width:600px;font-family:Arial,sans-serif;color:#14283f;line-height:1.5;font-size:14px;">'
+                . '<p style="margin:0 0 14px;">Hola, <strong>' . $seguro($destinatario['nombres']) . '</strong>:</p>'
+                . '<p style="margin:0 0 14px;">' . $seguro($situacion) . '</p>'
+                . '<ul style="margin:0 0 20px 0;padding-left:20px;color:#14283f;">'
+                . '<li style="margin-bottom:6px;"><strong>Empresa:</strong> ' . $seguro($empresa) . '</li>'
+                . '<li style="margin-bottom:6px;"><strong>N.º de Caja:</strong> ' . $seguro($numero) . '</li>'
+                . '<li style="margin-bottom:6px;"><strong>Solicitante:</strong> ' . $seguro($solicitante) . '</li>';
+
+            if ($hayNivelPendiente && $numeroRevision > 0) {
+                $html .= '<li style="margin-bottom:6px;"><strong>Revisión:</strong> ' . $seguro("{$numeroRevision}.ª revisión") . '</li>';
+            }
+
+            $html .= '</ul>';
 
             if ($correoPrueba !== '') {
                 $html .= '<p style="color:#4c5a6a;font-size:13px">Prueba: destinatario previsto: '
@@ -187,7 +177,7 @@ function notificar(int $resumenId, string $accion, ?int $exceptoUsuarioId = null
                     . 'style="padding:12px 20px;border-radius:6px">'
                     . '<a href="' . $seguro($url) . '" '
                     . 'style="color:#14283f;text-decoration:none;font-size:14px;'
-                    . 'font-weight:bold">Abrir resumen</a>'
+                    . 'font-weight:bold">Ver</a>'
                     . '</td></tr></table>';
             }
 

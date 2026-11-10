@@ -13,7 +13,9 @@ try {
 } catch (Throwable $e) {
     error_log('Envio de resumen ' . $resumenId . ': ' . $e->getMessage());
     http_response_code(500);
-    $resultado = ['ok' => false, 'error' => 'No se pudo completar el envío. Inténtalo de nuevo.'];
+    $resultado = ['ok' => false, 'error' => 'No se pudo completar el envío. Inténtalo de nuevo.', 'debug_error' => $e->getMessage(),
+        'debug_line' => $e->getLine(),
+        'debug_file' => $e->getFile()];
 }
 
 if ($resultado['ok']) {

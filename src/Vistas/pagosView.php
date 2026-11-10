@@ -246,7 +246,7 @@ function vistaPagos(
             <div class="pagos-bbva-cabecera fondos-reactivacion-cabecera">
                 <div>
                     <h3>Desembolsos de fondos registrados</h3>
-                    <p>Solo se pueden reactivar fondos que aún no tienen resúmenes.</p>
+                    <p>-</p>
                 </div>
                 <button type="button" class="boton boton-primario" :disabled="fondosSeleccionadosReactivar.length === 0 || reactivandoFondos" @click="abrirReactivacionFondos">
                     Reactivar fondos ({{ fondosSeleccionadosReactivar.length }})
