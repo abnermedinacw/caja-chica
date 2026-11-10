@@ -456,8 +456,46 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     font-size: 14px;
     line-height: 1;
     opacity: .55;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
 }
 .chip-adjunto-quitar:hover { opacity: 1; color: #b91c1c; }
+
+.adjunto-seleccionado-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 4px 0 8px;
+    padding: 4px 8px;
+    background: var(--color-navy-50);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--color-navy-800);
+}
+.adjunto-seleccionado-fila span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.boton-quitar-adjunto-modal {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color .15s ease, background-color .15s ease;
+}
+.boton-quitar-adjunto-modal:hover {
+    color: #b91c1c;
+    background: #fee2e2;
+}
 
 .boton-adjuntar {
     font-size: 12.5px;

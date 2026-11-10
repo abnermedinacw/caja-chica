@@ -45,6 +45,7 @@ export function crearPanelDocumento(opciones) {
     const refXmlItem = ref(null);
     const editandoIdx = ref(null); // null = añadiendo; número = editando ese índice
     const estadoItemAlAbrir = ref('');
+    const adjuntosItemEditando = ref([]); // adjuntos ya guardados del item que se está editando
 
     function serializarItemActual() {
         return JSON.stringify(nuevoItem.value);
@@ -63,12 +64,24 @@ export function crearPanelDocumento(opciones) {
             Object.keys(vacio).forEach(campo => { copia[campo] = it[campo] ?? vacio[campo]; });
             nuevoItem.value = copia;
             editandoIdx.value = idx;
+            adjuntosItemEditando.value = [...(it.adjuntos || [])];
         } else {
             nuevoItem.value = itemVacio();
             editandoIdx.value = null;
+            adjuntosItemEditando.value = [];
         }
         estadoItemAlAbrir.value = serializarItemActual();
         modalItemAbierto.value = true;
+    }
+
+    function limpiarArchivoNuevo() {
+        archivoNuevoItem.value = null;
+        if (refArchivoItem.value) refArchivoItem.value.value = '';
+    }
+
+    function limpiarXmlNuevo() {
+        xmlNuevoItem.value = null;
+        if (refXmlItem.value) refXmlItem.value.value = '';
     }
 
     function cerrarModalItem() {
@@ -80,6 +93,29 @@ export function crearPanelDocumento(opciones) {
         editandoIdx.value = null;
         estadoItemAlAbrir.value = '';
         modalItemAbierto.value = false;
+        adjuntosItemEditando.value = [];
+    }
+
+    async function quitarAdjuntoExistente(adjuntoId) {
+        if (!panel.value.documento?.id) return;
+        const resultado = await enviarFormulario(
+            datos.baseUrl + endpoints.quitarAdjunto,
+            { [campoIdAdjunto]: panel.value.documento.id, adjunto_id: adjuntoId }
+        );
+        if (!resultado.ok) {
+            mostrarAviso(resultado.error || 'No se pudo quitar el adjunto.');
+            return;
+        }
+        // Quitar del modal
+        adjuntosItemEditando.value = adjuntosItemEditando.value.filter(a => a.id !== adjuntoId);
+        // Quitar del item en el panel
+        const idx = editandoIdx.value;
+        if (idx !== null && panel.value.items[idx]) {
+            panel.value.items[idx] = {
+                ...panel.value.items[idx],
+                adjuntos: (panel.value.items[idx].adjuntos || []).filter(a => a.id !== adjuntoId)
+            };
+        }
     }
 
     function cancelarModalItem() {
@@ -239,8 +275,10 @@ export function crearPanelDocumento(opciones) {
         panel, total, editar, cancelar,
         modalItemAbierto, refModalItem, nuevoItem,
         archivoNuevoItem, refArchivoItem, xmlNuevoItem, refXmlItem, editandoIdx,
+        limpiarArchivoNuevo, limpiarXmlNuevo,
         abrirModalItem, mensajeValidacionItem, puedeGuardarItem,
         guardarItem, quitarItem, persistir, guardarDocumento,
-        quitarDocumento, cancelarModalItem
+        quitarDocumento, cancelarModalItem,
+        adjuntosItemEditando, quitarAdjuntoExistente
     };
 }

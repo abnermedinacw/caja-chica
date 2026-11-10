@@ -58,6 +58,7 @@ createApp({
             endpoints: {
                 guardar: '/guardar-documento-contable',
                 subirAdjunto: '/subir-adjunto-comprobante',
+                quitarAdjunto: '/quitar-adjunto-comprobante',
                 quitarDocumento: '/quitar-documento-contable',
             },
             campoIdAdjunto: 'documento_id',
@@ -90,6 +91,7 @@ createApp({
             endpoints: {
                 guardar: '/guardar-documento-no-contable',
                 subirAdjunto: '/subir-adjunto-no-contable',
+                quitarAdjunto: '/quitar-adjunto-no-contable',
                 quitarDocumento: '/quitar-documento-no-contable',
             },
             campoIdAdjunto: 'documento_id',
@@ -116,6 +118,7 @@ createApp({
             endpoints: {
                 guardar: '/guardar-planilla',
                 subirAdjunto: '/subir-adjunto-planilla',
+                quitarAdjunto: '/quitar-adjunto-planilla',
                 quitarDocumento: '/quitar-planilla',
             },
             campoIdAdjunto: 'planilla_id',
@@ -395,6 +398,7 @@ createApp({
 
             contable: panelContable.panel, totalContable: panelContable.total,
             nuevoItemContable: panelContable.nuevoItem, archivoNuevoItemContable: panelContable.archivoNuevoItem,
+            limpiarArchivoNuevoContable: panelContable.limpiarArchivoNuevo, limpiarXmlNuevoContable: panelContable.limpiarXmlNuevo,
             refArchivoContable: panelContable.refArchivoItem, modalItemContableAbierto: panelContable.modalItemAbierto,
             xmlNuevoItemContable: panelContable.xmlNuevoItem, refXmlContable: panelContable.refXmlItem,
             refModalItemContable: panelContable.refModalItem, editandoIdxContable: panelContable.editandoIdx,
@@ -404,9 +408,12 @@ createApp({
             guardarItemContable: panelContable.guardarItem, quitarItemContable: panelContable.quitarItem,
             guardarDocumentoContable: panelContable.guardarDocumento, quitarDocumentoContable: panelContable.quitarDocumento,
             verificandoRuc, verificarRuc, alCambiarRucContable,
+            adjuntosItemEditandoContable: panelContable.adjuntosItemEditando,
+            quitarAdjuntoExistenteContable: panelContable.quitarAdjuntoExistente,
 
             noContable: panelNoContable.panel, totalNoContable: panelNoContable.total,
             nuevoItemNoContable: panelNoContable.nuevoItem, archivoNuevoItemNoContable: panelNoContable.archivoNuevoItem,
+            limpiarArchivoNuevoNoContable: panelNoContable.limpiarArchivoNuevo, limpiarXmlNuevoNoContable: panelNoContable.limpiarXmlNuevo,
             refArchivoNoContable: panelNoContable.refArchivoItem, modalItemNoContableAbierto: panelNoContable.modalItemAbierto,
             xmlNuevoItemNoContable: panelNoContable.xmlNuevoItem, refXmlNoContable: panelNoContable.refXmlItem,
             refModalItemNoContable: panelNoContable.refModalItem, editandoIdxNoContable: panelNoContable.editandoIdx,
@@ -414,15 +421,20 @@ createApp({
             abrirModalItemNoContable: panelNoContable.abrirModalItem,
             guardarItemNoContable: panelNoContable.guardarItem, quitarItemNoContable: panelNoContable.quitarItem,
             guardarDocumentoNoContable: panelNoContable.guardarDocumento, quitarDocumentoNoContable: panelNoContable.quitarDocumento,
+            adjuntosItemEditandoNoContable: panelNoContable.adjuntosItemEditando,
+            quitarAdjuntoExistenteNoContable: panelNoContable.quitarAdjuntoExistente,
 
             planilla: panelPlanilla.panel, totalPlanilla: panelPlanilla.total,
             nuevoItemPlanilla: panelPlanilla.nuevoItem, archivoNuevoItemPlanilla: panelPlanilla.archivoNuevoItem,
+            limpiarArchivoNuevoPlanilla: panelPlanilla.limpiarArchivoNuevo,
             refArchivoPlanilla: panelPlanilla.refArchivoItem, modalItemPlanillaAbierto: panelPlanilla.modalItemAbierto,
             refModalItemPlanilla: panelPlanilla.refModalItem, editandoIdxPlanilla: panelPlanilla.editandoIdx,
             editarPlanilla, cancelarPlanilla,
             abrirModalItemPlanilla: panelPlanilla.abrirModalItem,
             guardarItemPlanilla: panelPlanilla.guardarItem, quitarItemPlanilla: panelPlanilla.quitarItem,
             guardarPlanilla: panelPlanilla.guardarDocumento, enlazarPlanillaExistente, quitarPlanilla: panelPlanilla.quitarDocumento,
+            adjuntosItemEditandoPlanilla: panelPlanilla.adjuntosItemEditando,
+            quitarAdjuntoExistentePlanilla: panelPlanilla.quitarAdjuntoExistente,
 
             formatearSoles, formatearFecha, numeroDocumento,
 

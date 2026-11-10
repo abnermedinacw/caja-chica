@@ -249,7 +249,7 @@ function vistaVerResumen(
                                         </a>
                                     </div>
                                     <p v-if="esEditable" class="texto-vacio texto-ayuda-guardar" style="text-align:center;">
-                                        <?= icono('clip') ?> Cada ítem requiere sustento. Se recomienda PDF. 
+                                        <?= icono('clip') ?> Cada ítem requiere sustento (PDF). 
                                     </p>
                                 </template>
                                 <template v-else>
@@ -394,7 +394,7 @@ function vistaVerResumen(
                                         </a>
                                     </div>
                                     <p v-if="esEditable" class="texto-vacio texto-ayuda-guardar" style="text-align:center;">
-                                        <?= icono('clip') ?> Cada ítem requiere sustento. Se recomienda PDF. 
+                                        <?= icono('clip') ?> Cada ítem requiere sustento (PDF). 
                                     </p>
                                 </template>
                                 <template v-else>
@@ -805,13 +805,27 @@ function vistaVerResumen(
                 <label>Razón social</label>
                 <input type="text" v-model="nuevoItemContable.proveedor_razon_social">
 
+                <template v-if="editandoIdxContable !== null && adjuntosItemEditandoContable.length">
+                    <label>Adjuntos guardados</label>
+                    <div v-for="adj in adjuntosItemEditandoContable" :key="adj.id" class="adjunto-seleccionado-fila">
+                        <span>{{ adj.tipo_archivo === 'XML' ? '📄 XML: ' : '📎 ' }}{{ adj.nombre_archivo }}</span>
+                        <button type="button" class="boton-quitar-adjunto-modal" title="Quitar adjunto" @click="quitarAdjuntoExistenteContable(adj.id)">✕</button>
+                    </div>
+                </template>
+
                 <label>Sustento (PDF o imagen)</label>
                 <input type="file" ref="refArchivoContable" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemContable = $event.target.files[0] || null">
-                <p class="texto-vacio" v-if="archivoNuevoItemContable">Archivo: {{ archivoNuevoItemContable.name }}</p>
+                <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemContable">
+                    <span>📎 {{ archivoNuevoItemContable.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoContable">✕</button>
+                </div>
 
                 <label>Archivo XML (opcional)</label>
                 <input type="file" ref="refXmlContable" accept="application/xml,text/xml,.xml" @change="xmlNuevoItemContable = $event.target.files[0] || null">
-                <p class="texto-vacio" v-if="xmlNuevoItemContable">XML: {{ xmlNuevoItemContable.name }}</p>
+                <div class="adjunto-seleccionado-fila" v-if="xmlNuevoItemContable">
+                    <span>📄 {{ xmlNuevoItemContable.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar XML" @click="limpiarXmlNuevoContable">✕</button>
+                </div>
                 <p class="error" v-if="mensajeValidacionItemContable">{{ mensajeValidacionItemContable }}</p>
                 <div class="acciones-modal">
                     <button type="button" class="boton boton-secundario" @click="cancelarModalItemContable">Cancelar</button>
@@ -845,13 +859,27 @@ function vistaVerResumen(
                 <label>Observaciones (opcional)</label>
                 <input type="text" v-model="nuevoItemNoContable.observaciones">
 
+                <template v-if="editandoIdxNoContable !== null && adjuntosItemEditandoNoContable.length">
+                    <label>Adjuntos guardados</label>
+                    <div v-for="adj in adjuntosItemEditandoNoContable" :key="adj.id" class="adjunto-seleccionado-fila">
+                        <span>{{ adj.tipo_archivo === 'XML' ? '📄 XML: ' : '📎 ' }}{{ adj.nombre_archivo }}</span>
+                        <button type="button" class="boton-quitar-adjunto-modal" title="Quitar adjunto" @click="quitarAdjuntoExistenteNoContable(adj.id)">✕</button>
+                    </div>
+                </template>
+
                 <label>Sustento (PDF o imagen)</label>
                 <input type="file" ref="refArchivoNoContable" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemNoContable = $event.target.files[0] || null">
-                <p class="texto-vacio" v-if="archivoNuevoItemNoContable">Archivo: {{ archivoNuevoItemNoContable.name }}</p>
+                <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemNoContable">
+                    <span>📎 {{ archivoNuevoItemNoContable.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoNoContable">✕</button>
+                </div>
 
                 <label>Archivo XML (opcional)</label>
                 <input type="file" ref="refXmlNoContable" accept="application/xml,text/xml,.xml" @change="xmlNuevoItemNoContable = $event.target.files[0] || null">
-                <p class="texto-vacio" v-if="xmlNuevoItemNoContable">XML: {{ xmlNuevoItemNoContable.name }}</p>
+                <div class="adjunto-seleccionado-fila" v-if="xmlNuevoItemNoContable">
+                    <span>📄 {{ xmlNuevoItemNoContable.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar XML" @click="limpiarXmlNuevoNoContable">✕</button>
+                </div>
 
                 <div class="acciones-modal">
                     <button type="button" class="boton boton-secundario" @click="cancelarModalItemNoContable">Cancelar</button>
@@ -889,9 +917,20 @@ function vistaVerResumen(
                 <label>Observación de evidencia (opcional)</label>
                 <input type="text" v-model="nuevoItemPlanilla.observacion_evidencia">
 
+                <template v-if="editandoIdxPlanilla !== null && adjuntosItemEditandoPlanilla.length">
+                    <label>Adjuntos guardados</label>
+                    <div v-for="adj in adjuntosItemEditandoPlanilla" :key="adj.id" class="adjunto-seleccionado-fila">
+                        <span>📎 {{ adj.nombre_archivo }}</span>
+                        <button type="button" class="boton-quitar-adjunto-modal" title="Quitar adjunto" @click="quitarAdjuntoExistentePlanilla(adj.id)">✕</button>
+                    </div>
+                </template>
+
                 <label>Adjunto (opcional: PDF o imagen)</label>
                 <input type="file" ref="refArchivoPlanilla" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemPlanilla = $event.target.files[0] || null">
-                <p class="texto-vacio" v-if="archivoNuevoItemPlanilla">Archivo: {{ archivoNuevoItemPlanilla.name }}</p>
+                <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemPlanilla">
+                    <span>📎 {{ archivoNuevoItemPlanilla.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoPlanilla">✕</button>
+                </div>
 
                 <div class="acciones-modal">
                     <button type="button" class="boton boton-secundario" @click="cancelarModalItemPlanilla">Cancelar</button>
