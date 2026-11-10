@@ -1,7 +1,8 @@
-const { ref, computed, watch } = Vue;
+﻿const { ref, computed, watch } = Vue;
 import { enviarFormulario } from '../utils/api.js';
 
 const archivosPendientes = {};
+const archivosGuardados = {};
 let siguienteTempId = 1;
 function nuevoTempId() {
     return 'tmp_' + (siguienteTempId++);
@@ -65,6 +66,15 @@ export function crearPanelDocumento(opciones) {
             nuevoItem.value = copia;
             editandoIdx.value = idx;
             adjuntosItemEditando.value = [...(it.adjuntos || [])];
+
+            const tempId = it._tempId;
+            const archivosGuardadosTmp = tempId ? (archivosGuardados[tempId] || null) : null;
+            const archivosPendientesTmp = tempId ? (archivosPendientes[tempId] || null) : null;
+            const archivosRestaurar = archivosGuardadosTmp || archivosPendientesTmp;
+            if (archivosRestaurar) {
+                if (archivosRestaurar.evidencia) archivoNuevoItem.value = archivosRestaurar.evidencia;
+                if (archivosRestaurar.xml) xmlNuevoItem.value = archivosRestaurar.xml;
+            }
         } else {
             nuevoItem.value = itemVacio();
             editandoIdx.value = null;
@@ -238,6 +248,7 @@ export function crearPanelDocumento(opciones) {
                         };
                     }
 
+                    archivosGuardados[tempId] = { ...archivos };
                     delete archivos[clave];
                 }
 

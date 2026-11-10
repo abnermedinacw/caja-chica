@@ -121,9 +121,15 @@ function notificar(int $resumenId, string $accion, ?int $exceptoUsuarioId = null
             if ($resumen['estado_general'] === 'VISADO') {
                 $situacion = 'La rendición ha sido aprobada y el flujo ha finalizado:';
             } elseif ($resumen['estado_general'] === 'RECHAZADO' && !$hayNivelPendiente) {
-                $situacion = 'Tu rendición fue rechazada. Revisa las observaciones.';
+                $motivoRechazo = trim((string)($resumen['motivo_rechazo'] ?? ''));
+            $situacion = $motivoRechazo !== ''
+                ? "Tu rendición fue rechazada. Motivo: {$motivoRechazo}"
+                : 'Tu rendición fue rechazada. Revisa las observaciones.';
             } elseif ($resumen['estado_general'] === 'RECHAZADO') {
-                $situacion = "Hay una observación que requiere tu revisión.";
+                $motivoRechazo = trim((string)($resumen['motivo_rechazo'] ?? ''));
+            $situacion = $motivoRechazo !== ''
+                ? "Hay una observación que requiere tu revisión. Motivo: {$motivoRechazo}"
+                : "Hay una observación que requiere tu revisión.";
             } elseif ($accion === 'ENVIADO' && $numeroRevision > 1) {
                 $situacion = "El solicitante corrigió y necesita tu revisión.";
             } elseif ($accion === 'ENVIADO') {

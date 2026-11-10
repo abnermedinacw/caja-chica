@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/layout.php';
 
 function vistaVerResumen(
@@ -813,15 +813,15 @@ function vistaVerResumen(
                     </div>
                 </template>
 
-                <label>Sustento (PDF o imagen)</label>
-                <input type="file" ref="refArchivoContable" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemContable = $event.target.files[0] || null">
+                <label>Sustento (PDF)</label>
+                <input type="file" ref="refArchivoContable" :disabled="!!archivoNuevoItemContable || (editandoIdxContable !== null && adjuntosItemEditandoContable.some(a => a.tipo_archivo === 'EVIDENCIA'))" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemContable = $event.target.files[0] || null">
                 <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemContable">
                     <span>📎 {{ archivoNuevoItemContable.name }}</span>
                     <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoContable">✕</button>
                 </div>
 
-                <label>Archivo XML (opcional)</label>
-                <input type="file" ref="refXmlContable" accept="application/xml,text/xml,.xml" @change="xmlNuevoItemContable = $event.target.files[0] || null">
+                <label>Archivo XML</label>
+                <input type="file" ref="refXmlContable" :disabled="!!xmlNuevoItemContable || (editandoIdxContable !== null && adjuntosItemEditandoContable.some(a => a.tipo_archivo === 'XML'))" accept="application/xml,text/xml,.xml" @change="xmlNuevoItemContable = $event.target.files[0] || null">
                 <div class="adjunto-seleccionado-fila" v-if="xmlNuevoItemContable">
                     <span>📄 {{ xmlNuevoItemContable.name }}</span>
                     <button type="button" class="boton-quitar-adjunto-modal" title="Quitar XML" @click="limpiarXmlNuevoContable">✕</button>
@@ -867,15 +867,15 @@ function vistaVerResumen(
                     </div>
                 </template>
 
-                <label>Sustento (PDF o imagen)</label>
-                <input type="file" ref="refArchivoNoContable" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemNoContable = $event.target.files[0] || null">
+                <label>Sustento (PDF)</label>
+                <input type="file" ref="refArchivoNoContable" :disabled="!!archivoNuevoItemNoContable || (editandoIdxNoContable !== null && adjuntosItemEditandoNoContable.some(a => a.tipo_archivo === 'EVIDENCIA'))" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemNoContable = $event.target.files[0] || null">
                 <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemNoContable">
                     <span>📎 {{ archivoNuevoItemNoContable.name }}</span>
                     <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoNoContable">✕</button>
                 </div>
 
-                <label>Archivo XML (opcional)</label>
-                <input type="file" ref="refXmlNoContable" accept="application/xml,text/xml,.xml" @change="xmlNuevoItemNoContable = $event.target.files[0] || null">
+                <label>Archivo XML (Opcional)</label>
+                <input type="file" ref="refXmlNoContable" :disabled="!!xmlNuevoItemNoContable || (editandoIdxNoContable !== null && adjuntosItemEditandoNoContable.some(a => a.tipo_archivo === 'XML'))" accept="application/xml,text/xml,.xml" @change="xmlNuevoItemNoContable = $event.target.files[0] || null">
                 <div class="adjunto-seleccionado-fila" v-if="xmlNuevoItemNoContable">
                     <span>📄 {{ xmlNuevoItemNoContable.name }}</span>
                     <button type="button" class="boton-quitar-adjunto-modal" title="Quitar XML" @click="limpiarXmlNuevoNoContable">✕</button>
@@ -925,8 +925,8 @@ function vistaVerResumen(
                     </div>
                 </template>
 
-                <label>Adjunto (opcional: PDF o imagen)</label>
-                <input type="file" ref="refArchivoPlanilla" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemPlanilla = $event.target.files[0] || null">
+                <label>Adjunto (PDF o Imagen)</label>
+                <input type="file" ref="refArchivoPlanilla" :disabled="!!archivoNuevoItemPlanilla || (editandoIdxPlanilla !== null && adjuntosItemEditandoPlanilla.length > 0)" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemPlanilla = $event.target.files[0] || null">
                 <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemPlanilla">
                     <span>📎 {{ archivoNuevoItemPlanilla.name }}</span>
                     <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoPlanilla">✕</button>

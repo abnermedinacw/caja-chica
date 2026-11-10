@@ -69,7 +69,7 @@ function vistaPerfil(array $perfil, ?array $mensaje): void
         </div>
     </section>
     <section class="ficha perfil-contacto">
-        <h2>Correo de notificaciones</h2>
+        <h2>Correo</h2>
         <p class="perfil-correo-actual"><?= htmlspecialchars($perfil['correo'] ?: 'No registrado', ENT_QUOTES, 'UTF-8') ?></p>
         <details class="perfil-editor" data-editor-correo>
             <summary class="boton boton-secundario">Editar correo</summary>

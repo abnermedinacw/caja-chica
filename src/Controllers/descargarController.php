@@ -74,8 +74,9 @@ $tiposMime = [
 $extension = strtolower(pathinfo($rutaCompleta, PATHINFO_EXTENSION));
 $mime = $tiposMime[$extension] ?? 'application/octet-stream';
 
+$disposition = ($extension === 'xml') ? 'attachment' : 'inline';
 header('Content-type: ' . $mime);
-header('Content-Disposition: inline; filename="'. basename($adjunto['nombre_archivo']) .'"');
+header('Content-Disposition: ' . $disposition . '; filename="'. basename($adjunto['nombre_archivo']) .'"');
 header('Content-Length: ' . filesize($rutaCompleta));
 readfile($rutaCompleta);
 exit;
