@@ -6,11 +6,11 @@ function obtenerConexionTs(): PDO
         return $pdoTs;
     }
 
-    $host = 'localhost';
-    $puerto = '3306';
-    $bd = 'tsoluciona';
-    $usuario = 'root';
-    $password = '';
+    $host = getenv('DB_TS_HOST') ?: (getenv('DB_HOST') ?: 'localhost');
+    $puerto = getenv('DB_TS_PORT') ?: (getenv('DB_PORT') ?: '3306');
+    $bd = getenv('DB_TS_DATABASE') ?: 'tsoluciona';
+    $usuario = getenv('DB_TS_USERNAME') ?: (getenv('DB_USERNAME') ?: 'root');
+    $password = getenv('DB_TS_PASSWORD') !== false ? getenv('DB_TS_PASSWORD') : (getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : '');
 
     $dsn = "mysql:host=$host;port=$puerto;dbname=$bd;charset=utf8mb4";
 

@@ -11,11 +11,11 @@ function obtenerConexion(): PDO
         return $pdo;
     }
 
-    $host = 'localhost';
-    $puerto = '3306';
-    $bd = 'caja_chica';
-    $usuario = 'root';
-    $password = '';
+    $host = getenv('DB_HOST') ?: 'localhost';
+    $puerto = getenv('DB_PORT') ?: '3306';
+    $bd = getenv('DB_DATABASE') ?: (getenv('DB_NAME') ?: 'caja_chica');
+    $usuario = getenv('DB_USERNAME') ?: (getenv('DB_USER') ?: 'root');
+    $password = getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : (getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 
     $dsn = "mysql:host=$host;port=$puerto;dbname=$bd;charset=utf8mb4";
 
