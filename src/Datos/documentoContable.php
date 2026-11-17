@@ -69,6 +69,19 @@ function enlazarDocumentoContableAResumen(int $documentoId, int $resumenId): voi
     $stmt->execute([$resumenId, $documentoId]);
 }
 
+function actualizarCabeceraDocumentoContable(
+    int $id,
+    string $periodoInicio,
+    string $periodoFin,
+    string $fechaRendicion
+): void {
+    $pdo = obtenerConexion();
+    $stmt = $pdo->prepare(
+        "UPDATE documento_contable SET periodo_inicio = ?, periodo_fin = ?, fecha_rendicion = ? WHERE id = ?"
+    );
+    $stmt->execute([$periodoInicio, $periodoFin, $fechaRendicion, $id]);
+}
+
 function obtenerDetalleDocumentoContable(int $documentoId): array
 {
     $pdo = obtenerConexion();

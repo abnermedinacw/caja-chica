@@ -63,6 +63,7 @@ function guardarDocumentoNoContable(
 
        if ($existente) {
         $documentoId = (int)$existente['id'];
+        actualizarCabeceraDocumentoNoContable($documentoId, $periodoInicio, $periodoFin, $fechaRendicion);
         $idsExistentes = obtenerDetallesIdsDocumentoNoContable($documentoId);
        } else {
         $numero = sgteNumeroDocumentoNoContable($trabajadorId);

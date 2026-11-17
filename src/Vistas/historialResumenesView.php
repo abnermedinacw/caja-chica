@@ -62,6 +62,7 @@ function vistaHistorialResumenes(array $resumenes): void
                     <th>Periodo</th>
                     <th>Total egresos</th>
                     <th>Estado</th>
+                    <th>Nivel actual</th>
                     <th></th>
                 </tr>
             </thead>
@@ -72,6 +73,7 @@ function vistaHistorialResumenes(array $resumenes): void
                     <td>{{ formatearFecha(r.periodo_inicio) }} - {{ formatearFecha(r.periodo_fin) }}</td>
                     <td>{{ formatearSoles(r.total_egresos) }}</td>
                     <td><span class="estado" :class="'estado-'+ r.estado_general.toLowerCase()">{{ r.estado_general }}</span></td>
+                    <td>{{ r.nivel_actual_nombre || '-' }}</td>
                     <td><a :href="datos.baseUrl + '/ver-resumen?id=' + r.id + '&amp;origen=historial'" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
                 </tr>
             </tbody>

@@ -30,6 +30,19 @@ function crearDocumentoNoContable(
     return (int)$pdo->lastInsertId();
 }
 
+function actualizarCabeceraDocumentoNoContable(
+    int $id,
+    string $periodoInicio,
+    string $periodoFin,
+    string $fechaRendicion
+): void {
+    $pdo = obtenerConexion();
+    $stmt = $pdo->prepare(
+        "UPDATE documento_no_contable SET periodo_inicio = ?, periodo_fin = ?, fecha_rendicion = ? WHERE id = ?"
+    );
+    $stmt->execute([$periodoInicio, $periodoFin, $fechaRendicion, $id]);
+}
+
 function obtenerDocumentoNoContablePorResumen(int $resumenId): ?array
 {
     $pdo = obtenerConexion();
