@@ -54,7 +54,7 @@ createApp({
             tipo: '',
             monto_asignado: '',
             fecha_asignacion: hoy,
-            generar_txt: true
+            generar_txt: false
         });
         const error = ref(null);
         const guardando = ref(false);
@@ -70,7 +70,7 @@ createApp({
             mostrarModalAsignar.value = false;
             error.value = null;
             fondoCreadoId.value = null;
-            form.value = { empresa_id: '', trabajador_id: '', tipo: '', monto_asignado: '', fecha_asignacion: hoy, generar_txt: true};
+            form.value = { empresa_id: '', trabajador_id: '', tipo: '', monto_asignado: '', fecha_asignacion: hoy, generar_txt: false};
             busquedaTrabajador.value = '';
         }
 

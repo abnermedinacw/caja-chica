@@ -29,8 +29,10 @@ export async function descargarTxtReporte(respuesta, nombreTxt, nombrePdf) {
 
         // Reporte pdf
         if (data.pdf?.contenido) {
+            await new Promise(r => setTimeout(r, 400));
             const blobPdf = base64ToBlob(data.pdf.contenido, 'application/pdf');
             descargarBlob(blobPdf, data.pdf.nombre_archivo || nombrePdf);
+            await new Promise(r => setTimeout(r, 400));
         }
         return;
     }
