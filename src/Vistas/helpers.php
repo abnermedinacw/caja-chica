@@ -33,6 +33,10 @@ function resolverRegresoResumen(?string $origen, string $modo): array
             'url' => BASE_URL . '/historial-aprobaciones',
             'texto' => 'Volver al historial de aprobaciones',
         ],
+        'admin-resumenes' => [
+            'url' => BASE_URL . '/admin-resumenes',
+            'texto' => 'Volver a resúmenes',
+        ],
     ];
 
     $predeterminado = $modo === 'APROBACION'

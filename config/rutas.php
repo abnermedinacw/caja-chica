@@ -48,5 +48,8 @@ return[
     'actualizar-cuenta-bbva' => 'actualizarCuentaBbvaController.php',
     'actualizar-correo' => 'actualizarCorreoController.php',
     'generar-txt-fondos' => 'generarTxtFondosController.php',
-    'reactivar-txt-fondos' => 'reactivarTxtFondosController.php'
+    'reactivar-txt-fondos' => 'reactivarTxtFondosController.php',
+    'admin-resumenes' => 'adminResumenesController.php',
+    'anular-resumen' => 'anularResumenController.php',
+    'anular-fondo' => 'anularFondoController.php'
 ];

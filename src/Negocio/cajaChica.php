@@ -67,6 +67,13 @@ function crearResumen(
             throw new RuntimeException('Trabajador no encontrado.');
         }
 
+        if ($fondoId !== null && $fondo['tipo'] === 'NO_RECURRENTE') {
+            $fondoBloqueado = bloquearFondoPorId($fondoId);
+            if (!$fondoBloqueado || $fondoBloqueado['estado'] !== 'ACTIVO' || tieneResumenActivoEnFondo($fondoId)) {
+                throw new DomainException('Este fondo no recurrente ya tiene un Resumen asignado o dejó de estar activo.');
+            }
+        }
+
         $numero = sgteNumeroResumen($trabajadorId, $empresaId);
         $resumenId = crearBorradorResumen(
             $trabajadorId, $empresaId, $fondoId, $numero,
@@ -76,6 +83,9 @@ function crearResumen(
         $pdo->commit();
 
         return ['ok' => true, 'id' => $resumenId];
+    } catch (DomainException $e) {
+        $pdo->rollBack();
+        return ['ok' => false, 'error' => $e->getMessage()];
     } catch (Throwable $e) {
         $pdo->rollBack();
         return ['ok' => false, 'error' => 'No se pudo crear el Resumen. Inténtalo de nuevo.'];
@@ -132,6 +142,9 @@ function registrarSaldoFinal(int $resumenId, array $resumen): void
     $saldoFinal = (float)$resumen['saldo_inicial'] - (float)$resumen['total_egresos'];
     $esRecurrente = $resumen['fondo_tipo'] === 'RECURRENTE';
     cerrarResumen($resumenId, $saldoFinal, $esRecurrente, $esRecurrente ? date('Y-m-d H:i:s') : null);
+    if ($resumen['fondo_tipo'] === 'NO_RECURRENTE' && !empty($resumen['fondo_id'])) {
+        cerrarFondoNoRecurrente((int)$resumen['fondo_id']);
+    }
 }
 
 function liquidarResumen(int $resumenId, int $usuarioId): array
@@ -191,4 +204,49 @@ function editarCabeceraResumen(
         $fechaEmision
     );
     return ['ok' => true, 'mensaje' => 'Editado correctamente'];
+}
+
+/**
+ * Anula manualmente un Resumen desde administración, liberando el saldo
+ * comprometido de su fondo y registrando el evento de auditoría.
+ */
+function anularResumenAdmin(int $resumenId, int $usuarioId, string $motivo): array
+{
+    $motivo = trim($motivo);
+    if ($resumenId <= 0) {
+        return ['ok' => false, 'error' => 'Resumen inválido.'];
+    }
+    if ($motivo === '') {
+        return ['ok' => false, 'error' => 'Indica el motivo de la anulación.'];
+    }
+    if (mb_strlen($motivo) > 255) {
+        return ['ok' => false, 'error' => 'El motivo no puede superar los 255 caracteres.'];
+    }
+
+    $pdo = obtenerConexion();
+    $pdo->beginTransaction();
+    try {
+        bloquearResumen($resumenId);
+        $resumen = obtenerResumenAprobador($resumenId);
+        if (!$resumen) {
+            return ['ok' => false, 'error' => 'Resumen no encontrado.'];
+        }
+        if ($resumen['estado_general'] === 'ANULADO') {
+            return ['ok' => false, 'error' => 'Este Resumen ya fue anulado.'];
+        }
+        if ((int)($resumen['txt_bbva_descargado'] ?? 0) === 1) {
+            return ['ok' => false, 'error' => 'No se puede anular un Resumen cuyo TXT BBVA ya fue descargado.'];
+        }
+
+        actualizarEstadoResumen($resumenId, 'ANULADO', null, null);
+        registrarEventoResumen($resumenId, 'ANULADO', $usuarioId, null, $motivo);
+        if ($resumen['fondo_tipo'] === 'NO_RECURRENTE' && !empty($resumen['fondo_id'])) {
+            reabrirFondoNoRecurrente((int)$resumen['fondo_id']);
+        }
+
+        $pdo->commit();
+        return ['ok' => true];
+    } finally {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+    }
 }

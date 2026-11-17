@@ -17,10 +17,13 @@ createApp({
             datos.fondos.filter(f => String(f.empresa_id) === String(empresaId.value))
         );
 
-        // Cambiar de empresa invalida cualquier fondo que ya estuviera
-        // elegido de la empresa anterior — si no se limpia, se podría enviar
-        // un fondo_id que no pertenece a la empresa recién seleccionada.
-        watch(empresaId, () => { fondoId.value = ''; });
+        // Al cambiar de empresa: si tiene fondos asignados, pre-selecciona el
+        // primero (el usuario igual puede cambiarlo o elegir "Sin fondo");
+        // si no tiene, limpia cualquier fondo de la empresa anterior.
+        watch(empresaId, () => {
+            const fondos = fondosDeEmpresa.value;
+            fondoId.value = fondos.length > 0 ? fondos[0].fondo_id : '';
+        });
 
         const fondoSeleccionado = computed(() =>
             datos.fondos.find(f => String(f.fondo_id) === String(fondoId.value))

@@ -1,6 +1,7 @@
 import { formatearFecha, formatearSoles } from './utils/formatos.js';
 import { coincideEnAlguno, coincideExacto, dentroDeRango } from './utils/filtros.js';
 import { descargarTxtReporte } from './utils/descargar_txt.js';
+import { enviarFormulario } from './utils/api.js';
 
 const { createApp, ref, computed, watch } = Vue;
 
@@ -214,6 +215,45 @@ createApp({
             }
         }
 
+        // ---------- Modal "Anular fondo" ----------
+        const mostrarModalAnular = ref(false);
+        const refModalAnular = ref(null);
+        const fondoAnulando = ref(null);
+        const errorAnular = ref(null);
+        const anulandoFondo = ref(false);
+
+        watch(mostrarModalAnular, (abierto) => { abierto ? refModalAnular.value?.showModal() : refModalAnular.value?.close(); });
+
+        function abrirModalAnular(fondo) {
+            fondoAnulando.value = fondo;
+            errorAnular.value = null;
+            mostrarModalAnular.value = true;
+        }
+
+        function cerrarModalAnular() {
+            if (anulandoFondo.value) return;
+            mostrarModalAnular.value = false;
+            fondoAnulando.value = null;
+            errorAnular.value = null;
+        }
+
+        async function confirmarAnularFondo() {
+            if (!fondoAnulando.value || anulandoFondo.value) return;
+            errorAnular.value = null;
+            anulandoFondo.value = true;
+
+            const resultado = await enviarFormulario(datos.baseUrl + '/anular-fondo', {
+                fondo_id: fondoAnulando.value.fondo_id,
+            });
+
+            anulandoFondo.value = false;
+            if (!resultado.ok) {
+                errorAnular.value = resultado.error || 'No se pudo anular el fondo.';
+                return;
+            }
+            window.location.reload();
+        }
+
         return {
             datos, hoy,
             mostrarFiltros, hayFiltrosActivos, limpiarFiltros,
@@ -221,6 +261,8 @@ createApp({
             mostrarModalAsignar, refModalAsignar, cerrarModalAsignar, form, error, guardando, fondoCreadoId, asignar,
             mostrarModalEditar, refModalEditar, fondoEditando, montoEditar, errorEditar, guardandoEditar,
             abrirModalEditar, cerrarModalEditar, actualizarMonto,
+            refModalAnular, fondoAnulando, errorAnular, anulandoFondo,
+            abrirModalAnular, cerrarModalAnular, confirmarAnularFondo,
             busquedaTrabajador, mostrarSugerencias, sugerenciasTrabajador, trabajadorSeleccionado, elegirTrabajador, ocultarSugerenciasConRetraso,
             formatearFecha, formatearSoles, quitarTrabajadorSeleccionado
         };

@@ -29,61 +29,64 @@ function obtenerFirmaGerencia(int $usuarioId, int $empresaId): ?array
     $pdo = obtenerConexion();
 
     $stmt = $pdo->prepare(
-        "SELECT 
-            id, 
-            ruta_imagen,
-            fecha_registro,
-            fecha_actualizacion
-        FROM firma_digital
-        WHERE tipo = 'GERENCIA'
-            AND usuario_id = ?
-            AND empresa_id = ?
-        ORDER BY id DESC
-        LIMIT 1"
-    );
-
-    $stmt->execute([$usuarioId, $empresaId]);
-    return $stmt->fetch() ?: null;
-}
-
-// Contabilidad no le pertenece a un usuario especifico ni empresa
-// Se valida por empresaId en caso las rubricas en un futuro sean por empresa
-function obtenerFirmaContabilidad(int $empresaId): ?array 
-{
-    $pdo = obtenerConexion();
-
-    $stmt = $pdo->prepare(
-        "SELECT 
+        "SELECT
             id,
             ruta_imagen,
             fecha_registro,
             fecha_actualizacion
         FROM firma_digital
-        WHERE tipo = 'CONTABILIDAD' 
-            AND usuario_id IS NULL
+        WHERE tipo = 'GERENCIA'
+            AND (usuario_id = ? OR usuario_id IS NULL)
+            AND empresa_id = ?
+        ORDER BY
+            CASE WHEN usuario_id = ? THEN 0 ELSE 1 END,
+            id DESC
+        LIMIT 1"
+    );
+
+    $stmt->execute([$usuarioId, $empresaId, $usuarioId]);
+    return $stmt->fetch() ?: null;
+}
+
+// Busca primero la rúbrica asignada al usuario aprobador (CONTABILIDAD o CONTROL)
+// y, si no tiene una específica, usa una rúbrica general del área (usuario_id IS NULL).
+function obtenerFirmaContabilidad(int $usuarioId, int $empresaId): ?array
+{
+    $pdo = obtenerConexion();
+
+    $stmt = $pdo->prepare(
+        "SELECT
+            id,
+            ruta_imagen,
+            fecha_registro,
+            fecha_actualizacion
+        FROM firma_digital
+        WHERE tipo = 'CONTABILIDAD'
+            AND (usuario_id = ? OR usuario_id IS NULL)
             AND (empresa_id = ? OR empresa_id IS NULL)
-        ORDER BY 
+        ORDER BY
+            CASE WHEN usuario_id = ? THEN 0 ELSE 1 END,
             CASE WHEN empresa_id = ? THEN 0 ELSE 1 END,
             id DESC
         LIMIT 1"
     );
 
-    $stmt->execute([$empresaId, $empresaId]);
+    $stmt->execute([$usuarioId, $empresaId, $usuarioId, $empresaId]);
     $firma = $stmt->fetch();
     return $firma ?: null;
 }
 
-function guardarRutaFirmaPersonal(int $usuarioId, string $ruta): void 
+function guardarRutaFirmaPersonal(int $usuarioId, string $ruta): void
 {
     $pdo = obtenerConexion();
 
     $stmt = $pdo->prepare(
-        "SELECT id 
-        FROM firma_digital 
-        WHERE tipo = 'PERSONAL' 
+        "SELECT id
+        FROM firma_digital
+        WHERE tipo = 'PERSONAL'
             AND usuario_id = ?
         ORDER BY id DESC
-        LIMIT 1" 
+        LIMIT 1"
     );
 
     $stmt->execute([$usuarioId]);
@@ -100,7 +103,7 @@ function guardarRutaFirmaPersonal(int $usuarioId, string $ruta): void
         $stmt->execute([$ruta, $firmaId]);
         return;
     }
-    
+
     $stmt = $pdo->prepare(
         "INSERT INTO firma_digital (
             tipo,
@@ -111,7 +114,7 @@ function guardarRutaFirmaPersonal(int $usuarioId, string $ruta): void
         VALUES ('PERSONAL', ?, NULL, ?)"
     );
 
-    $stmt->execute([$usuarioId, $ruta]); 
+    $stmt->execute([$usuarioId, $ruta]);
 }
 
 // Obtener firma de aprobadores en el proceso
@@ -143,7 +146,7 @@ function obtenerFirmanteNivelesPdf(int $resumenId): array
 {
     $pdo = obtenerConexion();
     $stmt = $pdo->prepare(
-        "SELECT 
+        "SELECT
             na.codigo,
             na.nombre AS nivel_nombre,
             ev.evento,

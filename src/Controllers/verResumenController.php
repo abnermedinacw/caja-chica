@@ -18,7 +18,7 @@ $esPropietario = $resumen !== null;
 
 if (!$esPropietario) {
     $resumen = obtenerResumenAprobador($resumenId);
-    if (!$resumen || !usuarioParticipo($resumenId, $usuarioId)) {
+    if (!$resumen || (!usuarioParticipo($resumenId, $usuarioId) && !esAdministrador())) {
         http_response_code(403);
         die('No tienes permiso para ver este Resumen.');
     }

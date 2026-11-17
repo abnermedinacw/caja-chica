@@ -118,7 +118,16 @@ function obtenerFondosActivos(int $trabajadorId): array
                 ), 0) AS saldo_disponible
         FROM fondo f
         JOIN empresa e ON e.id = f.empresa_id
-        WHERE f.trabajador_id = ? AND f.estado = 'ACTIVO'
+        WHERE f.trabajador_id = ?
+            AND f.estado = 'ACTIVO'
+            AND (
+                f.tipo = 'RECURRENTE'
+                OR NOT EXISTS (
+                    SELECT 1 FROM caja_chica cc
+                    WHERE cc.fondo_id = f.id
+                        AND cc.estado_general <> 'ANULADO'
+                )
+            )
         ORDER BY e.razon_social, f.id DESC";
 
         $stmt = $pdo->prepare($sql);
@@ -126,7 +135,7 @@ function obtenerFondosActivos(int $trabajadorId): array
         return $stmt->fetchAll();
 }
 
-// Todos los fondos de un trabajador, hasta los cerrados, para ver histórico
+// Fondos vigentes del trabajador (los cerrados y anulados dejan de mostrarse aquí).
 function obtenerFondosTrabajador(int $trabajadorId): array
 {
     $pdo = obtenerConexion();
@@ -152,6 +161,7 @@ function obtenerFondosTrabajador(int $trabajadorId): array
         FROM fondo f
         JOIN empresa e ON e.id = f.empresa_id
         WHERE f.trabajador_id = ?
+            AND f.estado IN ('PENDIENTE_DESEMBOLSO', 'ACTIVO')
         ORDER BY f.estado, f.fecha_asignacion DESC, f.id DESC";
 
     $stmt = $pdo->prepare($sql);
@@ -200,4 +210,69 @@ function obtenerSaldoDisponibleFondo(int $fondoId): float
     $stmt->execute([$fondoId]);
     $fila = $stmt->fetch();
     return $fila ? (float)$fila['saldo'] : 0.0;
+}
+
+function bloquearFondoPorId(int $fondoId): ?array
+{
+    $stmt = obtenerConexion()->prepare('SELECT * FROM fondo WHERE id = ? FOR UPDATE');
+    $stmt->execute([$fondoId]);
+    return $stmt->fetch() ?: null;
+}
+
+function tieneResumenActivoEnFondo(int $fondoId): bool
+{
+    $stmt = obtenerConexion()->prepare(
+        "SELECT 1
+        FROM caja_chica
+        WHERE fondo_id = ?
+            AND estado_general <> 'ANULADO'
+        LIMIT 1"
+    );
+    $stmt->execute([$fondoId]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function contarResumenesEnCursoFondo(int $fondoId): int
+{
+    $stmt = obtenerConexion()->prepare(
+        "SELECT COUNT(*)
+        FROM caja_chica
+        WHERE fondo_id = ?
+            AND (
+                estado_general IN ('BORRADOR', 'EN_REVISION', 'RECHAZADO')
+                OR (estado_general = 'VISADO' AND txt_bbva_descargado = 0)
+            )"
+    );
+    $stmt->execute([$fondoId]);
+    return (int)$stmt->fetchColumn();
+}
+
+function actualizarEstadoFondo(int $fondoId, string $estado): void
+{
+    $stmt = obtenerConexion()->prepare('UPDATE fondo SET estado = ? WHERE id = ?');
+    $stmt->execute([$estado, $fondoId]);
+}
+
+function cerrarFondoNoRecurrente(int $fondoId): void
+{
+    $stmt = obtenerConexion()->prepare(
+        "UPDATE fondo
+        SET estado = 'CERRADO'
+        WHERE id = ?
+            AND tipo = 'NO_RECURRENTE'
+            AND estado = 'ACTIVO'"
+    );
+    $stmt->execute([$fondoId]);
+}
+
+function reabrirFondoNoRecurrente(int $fondoId): void
+{
+    $stmt = obtenerConexion()->prepare(
+        "UPDATE fondo
+        SET estado = 'ACTIVO'
+        WHERE id = ?
+            AND tipo = 'NO_RECURRENTE'
+            AND estado = 'CERRADO'"
+    );
+    $stmt->execute([$fondoId]);
 }

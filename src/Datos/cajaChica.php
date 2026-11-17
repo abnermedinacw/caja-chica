@@ -214,7 +214,7 @@ function obtenerEventosResumen(int $resumenId): array
             ev.fecha,
             na.nombre AS nivel,
             na.orden AS orden,
-            t.nombres AS usuario
+            COALESCE(t.nombres, u.username) AS usuario
             FROM evento_caja_chica ev
             LEFT JOIN nivel_aprobacion na ON na.id = ev.nivel_id
             JOIN usuario u ON u.id = ev.usuario_id
@@ -509,4 +509,89 @@ function usuarioParticipo(int $resumenId, int $usuarioId): bool
     );
     $stmt->execute([$resumenId, $usuarioId]);
     return (bool)$stmt->fetchColumn();
+}
+
+function filtrosResumenesAdmin(string $busqueda, int $empresaId, string $estado): array
+{
+    $condiciones = [];
+    $parametros = [];
+
+    if ($busqueda !== '') {
+        $texto = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $busqueda) . '%';
+        $condiciones[] = "(t.nombres LIKE ? ESCAPE '!' OR t.dni LIKE ? ESCAPE '!' OR LPAD(cc.numero, 3, '0') LIKE ? ESCAPE '!')";
+        $parametros[] = $texto;
+        $parametros[] = $texto;
+        $parametros[] = $texto;
+    }
+
+    if ($empresaId > 0) {
+        $condiciones[] = 'cc.empresa_id = ?';
+        $parametros[] = $empresaId;
+    }
+
+    $estadosValidos = ['BORRADOR', 'EN_REVISION', 'RECHAZADO', 'VISADO', 'ANULADO'];
+    if (in_array($estado, $estadosValidos, true)) {
+        $condiciones[] = 'cc.estado_general = ?';
+        $parametros[] = $estado;
+    }
+
+    return [$condiciones ? ' WHERE ' . implode(' AND ', $condiciones) : '', $parametros];
+}
+
+function contarResumenesAdmin(string $busqueda = '', int $empresaId = 0, string $estado = ''): int
+{
+    [$where, $parametros] = filtrosResumenesAdmin($busqueda, $empresaId, $estado);
+    $stmt = obtenerConexion()->prepare(
+        'SELECT COUNT(*)
+         FROM caja_chica cc
+         JOIN empresa e ON e.id = cc.empresa_id
+         JOIN trabajador t ON t.id = cc.trabajador_id' . $where
+    );
+    $stmt->execute($parametros);
+    return (int)$stmt->fetchColumn();
+}
+
+function listarResumenesAdmin(
+    string $busqueda = '',
+    int $empresaId = 0,
+    string $estado = '',
+    ?int $limite = null,
+    int $desplazamiento = 0
+): array {
+    $pdo = obtenerConexion();
+    [$where, $parametros] = filtrosResumenesAdmin($busqueda, $empresaId, $estado);
+    $sql =
+        "SELECT
+            cc.id,
+            cc.numero,
+            cc.periodo_inicio,
+            cc.periodo_fin,
+            cc.fecha_emision,
+            cc.total_egresos,
+            cc.estado_general,
+            cc.txt_bbva_descargado,
+            e.razon_social AS empresa,
+            t.nombres AS solicitante,
+            t.dni,
+            f.tipo AS fondo_tipo,
+            na.nombre AS nivel_actual_nombre
+        FROM caja_chica cc
+        JOIN empresa e ON e.id = cc.empresa_id
+        JOIN trabajador t ON t.id = cc.trabajador_id
+        LEFT JOIN fondo f ON f.id = cc.fondo_id
+        LEFT JOIN nivel_aprobacion na ON na.id = cc.nivel_actual_id" . $where . "
+        ORDER BY cc.id DESC";
+
+    if ($limite !== null) {
+        $sql .= ' LIMIT ? OFFSET ?';
+        $parametros[] = max(1, min(100, $limite));
+        $parametros[] = max(0, $desplazamiento);
+    }
+
+    $stmt = $pdo->prepare($sql);
+    foreach ($parametros as $indice => $valor) {
+        $stmt->bindValue($indice + 1, $valor, is_int($valor) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
+    return $stmt->fetchAll();
 }

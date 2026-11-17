@@ -51,6 +51,7 @@ function vistaFondosEmpresa(array $fondos, array $empresas, array $trabajadores,
                     <option value="PENDIENTE_DESEMBOLSO">Pendiente de desembolso</option>
                     <option value="ACTIVO">Activo</option>
                     <option value="CERRADO">Cerrado</option>
+                    <option value="ANULADO">Anulado</option>
                 </select>
             </div>
             <div class="campo">
@@ -91,13 +92,25 @@ function vistaFondosEmpresa(array $fondos, array $empresas, array $trabajadores,
                         <td>{{ formatearFecha(f.fecha_asignacion) }}</td>
                         <td><span class="estado" :class="'estado-' + f.estado.toLowerCase()">{{ f.estado }}</span></td>
                         <td v-if="datos.puedeAsignar">
-                            <button
-                                v-if="f.tipo === 'RECURRENTE' && f.estado === 'ACTIVO'"
-                                type="button"
-                                class="boton boton-chico"
-                                @click="abrirModalEditar(f)">
-                                <?= icono('editar') ?>
-                            </button>
+                            <div class="acciones-fila" v-if="f.estado === 'PENDIENTE_DESEMBOLSO' || f.estado === 'ACTIVO'">
+                                <button
+                                    v-if="f.tipo === 'RECURRENTE' && f.estado === 'ACTIVO'"
+                                    type="button"
+                                    class="boton boton-chico"
+                                    aria-label="Editar monto"
+                                    title="Editar monto"
+                                    @click="abrirModalEditar(f)">
+                                    <?= icono('editar') ?>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="boton boton-peligro boton-chico"
+                                    aria-label="Anular fondo"
+                                    title="Anular fondo"
+                                    @click="abrirModalAnular(f)">
+                                    <?= icono('quitar') ?>
+                                </button>
+                            </div>
                             <span v-else>—</span>
                         </td>
                     </tr>
@@ -203,6 +216,25 @@ function vistaFondosEmpresa(array $fondos, array $empresas, array $trabajadores,
                 <button type="button" class="boton boton-secundario" :disabled="guardandoEditar" @click="cerrarModalEditar">Cancelar</button>
                 <button type="button" class="boton boton-primario" :disabled="guardandoEditar" @click="actualizarMonto">
                     <span v-if="guardandoEditar" class="spinner"></span>{{ guardandoEditar ? 'Guardando…' : 'Guardar monto' }}
+                </button>
+            </div>
+        </dialog>
+
+        <dialog ref="refModalAnular" class="dialogo-asignar-fondo" v-if="datos.puedeAsignar" @cancel.prevent="cerrarModalAnular">
+            <h2><?= icono('quitar') ?> Anular fondo</h2>
+            <p v-if="fondoAnulando">
+                <strong>{{ fondoAnulando.trabajador }}</strong><br>
+                {{ fondoAnulando.empresa }} · {{ fondoAnulando.tipo }} · {{ formatearSoles(fondoAnulando.monto_asignado) }}
+            </p>
+            <p class="texto-vacio">
+                El fondo pasará a estado <strong>ANULADO</strong> y dejará de estar disponible para el trabajador y para desembolso BBVA.
+            </p>
+            <p class="error" v-if="errorAnular">{{ errorAnular }}</p>
+
+            <div class="acciones-modal">
+                <button type="button" class="boton boton-secundario" :disabled="anulandoFondo" @click="cerrarModalAnular">Cancelar</button>
+                <button type="button" class="boton boton-peligro" :disabled="anulandoFondo" @click="confirmarAnularFondo">
+                    <span v-if="anulandoFondo" class="spinner"></span>{{ anulandoFondo ? 'Anulando…' : 'Confirmar' }}
                 </button>
             </div>
         </dialog>

@@ -1250,3 +1250,10 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     background: var(--color-neutro-bg);
     border-color: var(--color-neutro-borde);
 }
+
+.acciones-fila {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}

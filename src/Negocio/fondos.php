@@ -20,7 +20,7 @@ function asignarFondo(int $empresaId, int $trabajadorId, string $tipo, float $mo
     if ($fechaAsignacion === '' || $fechaAsignacion > date('Y-m-d')) {
         return ['ok' => false, 'error' => 'La fecha de asignación no puede estar vacía ni ser futura.'];
     }
-    if (tieneFondoRecurrenteActivo($empresaId, $trabajadorId)) {
+    if ($tipo === 'RECURRENTE' && tieneFondoRecurrenteActivo($empresaId, $trabajadorId)) {
         return ['ok' => false, 'error' => 'El trabajador ya tiene un fondo recurrente activo en esta empresa.'];
     }
 
@@ -61,4 +61,35 @@ function cambiarMontoFondoRecurrente(int $fondoId, mixed $montoNuevo): array
 
     actualizarMontoAsignadoFondo($fondoId, $montoNuevo);
     return ['ok' => true];
+}
+
+function anularFondoTesoreria(int $fondoId): array
+{
+    if ($fondoId <= 0) {
+        return ['ok' => false, 'error' => 'Fondo inválido.'];
+    }
+
+    $pdo = obtenerConexion();
+    $pdo->beginTransaction();
+    try {
+        $fondo = bloquearFondoPorId($fondoId);
+        if (!$fondo) {
+            return ['ok' => false, 'error' => 'Fondo no encontrado.'];
+        }
+        if (!in_array($fondo['estado'], ['PENDIENTE_DESEMBOLSO', 'ACTIVO'], true)) {
+            return ['ok' => false, 'error' => 'Este fondo ya está cerrado o anulado.'];
+        }
+        if (contarResumenesEnCursoFondo($fondoId) > 0) {
+            return [
+                'ok' => false,
+                'error' => 'No se puede anular el fondo porque tiene resúmenes en curso o pendientes de pago BBVA.',
+            ];
+        }
+
+        actualizarEstadoFondo($fondoId, 'ANULADO');
+        $pdo->commit();
+        return ['ok' => true];
+    } finally {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+    }
 }

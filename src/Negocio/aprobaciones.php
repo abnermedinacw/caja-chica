@@ -203,6 +203,7 @@ function puedeVerDocumentosResumen(
     int $usuarioIdSesion
 ): bool {
     if ((int)$resumen['trabajador_id'] === $trabajadorIdSesion) return true;
+    if (function_exists('esAdministrador') && esAdministrador()) return true;
     if (usuarioParticipo((int)$resumen['id'], $usuarioIdSesion)) return true;
 
     $estadosValidos = ['EN_REVISION', 'RECHAZADO'];

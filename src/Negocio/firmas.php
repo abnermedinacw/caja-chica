@@ -175,7 +175,7 @@ function prepararFirmasPdf(int $resumenId, array $resumen): array
 
         if ($codigo === 'JEFATURA') $firma = obtenerFirmaPersonal($usuarioId);
         elseif ($codigo === 'GERENCIA') $firma = obtenerFirmaGerencia($usuarioId, $empresaId);
-        elseif (in_array($codigo, ['CONTABILIDAD_1', 'CONTROL'], true)) $firma = obtenerFirmaContabilidad($empresaId);
+        elseif (in_array($codigo, ['CONTABILIDAD_1', 'CONTROL'], true)) $firma = obtenerFirmaContabilidad($usuarioId, $empresaId);
 
         $casillas[$codigo]['nombre'] = $evento['nombre'];
         $casillas[$codigo]['fecha'] = formatearFecha($evento['fecha']);
