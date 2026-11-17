@@ -626,7 +626,7 @@ function vistaVerResumen(
                                         <p class="texto-vacio" v-if="planilla.items.length === 0">Todavía no agregaste ningún viaje.</p>
 
                                         <div class="acciones-edicion-documento-items">
-                                            <button type="button" class="boton boton-chico" @click="abrirModalItemPlanilla()"><?= icono('mas') ?> Añadir viaje</button>
+                                            <button type="button" class="boton boton-chico" @click="abrirModalItemPlanilla()"><?= icono('mas') ?> Añadir ítem</button>
                                         </div>
                                         <div class="error" v-if="planilla.error">{{ planilla.error }}</div>
                                         <div class="acciones-edicion-documento-cierre">

@@ -48,6 +48,7 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
     if (esAdministrador()) {
         $secciones[] = ['titulo' => 'Administración', 'enlaces' => [
             'trabajadores' => ['ruta' => '/trabajadores', 'texto' => 'Trabajadores', 'disponible' => true],
+            'admin-resumenes' => ['ruta' => '/admin-resumenes', 'texto' => 'Resúmenes', 'disponible' => true],
             'reactivar-txt-bbva' => ['ruta' => '/pagos-bbva?modo=reactivacion', 'texto' => 'Reactivar pagos BBVA', 'disponible' => true],
         ]];
     }
@@ -77,7 +78,7 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
         <link rel="stylesheet" href="<?= assetUrl('/css/base.css') ?>">
         <link rel="stylesheet" href="<?= assetUrl('/css/componentes.css') ?>">
         <link rel="stylesheet" href="<?= assetUrl('/css/modulos.css') ?>">
-        <link rel="icon" type="image/x-icon" href="<?= assetUrl('/icon-moneda.svg') ?>">
+        <link rel="icon" type="image/x-icon" href="<?= assetUrl('/money.png') ?>">
         <script type="importmap"><?= json_encode(mapaModulosJs(), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
     </head>
     <body class="con-barra-lateral">

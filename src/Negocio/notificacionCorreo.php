@@ -119,7 +119,7 @@ function notificar(int $resumenId, string $accion, ?int $exceptoUsuarioId = null
             }
 
             if ($resumen['estado_general'] === 'VISADO') {
-                $situacion = 'La rendición ha sido aprobada y el flujo ha finalizado:';
+                $situacion = 'La rendición ha sido aprobada.';
             } elseif ($resumen['estado_general'] === 'RECHAZADO' && !$hayNivelPendiente) {
                 $motivoRechazo = trim((string)($resumen['motivo_rechazo'] ?? ''));
             $situacion = $motivoRechazo !== ''

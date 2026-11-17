@@ -393,6 +393,97 @@ class ResumenPdf extends Fpdi
         }
     }
 
+    /** Agrupa imágenes de capturas (Yape/plin) en bloques de hasta 8 por hoja A4 */
+    public function anexarCapturas(array $imagenes, string $titulo = ''): void
+    {
+        if (!$imagenes) return;
+
+        // Desactivar salto de página automatico
+        $this->SetAutoPageBreak(false);
+
+        try {
+            foreach (array_chunk($imagenes, 8) as $numeroHoja => $lote) {
+                $this->siguientePaginaEsAnexo = true;
+                $this->AddPage('L', 'A4');
+
+                $margen = 10;
+                $gap = 4;
+                $altoTitulo = $titulo !== '' ? 8 : 0;
+                
+                if ($titulo !== '') {
+                    $sufijo = count($imagenes) > 8 ? ' (Hoja ' . ($numeroHoja + 1) . ')' : '';
+                    $this->SetXY($margen, $margen);
+                    $this->SetFont('Arial', 'B', 9);
+                    $this->Cell($this->w - ($margen * 2), 6, textoPdf($titulo . $sufijo), 0, 0, 'L');
+                }
+
+                // Rejilla adaptable para en caso de menos capturas
+                $cantidad = count($lote);
+                [$cols, $filas] = match (true) {
+                    $cantidad === 1 => [1, 1],
+                    $cantidad === 2 => [2, 1],
+                    $cantidad <= 4 => [2, 2],   
+                    default => [4, 2]
+                };
+
+                $yInicio = $margen + $altoTitulo;
+                $anchoArea = $this->w - ($margen * 2);
+                $altoArea = $this->h - $yInicio - $margen;
+                $anchoCelda = ($anchoArea - ($gap * ($cols - 1))) / $cols;
+                $altoCelda = ($altoArea - ($gap * ($filas - 1))) / $filas;
+                $altoEtiqueta = 6;
+                $padding = 2;
+
+                foreach ($lote as $indice => $item) {
+                    $ruta = $item['ruta'];
+                    $etiqueta = (string)($item['etiqueta'] ?? '');
+
+                    $dimensiones = @getimagesize($ruta);
+                    if (!$dimensiones) {
+                        throw new RuntimeException('No se pudo leer la imagen adjunta: ' . basename($ruta));
+                    }
+
+                    [$anchoPx, $altoPx, $tipoImg] = $dimensiones;
+                    $tipoFpdf = match ($tipoImg) {
+                        IMAGETYPE_JPEG => 'JPG',
+                        IMAGETYPE_PNG => 'PNG',
+                        default => throw new RuntimeException('Formato de imagen no soportado en PDF: ' . basename($ruta))
+                    };
+
+                    $col = $indice % $cols;
+                    $fila = intdiv($indice, $cols);
+                    $x = $margen + ($col * ($anchoCelda + $gap));
+                    $y = $yInicio + ($fila * ($altoCelda + $gap));
+
+                    // Marco de celda y barra de identificación
+                    $this->SetDrawColor(200,200,200);
+                    $this->Rect($x, $y, $anchoCelda, $altoCelda);
+
+                    $this->SetFillColor(240,240,240);
+                    $this->Rect($x, $y, $anchoCelda, $altoEtiqueta, 'DF');
+                    $this->SetXY($x + 1, $y);
+                    $this->SetFont('Arial', 'B', 7);
+                    $this->Cell($anchoCelda - 2, $altoEtiqueta, textoPdf($etiqueta), 0, 0, 'C');
+
+                    // Escala proporcional de la imagen
+                    $anchoMaxImg = $anchoCelda - ($padding * 2);
+                    $altoMaxImg = $altoCelda - $altoEtiqueta - ($padding * 2);
+                    $escala = min($anchoMaxImg / $anchoPx, $altoMaxImg / $altoPx);
+                    $anchoImg = $anchoPx * $escala;
+                    $altoImg = $altoPx * $escala;
+
+                    $xImg = $x + (($anchoCelda - $anchoImg) / 2);
+                    $yImg = $y + $altoEtiqueta + $padding + (($altoMaxImg - $altoImg) / 2);
+
+                    $this->Image($ruta, $xImg, $yImg, $anchoImg, $altoImg, $tipoFpdf);
+                }
+            }
+        } finally {
+            // Restaurar el salto página
+            $this->SetAutoPageBreak(true, 20);
+        }
+    }
+
     /** Mantiene visibles imágenes antiguas que se cargaron antes de la regla PDF. */
     public function anexarImagenAntigua(string $ruta): void
     {

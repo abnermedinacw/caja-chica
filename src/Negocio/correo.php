@@ -85,7 +85,7 @@ function enviarCorreo(
         $mail->addAddress($destinatario, $nombreDestinatario);
         $mail->isHTML(true);
         $mail->Subject = $asunto;
-        $rutaFirma = __DIR__ . '/../../storage/correo/firma_RR._HH_-_2026-10-13.png';
+        $rutaFirma = __DIR__ . '/../../storage/correo/firmacorr.png';
         if (is_file($rutaFirma)) {
             $mail->addEmbeddedImage($rutaFirma, 'firma-correo', 'firma.png');
             $firmaHtml = '<p><img src="cid:firma-correo" alt="Firma de correo" '

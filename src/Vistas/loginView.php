@@ -47,7 +47,7 @@ function vistaLogin(?string $error): void
         <link rel="stylesheet" href="<?= assetUrl('/css/componentes.css') ?>">
         <link rel="preload" href="<?= BASE_URL ?>/fonts/manrope.ttf" as="font" type="font/ttf" crossorigin>
         <link rel="stylesheet" href="<?= assetUrl('/css/login.css') ?>">
-        <link rel="icon" type="image/x-icon" href="<?= assetUrl('/icon-moneda.svg') ?>">
+        <link rel="icon" type="image/x-icon" href="<?= assetUrl('/money.png') ?>">
 
     </head>
 

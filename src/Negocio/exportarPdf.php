@@ -31,8 +31,10 @@ function rutaAdjuntoInterna(string $rutaRelativa): string
     return $ruta;
 }
 
-function anexarEvidenciasAlResumenPdf(ResumenPdf $pdf, array $anexos): void
+function anexarEvidenciasAlResumenPdf(ResumenPdf $pdf, array $anexos, bool $agruparImagenes = false): void
 {
+    $imagenesCapturas = [];
+
     foreach ($anexos as $anexo) {
         $ruta = rutaAdjuntoInterna($anexo['ruta']);
 
@@ -42,14 +44,22 @@ function anexarEvidenciasAlResumenPdf(ResumenPdf $pdf, array $anexos): void
             continue;
         }
 
-        // Solo para evidencias históricas que el sistema permitía como imagen.
         if (in_array($extension, ['png', 'jpg', 'jpeg'], true)) {
-            $pdf->anexarImagenAntigua($ruta);
+            if ($agruparImagenes) {
+                $etiqueta = 'N° '. $anexo['item'];
+                $imagenesCapturas[] = [
+                    'ruta' => $ruta,
+                    'etiqueta' => $etiqueta
+                ];
+            } else {
+                $pdf->anexarImagenAntigua($ruta);
+            }
             continue;
         }
 
         throw new RuntimeException('El anexo ' . $anexo['nombre_archivo'] . ' no puede incorporarse al PDF final.');
     }
+    if ($imagenesCapturas !== []) $pdf->anexarCapturas($imagenesCapturas, 'Evidencias de Planilla de Movilidad');
 }
 
 function generarPdfResumen(int $resumenId, bool $incluirAnexos = true): ?string
@@ -152,7 +162,7 @@ function generarPdfResumen(int $resumenId, bool $incluirAnexos = true): ?string
     if ($itemsContable) {
         $pdf->nuevaPagina('DOCUMENTOS CONTABLES');
         $pdf->datosGenerales($datosGeneralesIzq, $datosGeneralesDer);
-        $pdf->tituloSeccion('2' . chr(176) . 'DETALLE DE GASTOS');
+        $pdf->tituloSeccion('2' . chr(176) . ' DETALLE DE GASTOS');
 
         $columnas = [
             ['titulo' => 'N°', 'ancho' => 8, 'align' => 'C'],
@@ -167,7 +177,7 @@ function generarPdfResumen(int $resumenId, bool $incluirAnexos = true): ?string
 
         $filas = array_map(fn($it) => [
             $it['item'],
-            $it['fecha'],
+            formatearFecha($it['fecha']),
             $it['tipo_comprobante'] ?? '-',
             $it['serie'],
             $it['numero_comprobante'],
@@ -214,7 +224,7 @@ function generarPdfResumen(int $resumenId, bool $incluirAnexos = true): ?string
     if ($itemsPlanilla) {
         $pdf->nuevaPagina('PLANILLA DE MOVILIDAD');
         $pdf->datosGenerales($datosGeneralesIzq, $datosGeneralesDer);
-        $pdf->tituloSeccion('2' . chr(176) . 'DETALLE DE GASTOS');
+        $pdf->tituloSeccion('2' . chr(176) . ' DETALLE DE GASTOS');
 
         $columnas = [
             ['titulo' => 'N°', 'ancho' => 10, 'align' => 'C'],
@@ -226,7 +236,7 @@ function generarPdfResumen(int $resumenId, bool $incluirAnexos = true): ?string
         ];
         $filas = array_map(fn($it) => [
             $it['item'],
-            $it['fecha'],
+            formatearFecha($it['fecha']),
             $it['origen'],
             $it['destino'],
             $it['motivo'],
@@ -257,7 +267,8 @@ function generarPdfResumen(int $resumenId, bool $incluirAnexos = true): ?string
         if ($planilla) {
             anexarEvidenciasAlResumenPdf(
                 $pdf,
-                obtenerEvidenciasMovilidadParaPdf((int)$planilla['id'])
+                obtenerEvidenciasMovilidadParaPdf((int)$planilla['id']),
+                true
             );
         }
     }
