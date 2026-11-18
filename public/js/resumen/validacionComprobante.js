@@ -34,13 +34,10 @@ export function validarItemContableCliente(tiposComprobante, item) {
     const tipoNombre = nombreTipoComprobante(tiposComprobante, item.tipo_comprobante_id);
     const esFormal = TIPOS_ESTRICTOS.includes(tipoNombre);
 
-    if (esFormal) {
-        if (!/^([A-Za-z]\d{3}|\d{3})$/.test(item.serie)) {
-            return `Serie inválida para ${tipoNombre}. Formato esperado: letra + 3 dígitos (ej. F001) o 3 dítigos (ej. 001).`;
-        }
-    } else if (item.serie === '') {
+    if (!String(item.serie || '').trim()) {
         return 'Indica la serie.';
     }
+
     if (!/^\d{1,8}$/.test(item.numero_comprobante)) {
         return 'El número de comprobante debe ser solo dígitos (máximo 8).';
     }

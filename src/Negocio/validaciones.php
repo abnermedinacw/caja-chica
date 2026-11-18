@@ -50,13 +50,9 @@ function validarMonto($monto, float $tope = 50000): ?string
 //  - Ticket/Voucher/Otros: no siguen este estándar, se acepta libre.
 function validarSerieComprobante(string $serie, string $tipoComprobanteNombre): ?string
 {
-    $tiposEstrictos = ['FACTURA', 'BOLETA', 'RECIBO POR HONORARIOS'];
-    if (!in_array(strtoupper($tipoComprobanteNombre), $tiposEstrictos, true)) {
-        return $serie === '' ? 'Indica la serie.' : null;
-    }
-    if (!preg_match('/^([A-Za-z]\d{3}|\d{3})$/', $serie)) {
-        return "Serie inválida para $tipoComprobanteNombre. Formato esperado: letra+3 dígitos (ej. F001) o 3 dígitos (ej. 001).";
-    }
+    $serie = trim($serie);
+    if ($serie === '') return 'Indica la serie.';
+    if (mb_strlen($serie) > 20) return 'La serie no puede superar 10 caracteres.';
     return null;
 }
 

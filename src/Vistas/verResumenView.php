@@ -783,7 +783,7 @@ function vistaVerResumen(
                 </select>
 
                 <label>Serie</label>
-                <input type="text" v-model="nuevoItemContable.serie" maxlength="4" placeholder="F001 o 001" required>
+                <input type="text" v-model="nuevoItemContable.serie" maxlength="10" placeholder="F001 o 001" required>
 
                 <label>Número</label>
                 <input type="text" v-model="nuevoItemContable.numero_comprobante" maxlength="8" inputmode="numeric" placeholder="00012345" required>
