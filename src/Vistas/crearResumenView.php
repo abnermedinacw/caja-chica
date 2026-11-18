@@ -50,7 +50,7 @@ function vistaCrearResumen(array $fondos, array $empresas, ?string $error): void
                         <input type="date" name="periodo_fin" id="periodo_fin" required max="<?= date('Y-m-d') ?>">
                     </div>
                     <div class="campo">
-                        <label for="fecha_emision">Fecha de emisión</label>
+                        <label for="fecha_emision">Fecha de elaboración</label>
                         <input type="date" name="fecha_emision" id="fecha_emision" required value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>">
                     </div>
                 </section>

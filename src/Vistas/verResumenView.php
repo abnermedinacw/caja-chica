@@ -773,7 +773,7 @@ function vistaVerResumen(
                 <label>Concepto</label>
                 <input type="text" v-model="nuevoItemContable.concepto" required>
 
-                <label>Fecha</label>
+                <label>Fecha de emisión</label>
                 <input type="date" v-model="nuevoItemContable.fecha" :min="contable.periodoInicio" :max="contable.periodoFin" required>
 
                 <label>Tipo de comprobante</label>
@@ -847,7 +847,7 @@ function vistaVerResumen(
                 <label>Descripción</label>
                 <input type="text" v-model="nuevoItemNoContable.descripcion" required>
 
-                <label>Fecha del documento</label>
+                <label>Fecha de emisión</label>
                 <input type="date" v-model="nuevoItemNoContable.fecha_documento" :min="noContable.periodoInicio" :max="noContable.periodoFin" required>
 
                 <label>Monto</label>
@@ -891,7 +891,7 @@ function vistaVerResumen(
         <dialog ref="refModalItemPlanilla" @cancel.prevent="cancelarModalItemPlanilla">
             <form @submit.prevent="guardarItemPlanilla">
                 <h2>{{ editandoIdxPlanilla !== null ? 'Editar viaje' : 'Nuevo viaje' }}</h2>
-                <label>Fecha</label>
+                <label>Fecha de emisión</label>
                 <input type="date" v-model="nuevoItemPlanilla.fecha" :min="planilla.periodoInicio" :max="planilla.periodoFin" required>
 
                 <label>Motivo</label>
