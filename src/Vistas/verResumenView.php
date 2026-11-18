@@ -771,7 +771,7 @@ function vistaVerResumen(
             <form @submit.prevent="guardarItemContable">
                 <h2>{{ editandoIdxContable !== null ? 'Editar comprobante' : 'Nuevo comprobante' }}</h2>
                 <label>Concepto</label>
-                <input type="text" v-model="nuevoItemContable.concepto" required>
+                <input type="text" v-model="nuevoItemContable.concepto" spellcheck="true" required>
 
                 <label>Fecha de emisión</label>
                 <input type="date" v-model="nuevoItemContable.fecha" :min="contable.periodoInicio" :max="contable.periodoFin" required>
@@ -845,7 +845,7 @@ function vistaVerResumen(
                 </select>
 
                 <label>Descripción</label>
-                <input type="text" v-model="nuevoItemNoContable.descripcion" required>
+                <input type="text" v-model="nuevoItemNoContable.descripcion" spellcheck="true" required>
 
                 <label>Fecha de emisión</label>
                 <input type="date" v-model="nuevoItemNoContable.fecha_documento" :min="noContable.periodoInicio" :max="noContable.periodoFin" required>
@@ -857,7 +857,7 @@ function vistaVerResumen(
                 <input type="number" min="1" v-model="nuevoItemNoContable.numero_paginas">
 
                 <label>Observaciones (opcional)</label>
-                <input type="text" v-model="nuevoItemNoContable.observaciones">
+                <input type="text" v-model="nuevoItemNoContable.observaciones" spellcheck="true">
 
                 <template v-if="editandoIdxNoContable !== null && adjuntosItemEditandoNoContable.length">
                     <label>Adjuntos guardados</label>
@@ -895,13 +895,13 @@ function vistaVerResumen(
                 <input type="date" v-model="nuevoItemPlanilla.fecha" :min="planilla.periodoInicio" :max="planilla.periodoFin" required>
 
                 <label>Motivo</label>
-                <input type="text" v-model="nuevoItemPlanilla.motivo" required>
+                <input type="text" v-model="nuevoItemPlanilla.motivo" spellcheck="true" required>
 
                 <label>Origen</label>
-                <input type="text" v-model="nuevoItemPlanilla.origen" required>
+                <input type="text" v-model="nuevoItemPlanilla.origen" spellcheck="true" required>
 
                 <label>Destino</label>
-                <input type="text" v-model="nuevoItemPlanilla.destino" required>
+                <input type="text" v-model="nuevoItemPlanilla.destino" spellcheck="true" required>
 
                 <label>Monto</label>
                 <input type="number" step="0.01" min="0.01" max="50000" v-model="nuevoItemPlanilla.monto" required>
@@ -915,7 +915,7 @@ function vistaVerResumen(
                 </select>
 
                 <label>Observación de evidencia (opcional)</label>
-                <input type="text" v-model="nuevoItemPlanilla.observacion_evidencia">
+                <input type="text" v-model="nuevoItemPlanilla.observacion_evidencia" spellcheck="true">
 
                 <template v-if="editandoIdxPlanilla !== null && adjuntosItemEditandoPlanilla.length">
                     <label>Adjuntos guardados</label>
