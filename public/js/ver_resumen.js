@@ -320,10 +320,9 @@ createApp({
             });
         }
 
-        const anulado = ref(false);
+        const anulando = ref(false);
         function anularResumen() {
-            if (!esEditable || hayPanelesEnEdicion.value || cabeceraEditando.value || procesando.value);
-            return;
+            if (!esEditable || hayPanelesEnEdicion.value || cabeceraEditando.value || procesando.value) return;
             pedirConfirmacion({
                 titulo: 'Anular Caja Chica',
                 mensaje: '¿Seguro que deseas anular tu Caja? Esta acción no se puede deshacer.',
@@ -332,7 +331,7 @@ createApp({
                 accion: async () => {
                     if (anulando.value) return;
                     anulando.value = true;
-                    const resultado = await enviarFormulario(datos.baseUrl + '/anular-mi-resumen', {
+                    const resultado = await enviarFormulario(datos.baseUrl + '/anular-resumen-usuario', {
                         resumen_id: datos.resumenId,
                     });
                     anulando.value = false;
@@ -340,9 +339,9 @@ createApp({
                         window.location.href = datos.baseUrl + '/home';
                         return;
                     }
-                    mostrarAviso(resultado.error || 'No se pudo anular la Caja Chica')
+                    mostrarAviso(resultado.error || 'No se pudo anular la Caja Chica');
                 },
-            })
+            });
         }
 
         // Estado global de edición: solo se permite modificar un documento a la vez.
@@ -423,6 +422,7 @@ createApp({
 
             contable: panelContable.panel, totalContable: panelContable.total,
             nuevoItemContable: panelContable.nuevoItem, archivoNuevoItemContable: panelContable.archivoNuevoItem,
+            agregarEvidenciasContable: panelContable.agregarEvidencias,
             limpiarArchivoNuevoContable: panelContable.limpiarArchivoNuevo, limpiarXmlNuevoContable: panelContable.limpiarXmlNuevo,
             refArchivoContable: panelContable.refArchivoItem, modalItemContableAbierto: panelContable.modalItemAbierto,
             xmlNuevoItemContable: panelContable.xmlNuevoItem, refXmlContable: panelContable.refXmlItem,
@@ -438,6 +438,7 @@ createApp({
 
             noContable: panelNoContable.panel, totalNoContable: panelNoContable.total,
             nuevoItemNoContable: panelNoContable.nuevoItem, archivoNuevoItemNoContable: panelNoContable.archivoNuevoItem,
+            agregarEvidenciasNoContable: panelNoContable.agregarEvidencias,
             limpiarArchivoNuevoNoContable: panelNoContable.limpiarArchivoNuevo, limpiarXmlNuevoNoContable: panelNoContable.limpiarXmlNuevo,
             refArchivoNoContable: panelNoContable.refArchivoItem, modalItemNoContableAbierto: panelNoContable.modalItemAbierto,
             xmlNuevoItemNoContable: panelNoContable.xmlNuevoItem, refXmlNoContable: panelNoContable.refXmlItem,
@@ -451,6 +452,7 @@ createApp({
 
             planilla: panelPlanilla.panel, totalPlanilla: panelPlanilla.total,
             nuevoItemPlanilla: panelPlanilla.nuevoItem, archivoNuevoItemPlanilla: panelPlanilla.archivoNuevoItem,
+            agregarEvidenciasPlanilla: panelPlanilla.agregarEvidencias,
             limpiarArchivoNuevoPlanilla: panelPlanilla.limpiarArchivoNuevo,
             refArchivoPlanilla: panelPlanilla.refArchivoItem, modalItemPlanillaAbierto: panelPlanilla.modalItemAbierto,
             refModalItemPlanilla: panelPlanilla.refModalItem, editandoIdxPlanilla: panelPlanilla.editandoIdx,

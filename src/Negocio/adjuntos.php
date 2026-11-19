@@ -202,7 +202,7 @@ function subirAdjuntoDocumentoContable(int $trabajadorId, int $usuarioId, int $d
         return ['ok' => false, 'error' => $error];
     }
 
-    $anterior = obtenerAdjuntoDocumentoContablePorDetalleYTipo($documentoId, $detalleId, $tipoArchivo);
+    $anterior = $tipoArchivo === TIPO_ADJUNTO_XML ? obtenerAdjuntoDocumentoContablePorDetalleYTipo($documentoId, $detalleId, $tipoArchivo) : null;
     $ruta = moverArchivoSubido($archivo, 'documento_contable/' . $documentoId);
 
     try {
@@ -213,6 +213,7 @@ function subirAdjuntoDocumentoContable(int $trabajadorId, int $usuarioId, int $d
             fn() => insertarAdjuntoDocumentoContable($documentoId, $detalleId, $archivo['name'], $ruta, $usuarioId, $tipoArchivo)
         );
     } catch (Throwable $e) {
+        error_log('Error al guardar adjunto documento contable: ' . $e->getMessage());
         return ['ok' => false, 'error' => 'No se pudo guardar el archivo adjunto.'];
     }
 
@@ -273,7 +274,7 @@ function subirAdjuntoDocumentoNoContable(int $trabajadorId, int $usuarioId, int 
         return ['ok' => false, 'error' => $error];
     }
 
-    $anterior = obtenerAdjuntoDocumentoNoContablePorDetalleYTipo($documentoId, $detalleId, $tipoArchivo);
+    $anterior = $tipoArchivo === TIPO_ADJUNTO_XML ? obtenerAdjuntoDocumentoNoContablePorDetalleYTipo($documentoId, $detalleId, $tipoArchivo) : null;
     $ruta = moverArchivoSubido($archivo, 'documento_no_contable/' . $documentoId);
 
     try {
@@ -284,6 +285,7 @@ function subirAdjuntoDocumentoNoContable(int $trabajadorId, int $usuarioId, int 
             fn() => insertarAdjuntoDocumentoNoContable($documentoId, $detalleId, $archivo['name'], $ruta, $usuarioId, $tipoArchivo)
         );
     } catch (Throwable $e) {
+        error_log('Error al guardar adjunto documento contable: ' . $e->getMessage());
         return ['ok' => false, 'error' => 'No se pudo guardar el archivo adjunto.'];
     }
 
@@ -341,7 +343,7 @@ function subirAdjuntoPlanilla(int $trabajadorId, int $usuarioId, int $planillaId
         return ['ok' => false, 'error' => $error];
     }
 
-    $anterior = obtenerAdjuntoMovilidadPorDetalleYTipo($planillaId, $detalleId, $tipoArchivo);
+    $anterior = $tipoArchivo === TIPO_ADJUNTO_XML ? obtenerAdjuntoMovilidadPorDetalleYTipo($planillaId, $detalleId, $tipoArchivo) : null;
     $ruta = moverArchivoSubido($archivo, 'movilidad/' . $planillaId);
 
     try {
@@ -352,6 +354,7 @@ function subirAdjuntoPlanilla(int $trabajadorId, int $usuarioId, int $planillaId
             fn() => insertarAdjuntoMovilidad($planillaId, $detalleId, $archivo['name'], $ruta, $usuarioId, $tipoArchivo)
         );
     } catch (Throwable $e) {
+        error_log('Error al guardar adjunto documento contable: ' . $e->getMessage());
         return ['ok' => false, 'error' => 'No se pudo guardar el archivo adjunto.'];
     }
 

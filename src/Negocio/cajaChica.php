@@ -214,7 +214,7 @@ function anularResumenAdmin(int $resumenId, int $usuarioId, string $motivo): arr
 {
     $motivo = trim($motivo);
     if ($motivo === '') return ['ok' => false, 'error' => 'Indica el motivo de la anulación'];
-    if (mb_strlen($motivo) < 255) return ['ok' => false, 'error' => 'Máximo de 255 caracteres.'];
+    if (mb_strlen($motivo) > 255) return ['ok' => false, 'error' => 'Máximo de 255 caracteres.'];
     return _anularResumen($resumenId, $usuarioId, $motivo);
 }
 

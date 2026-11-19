@@ -1,5 +1,6 @@
 ﻿const { ref, computed, watch } = Vue;
 import { enviarFormulario } from '../utils/api.js';
+import { prepararArchivoParaSubida } from '../utils/normalizarPdf.js';
 
 const archivosPendientes = {};
 const archivosGuardados = {};
@@ -40,7 +41,7 @@ export function crearPanelDocumento(opciones) {
     const modalItemAbierto = ref(false);
     const refModalItem = ref(null);
     const nuevoItem = ref(itemVacio());
-    const archivoNuevoItem = ref(null);
+    const archivoNuevoItem = ref([]);
     const refArchivoItem = ref(null);
     const xmlNuevoItem = ref(null);
     const refXmlItem = ref(null);
@@ -71,21 +72,30 @@ export function crearPanelDocumento(opciones) {
             const archivosGuardadosTmp = tempId ? (archivosGuardados[tempId] || null) : null;
             const archivosPendientesTmp = tempId ? (archivosPendientes[tempId] || null) : null;
             const archivosRestaurar = archivosGuardadosTmp || archivosPendientesTmp;
-            if (archivosRestaurar) {
-                if (archivosRestaurar.evidencia) archivoNuevoItem.value = archivosRestaurar.evidencia;
-                if (archivosRestaurar.xml) xmlNuevoItem.value = archivosRestaurar.xml;
-            }
+            archivoNuevoItem.value = archivosRestaurar?.evidencias ? [...archivosRestaurar.evidencias] : [];
+            if (archivosRestaurar?.xml) xmlNuevoItem.value = archivosRestaurar.xml;
         } else {
             nuevoItem.value = itemVacio();
             editandoIdx.value = null;
             adjuntosItemEditando.value = [];
+            archivoNuevoItem.value = [];
         }
         estadoItemAlAbrir.value = serializarItemActual();
         modalItemAbierto.value = true;
     }
 
-    function limpiarArchivoNuevo() {
-        archivoNuevoItem.value = null;
+    function agregarEvidencias(evento) {
+        const seleccionados = Array.from(evento.target.files || []);
+        if (seleccionados.length) archivoNuevoItem.value = [...archivoNuevoItem.value, ...seleccionados];
+        if (refArchivoItem.value) refArchivoItem.value.value = '';
+    }
+
+    function limpiarArchivoNuevo(indice = null) {
+        if (indice === null) {
+            archivoNuevoItem.value = [];
+        } else {
+            archivoNuevoItem.value = archivoNuevoItem.value.filter((_, i) => i !== indice);
+        }
         if (refArchivoItem.value) refArchivoItem.value.value = '';
     }
 
@@ -96,7 +106,7 @@ export function crearPanelDocumento(opciones) {
 
     function cerrarModalItem() {
         nuevoItem.value = itemVacio();
-        archivoNuevoItem.value = null;
+        archivoNuevoItem.value = [];
         xmlNuevoItem.value = null;
         if (refArchivoItem.value) refArchivoItem.value.value = '';
         if (refXmlItem.value) refXmlItem.value.value = '';
@@ -130,7 +140,7 @@ export function crearPanelDocumento(opciones) {
 
     function cancelarModalItem() {
         const cambioFormulario = serializarItemActual() !== estadoItemAlAbrir.value;
-        const hayArchivoSeleccionado = archivoNuevoItem.value !== null || (permiteXml && xmlNuevoItem.value !== null);
+        const hayArchivoSeleccionado = archivoNuevoItem.value.length > 0 || (permiteXml && xmlNuevoItem.value !== null);
 
         if (!cambioFormulario && !hayArchivoSeleccionado) {
             cerrarModalItem();
@@ -157,9 +167,9 @@ export function crearPanelDocumento(opciones) {
         const pendientesPrevios = base._tempId ? archivosPendientes[base._tempId] : null;
         const yaTieneEvidencia = (base.adjuntos || []).some(
             adjunto => adjunto.tipo_archivo === 'EVIDENCIA'
-        ) || Boolean(pendientesPrevios?.evidencia);
+        ) || (pendientesPrevios?.evidencias?.length > 0);
 
-        if (requiereEvidencia && !archivoNuevoItem.value && !yaTieneEvidencia) {
+        if (requiereEvidencia && archivoNuevoItem.value.length === 0 && !yaTieneEvidencia) {
             mostrarAviso('Adjunta el sustento antes de añadir este ítem.');
             return;
         }
@@ -167,13 +177,15 @@ export function crearPanelDocumento(opciones) {
         const extra = enriquecerItem ? enriquecerItem(datos, nuevoItem.value) : {};
         const item = { ...base, ...nuevoItem.value, ...extra };
 
-        if (archivoNuevoItem.value || (permiteXml && xmlNuevoItem.value)) {
+        if (archivoNuevoItem.value.length > 0 || (permiteXml && xmlNuevoItem.value)) {
             const tempId = base._tempId || nuevoTempId();
             const archivos = archivosPendientes[tempId] || {};
 
-            if (archivoNuevoItem.value) {
-                archivos.evidencia = archivoNuevoItem.value;
-                item._archivoPendienteNombre = archivoNuevoItem.value.name;
+            if (archivoNuevoItem.value.length > 0) {
+                archivos.evidencias = [...archivoNuevoItem.value];
+                item._archivoPendienteNombre = archivos.evidencias.length === 1
+                    ? archivos.evidencias[0].name
+                    : `${archivos.evidencias.length} archivos adjuntos`;
             }
 
             if (permiteXml && xmlNuevoItem.value) {
@@ -199,11 +211,15 @@ export function crearPanelDocumento(opciones) {
 
     // Adjuntos por item ya guardado en servidor 
     async function subirArchivoAdjunto(documentoId, detalleId, archivo, tipoArchivo) {
+        const archivoFinal = tipoArchivo === 'EVIDENCIA'
+            ? await prepararArchivoParaSubida(archivo)
+            : archivo;
+
         return enviarFormulario(datos.baseUrl + endpoints.subirAdjunto, {
             [campoIdAdjunto]: documentoId,
             detalle_id: detalleId,
             tipo_archivo: tipoArchivo,
-            archivo,
+            archivo: archivoFinal,
         });
     }
 
@@ -236,20 +252,40 @@ export function crearPanelDocumento(opciones) {
                 };
             }
             if (archivos && idReal) {
-                for (const [clave, archivo] of Object.entries(archivos)) {
-                    const tipoArchivo = clave === 'xml' ? 'XML' : 'EVIDENCIA';
-                    const subida = await subirArchivoAdjunto(resultado.id, idReal, archivo, tipoArchivo);
-
-                    if (!subida.ok) {
-                        return {
-                            ok: false,
-                            error: 'El documento se guardó, pero no se pudo adjuntar '
-                                + archivo.name + ': ' + (subida.error || 'intenta de nuevo.'),
-                        };
+                try {
+                    const evidencias = [...(archivos.evidencias || [])];
+                    while (evidencias.length > 0) {
+                        const archivo = evidencias[0];
+                        const subida = await subirArchivoAdjunto(resultado.id, idReal, archivo, 'EVIDENCIA');
+                        if (!subida.ok) {
+                            archivos.evidencias = evidencias;
+                            return {
+                                ok: false,
+                                error: 'El documento se guardó, pero no se pudo adjuntar '
+                                    + archivo.name + ': ' + (subida.error || 'intenta de nuevo.'),
+                            };
+                        }
+                        archivosGuardados[tempId] = archivosGuardados[tempId] || { evidencias: [] };
+                        archivosGuardados[tempId].evidencias.push(archivo);
+                        evidencias.shift();
                     }
+                    delete archivos.evidencias;
 
-                    archivosGuardados[tempId] = { ...archivos };
-                    delete archivos[clave];
+                    if (archivos.xml) {
+                        const subidaXml = await subirArchivoAdjunto(resultado.id, idReal, archivos.xml, 'XML');
+                        if (!subidaXml.ok) {
+                            return {
+                                ok: false,
+                                error: 'El documento se guardó, pero no se pudo adjuntar '
+                                    + archivos.xml.name + ': ' + (subidaXml.error || 'intenta de nuevo.'),
+                            };
+                        }
+                        archivosGuardados[tempId] = archivosGuardados[tempId] || {};
+                        archivosGuardados[tempId].xml = archivos.xml;
+                        delete archivos.xml;
+                    }
+                } catch (err) {
+                    return { ok: false, error: err.message || 'No se pudo procesar el archivo adjunto.' };
                 }
 
                 if (Object.keys(archivos).length === 0) delete archivosPendientes[tempId];
@@ -285,7 +321,7 @@ export function crearPanelDocumento(opciones) {
     return {
         panel, total, editar, cancelar,
         modalItemAbierto, refModalItem, nuevoItem,
-        archivoNuevoItem, refArchivoItem, xmlNuevoItem, refXmlItem, editandoIdx,
+        archivoNuevoItem, refArchivoItem, agregarEvidencias, xmlNuevoItem, refXmlItem, editandoIdx,
         limpiarArchivoNuevo, limpiarXmlNuevo,
         abrirModalItem, mensajeValidacionItem, puedeGuardarItem,
         guardarItem, quitarItem, persistir, guardarDocumento,

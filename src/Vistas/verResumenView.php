@@ -818,11 +818,11 @@ function vistaVerResumen(
                     </div>
                 </template>
 
-                <label>Sustento (PDF)</label>
-                <input type="file" ref="refArchivoContable" :disabled="!!archivoNuevoItemContable || (editandoIdxContable !== null && adjuntosItemEditandoContable.some(a => a.tipo_archivo === 'EVIDENCIA'))" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemContable = $event.target.files[0] || null">
-                <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemContable">
-                    <span>📎 {{ archivoNuevoItemContable.name }}</span>
-                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoContable">✕</button>
+                <label>Sustento (PDF o Imagen)</label>
+                <input type="file" ref="refArchivoContable" multiple accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="agregarEvidenciasContable">
+                <div class="adjunto-seleccionado-fila" v-for="(arch, i) in archivoNuevoItemContable" :key="i">
+                    <span>📎 {{ arch.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoContable(i)">✕</button>
                 </div>
 
                 <label>Archivo XML</label>
@@ -872,11 +872,11 @@ function vistaVerResumen(
                     </div>
                 </template>
 
-                <label>Sustento (PDF)</label>
-                <input type="file" ref="refArchivoNoContable" :disabled="!!archivoNuevoItemNoContable || (editandoIdxNoContable !== null && adjuntosItemEditandoNoContable.some(a => a.tipo_archivo === 'EVIDENCIA'))" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemNoContable = $event.target.files[0] || null">
-                <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemNoContable">
-                    <span>📎 {{ archivoNuevoItemNoContable.name }}</span>
-                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoNoContable">✕</button>
+                <label>Sustento (PDF o Imagen)</label>
+                <input type="file" ref="refArchivoNoContable" multiple accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="agregarEvidenciasNoContable">
+                <div class="adjunto-seleccionado-fila" v-for="(arch, i) in archivoNuevoItemNoContable" :key="i">
+                    <span>📎 {{ arch.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoNoContable(i)">✕</button>
                 </div>
 
                 <label>Archivo XML (Opcional)</label>
@@ -931,10 +931,10 @@ function vistaVerResumen(
                 </template>
 
                 <label>Adjunto (PDF o Imagen)</label>
-                <input type="file" ref="refArchivoPlanilla" :disabled="!!archivoNuevoItemPlanilla || (editandoIdxPlanilla !== null && adjuntosItemEditandoPlanilla.length > 0)" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="archivoNuevoItemPlanilla = $event.target.files[0] || null">
-                <div class="adjunto-seleccionado-fila" v-if="archivoNuevoItemPlanilla">
-                    <span>📎 {{ archivoNuevoItemPlanilla.name }}</span>
-                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoPlanilla">✕</button>
+                <input type="file" ref="refArchivoPlanilla" multiple accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" @change="agregarEvidenciasPlanilla">
+                <div class="adjunto-seleccionado-fila" v-for="(arch, i) in archivoNuevoItemPlanilla" :key="i">
+                    <span>📎 {{ arch.name }}</span>
+                    <button type="button" class="boton-quitar-adjunto-modal" title="Quitar archivo" @click="limpiarArchivoNuevoPlanilla(i)">✕</button>
                 </div>
 
                 <div class="acciones-modal">
