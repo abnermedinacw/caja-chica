@@ -57,9 +57,14 @@ function vistaVerResumen(
         <section class="ficha ficha-cabecera">
             <div class="ficha-cabecera-acciones" v-if="esEditable">
                 <div class="ficha-cabecera-botones">
-                    <button v-if="!cabeceraEditando" type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || procesando" @click="iniciarEdicionCabecera" title="Editar cabecera">
-                    <?= icono('editar') ?> Editar
+                    <template v-if="!cabeceraEditando">
+                        <button type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || procesando" @click="iniciarEdicionCabecera" title="Editar cabecera">
+                        <?= icono('editar') ?> Editar
                     </button>
+                    <button type="button" class="boton boton-chico boton-anular-sutil" :disabled="hayPanelesEnEdicion || procesando" @click="anularResumen" title="Anular resumen">
+                        <?= icono('quitar') ?>
+                    </button>
+                    </template> 
                     <template v-else>
                         <button type="button" class="boton boton-primario boton-chico" :disabled="guardandoCabecera" @click="guardarCabecera">Guardar</button>
                         <button type="button" class="boton boton-secundario boton-chico" :disabled="guardandoCabecera" @click="cancelarEdicionCabecera">Cancelar</button>

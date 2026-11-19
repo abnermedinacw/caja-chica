@@ -320,6 +320,31 @@ createApp({
             });
         }
 
+        const anulado = ref(false);
+        function anularResumen() {
+            if (!esEditable || hayPanelesEnEdicion.value || cabeceraEditando.value || procesando.value);
+            return;
+            pedirConfirmacion({
+                titulo: 'Anular Caja Chica',
+                mensaje: '¿Seguro que deseas anular tu Caja? Esta acción no se puede deshacer.',
+                textoConfirmar: 'Anular',
+                tipo: 'peligro',
+                accion: async () => {
+                    if (anulando.value) return;
+                    anulando.value = true;
+                    const resultado = await enviarFormulario(datos.baseUrl + '/anular-mi-resumen', {
+                        resumen_id: datos.resumenId,
+                    });
+                    anulando.value = false;
+                    if (resultado.ok) {
+                        window.location.href = datos.baseUrl + '/home';
+                        return;
+                    }
+                    mostrarAviso(resultado.error || 'No se pudo anular la Caja Chica')
+                },
+            })
+        }
+
         // Estado global de edición: solo se permite modificar un documento a la vez.
         const documentoEnEdicion = computed(() => {
             if (panelContable.panel.value.editando) return 'contable';
@@ -440,7 +465,7 @@ createApp({
 
             cancelarModalItemContable: panelContable.cancelarModalItem, cancelarModalItemNoContable: panelNoContable.cancelarModalItem, cancelarModalItemPlanilla: panelPlanilla.cancelarModalItem,
 
-            filasAbiertas, filaEstaAbierta, toggleFila, todosDesplegados, alternarTodasLasFilas
+            filasAbiertas, filaEstaAbierta, toggleFila, todosDesplegados, alternarTodasLasFilas, anularResumen
         };
     },
 }).mount('#app');

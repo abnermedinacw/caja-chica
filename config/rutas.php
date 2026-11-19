@@ -51,5 +51,6 @@ return[
     'reactivar-txt-fondos' => 'reactivarTxtFondosController.php',
     'admin-resumenes' => 'adminResumenesController.php',
     'anular-resumen' => 'anularResumenController.php',
+    'anular-resumen-usuario' => 'anularResumenUsuarioController.php',
     'anular-fondo' => 'anularFondoController.php'
 ];

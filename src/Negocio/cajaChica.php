@@ -213,36 +213,47 @@ function editarCabeceraResumen(
 function anularResumenAdmin(int $resumenId, int $usuarioId, string $motivo): array
 {
     $motivo = trim($motivo);
-    if ($resumenId <= 0) {
-        return ['ok' => false, 'error' => 'Resumen inválido.'];
-    }
-    if ($motivo === '') {
-        return ['ok' => false, 'error' => 'Indica el motivo de la anulación.'];
-    }
-    if (mb_strlen($motivo) > 255) {
-        return ['ok' => false, 'error' => 'El motivo no puede superar los 255 caracteres.'];
-    }
+    if ($motivo === '') return ['ok' => false, 'error' => 'Indica el motivo de la anulación'];
+    if (mb_strlen($motivo) < 255) return ['ok' => false, 'error' => 'Máximo de 255 caracteres.'];
+    return _anularResumen($resumenId, $usuarioId, $motivo);
+}
 
+// Permite al mismo usuario anular su propio resumen
+function anularResumenUsuario(int $resumenId, int $trabajadorId, int $usuarioId): array
+{
+    return _anularResumen(
+        $resumenId,
+        $usuarioId,
+        'Anulado por el responsable',
+        function (array $resumen) use ($trabajadorId): ?string {
+            if ((int)$resumen['trabajador_id'] !== $trabajadorId) return 'No tienes permiso para anular este Resumen.';
+            if (!esResumenEditable($resumen)) return 'Solo puede anular la Caja en estado de borrador o rechazo.';
+            return null;
+        }
+    );
+}
+
+function _anularResumen(
+    int $resumenId,
+    int $usuarioId,
+    string $motivo,
+    ?callable $validarRegla = null
+): array {
+    if ($resumenId <= 0) return ['ok' => false, 'error' => 'Resumen Inválido'];
+    
     $pdo = obtenerConexion();
     $pdo->beginTransaction();
     try {
         bloquearResumen($resumenId);
         $resumen = obtenerResumenAprobador($resumenId);
-        if (!$resumen) {
-            return ['ok' => false, 'error' => 'Resumen no encontrado.'];
-        }
-        if ($resumen['estado_general'] === 'ANULADO') {
-            return ['ok' => false, 'error' => 'Este Resumen ya fue anulado.'];
-        }
-        if ((int)($resumen['txt_bbva_descargado'] ?? 0) === 1) {
-            return ['ok' => false, 'error' => 'No se puede anular un Resumen cuyo TXT BBVA ya fue descargado.'];
-        }
+        if (!$resumen) return ['ok' => false, 'error' => 'Resumen no encontrado.'];
+        if ($resumen['estado_general'] === 'ANULADO') return ['ok' => false, 'error' => 'Caja chica anulada previamente.'];
+        if ((int)($resumen['txt_bbva_descargado'] ?? 0) === 1) return ['ok' => false, 'error' => 'No se puede anular Caja con pago en proceso.'];
+        if ($validarRegla !== null && ($error = $validarRegla($resumen)) !== null) return ['ok' => false, 'error' => $error];
 
         actualizarEstadoResumen($resumenId, 'ANULADO', null, null);
         registrarEventoResumen($resumenId, 'ANULADO', $usuarioId, null, $motivo);
-        if ($resumen['fondo_tipo'] === 'NO_RECURRENTE' && !empty($resumen['fondo_id'])) {
-            reabrirFondoNoRecurrente((int)$resumen['fondo_id']);
-        }
+        if ($resumen['fondo_tipo'] === 'NO_RECURRENTE' && !empty($resumen['fondo_id'])) reabrirFondoNoRecurrente((int)$resumen['fondo_id']);
 
         $pdo->commit();
         return ['ok' => true];
