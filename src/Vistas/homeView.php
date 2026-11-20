@@ -3,7 +3,7 @@ require_once __DIR__ . '/layout.php';
 
 function vistaHome(array $fondos, array $resumenes): void
 {
-    aperturaLayout('Inicio - Caja Chica', 'home');
+    aperturaLayout('Inicio - T-RINDE', 'home');
 ?>
     <div class="barra-superior cabecera-home">
         <div>

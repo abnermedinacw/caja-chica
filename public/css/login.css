@@ -159,7 +159,7 @@ body.pagina-login {
     .tarjeta-login { grid-template-columns: minmax(0, 1fr); max-width: 420px; min-height: 0; border-radius: 24px; }
     .panel-marca { display: none; }
     .panel-form { padding: 36px 32px 40px; }
-    .marca-compacta { display: block; margin-bottom: 32px; font-size: 15px; }
+    .marca-compacta { display: inline-flex; align-items: center; margin-bottom: 32px; font-size: 15px; }
     .moneda-suelta-2, .moneda-suelta-3, .punto-suelto-1, .punto-suelto-2 { display: none; }
 }
 @media (max-width: 420px) {

@@ -77,6 +77,14 @@ body {
 
 h1, h2, h3 { font-family: Manrope, 'Segoe UI', sans-serif; }
 
+.marca-trinde {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+}
+.marca-trinde svg { flex-shrink: 0; display: block; }
+
 h1 {
     font-size: 22px;
     font-weight: 700;

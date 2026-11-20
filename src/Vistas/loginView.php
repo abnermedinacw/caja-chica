@@ -42,12 +42,12 @@ function vistaLogin(?string $error): void
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Caja Chica — Ingresar</title>
+        <title>T-RINDE — Ingresar</title>
         <link rel="stylesheet" href="<?= assetUrl('/css/base.css') ?>">
         <link rel="stylesheet" href="<?= assetUrl('/css/componentes.css') ?>">
         <link rel="preload" href="<?= BASE_URL ?>/fonts/manrope.ttf" as="font" type="font/ttf" crossorigin>
         <link rel="stylesheet" href="<?= assetUrl('/css/login.css') ?>">
-        <link rel="icon" type="image/x-icon" href="<?= assetUrl('/money.png') ?>">
+        <link rel="icon" type="image/svg+xml" href="<?= assetUrl('/favicon.svg') ?>">
 
     </head>
 
@@ -112,15 +112,15 @@ function vistaLogin(?string $error): void
                     <path d="M20 350h120m-120 10h75"/>
                 </svg>
                 <div class="marca-monedas">
-                    <button type="button" class="moneda-juego moneda moneda-plata" aria-label="Hacer girar la moneda plateada de Caja Chica" title="Haz clic para hacerla girar"><?= moneda(112, 'plata') ?></button>
-                    <button type="button" class="moneda-juego moneda moneda-cobre" aria-label="Hacer girar la moneda de cobre de Caja Chica" title="Haz clic para hacerla girar"><?= moneda(104, 'cobre') ?></button>
+                    <button type="button" class="moneda-juego moneda moneda-plata" aria-label="Hacer girar la moneda plateada de T-RINDE" title="Haz clic para hacerla girar"><?= moneda(112, 'plata') ?></button>
+                    <button type="button" class="moneda-juego moneda moneda-cobre" aria-label="Hacer girar la moneda de cobre de T-RINDE" title="Haz clic para hacerla girar"><?= moneda(104, 'cobre') ?></button>
                 </div>
-                <h1 class="marca-titulo">Caja Chica</h1>
-                <p class="marca-descripcion">Gestión de fondos y rendiciones.</p>
+                <h1 class="marca-titulo" aria-label="T-RINDE"><?= logoMarca(36) ?></h1>
+                <p class="marca-descripcion">Gestión de caja chica, fondos y rendiciones.</p>
             </section>
 
             <section class="panel-form" aria-labelledby="titulo-login">
-                <span class="marca-compacta">Caja Chica</span>
+                <span class="marca-compacta" aria-label="T-RINDE"><?= logoMarca(24) ?></span>
                 <h2 class="form-titulo" id="titulo-login">Inicia sesión</h2>
                 <p class="form-subtitulo">Ingresa con tu usuario para continuar.</p>
 

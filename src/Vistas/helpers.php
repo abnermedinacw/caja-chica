@@ -96,6 +96,18 @@ function icono(string $nombre): string
     return $iconos[$nombre] ?? '';
 }
 
+/** Renderiza el isotipo [T] + "-RINDE" usando currentColor para adaptarse a fondos claros u oscuros. */
+function logoMarca(int $tamanoIcono = 26): string
+{
+    return '<span class="marca-trinde">'
+        . '<svg width="' . $tamanoIcono . '" height="' . $tamanoIcono . '" viewBox="0 0 32 32" aria-hidden="true" focusable="false">'
+        . '<rect width="32" height="32" rx="6" fill="#EC5A38"/>'
+        . '<path fill="#FFFFFF" d="M7 6.5 H25 V11.2 H23.5 C23.2 9.2 22.3 8.4 20.4 8.4 H17.7 V22.8 C17.7 23.8 18.2 24.2 19.6 24.3 L20.6 24.4 V25.5 H11.4 V24.4 L12.4 24.3 C13.8 24.2 14.3 23.8 14.3 22.8 V8.4 H11.6 C9.7 8.4 8.8 9.2 8.5 11.2 H7 Z"/>'
+        . '</svg>'
+        . '<span class="marca-trinde-texto">-RINDE</span>'
+        . '</span>';
+}
+
 function formatearFecha(?string $fecha): string 
 {
     if (!$fecha) return '-';

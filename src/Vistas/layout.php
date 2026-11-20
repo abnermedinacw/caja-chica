@@ -78,12 +78,12 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
         <link rel="stylesheet" href="<?= assetUrl('/css/base.css') ?>">
         <link rel="stylesheet" href="<?= assetUrl('/css/componentes.css') ?>">
         <link rel="stylesheet" href="<?= assetUrl('/css/modulos.css') ?>">
-        <link rel="icon" type="image/x-icon" href="<?= assetUrl('/money.png') ?>">
+        <link rel="icon" type="image/svg+xml" href="<?= assetUrl('/favicon.svg') ?>">
         <script type="importmap"><?= json_encode(mapaModulosJs(), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
     </head>
     <body class="con-barra-lateral">
         <aside class="barra-lateral">
-            <a href="<?= BASE_URL ?>/home" class="barra-lateral-marca">Caja Chica</a>
+            <a href="<?= BASE_URL ?>/home" class="barra-lateral-marca" aria-label="T-RINDE — Inicio"><?= logoMarca(26) ?></a>
             <nav class="barra-lateral-nav" aria-label="Navegación principal">
                 <?php foreach ($secciones as $seccion): ?>
                     <?php if (isset($seccion['titulo'])): ?>
