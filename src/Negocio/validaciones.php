@@ -94,3 +94,29 @@ function validarRucComprobante(?string $ruc, ?bool $proveedorValido, string $tip
     }
     return null;
 }
+
+// Regla estricta SUNAT para comprobantes con codigo_sunat (Factura, Boleta, RxH):
+// solo pasa si estadoCp = ACEPTADO (1), estadoRuc = ACTIVO (00) y condDomiRuc = HABIDO (00).
+function validarCpeComprobante(
+    ?string $cpeEstadoSunat,
+    ?string $cpeEstadoRuc,
+    ?string $cpeCondicionRuc,
+    ?string $codigoSunat,
+    string $tipoComprobanteNombre
+): ?string {
+    if ($codigoSunat === null || $codigoSunat === '') {
+        return null;
+    }
+
+    $estadoCp = strtoupper(trim((string)$cpeEstadoSunat));
+    $estadoRuc = strtoupper(trim((string)$cpeEstadoRuc));
+    $condicionRuc = strtoupper(trim((string)$cpeCondicionRuc));
+
+    if ($estadoCp === '') {
+        return "$tipoComprobanteNombre requiere verificación del comprobante en SUNAT antes de guardar.";
+    }
+    if ($estadoCp !== 'ACEPTADO' || $estadoRuc !== 'ACTIVO' || $condicionRuc !== 'HABIDO') {
+        return "El comprobante no cumple la validación estricta de SUNAT (debe estar ACEPTADO, ACTIVO y HABIDO).";
+    }
+    return null;
+}

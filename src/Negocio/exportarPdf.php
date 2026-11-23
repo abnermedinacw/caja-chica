@@ -249,12 +249,38 @@ function generarPdfResumen(int $resumenId, bool $incluirAnexos = true): ?string
 
     if ($incluirAnexos) {
         // Los XML quedan disponibles para descarga en la vista, pero nunca se
-        // incorporan al expediente visual. Solo se adjuntan evidencias PDF.
+        // incorporan al expediente visual. Solo se adjuntan evidencias PDF
+        // seguidas inmediatamente por la constancia SUNAT de cada comprobante verificado.
         if ($documentoContable) {
-            anexarEvidenciasAlResumenPdf(
-                $pdf,
-                obtenerEvidenciasContablesParaPdf((int)$documentoContable['id'])
-            );
+            $evidenciasPorDetalle = [];
+            foreach (obtenerEvidenciasContablesParaPdf((int)$documentoContable['id']) as $ev) {
+                $evidenciasPorDetalle[(int)$ev['detalle_id']][] = $ev;
+            }
+
+            foreach ($itemsContable as $itemContable) {
+                $detalleId = (int)$itemContable['id'];
+                if (!empty($evidenciasPorDetalle[$detalleId])) {
+                    anexarEvidenciasAlResumenPdf($pdf, $evidenciasPorDetalle[$detalleId]);
+                }
+
+                // Inmediatamente después del sustento de este comprobante, anexamos su constancia SUNAT.
+                if (!empty($itemContable['cpe_estado_sunat'])) {
+                    $pdf->anexarConstanciaSunat([
+                        'codigo_sunat'           => $itemContable['codigo_sunat'] ?? '',
+                        'tipo_comprobante'       => $itemContable['tipo_comprobante'] ?? '',
+                        'proveedor_ruc'          => $itemContable['proveedor_ruc'] ?? '',
+                        'empresa_ruc'            => $resumen['empresa_ruc'] ?? '',
+                        'serie'                  => $itemContable['serie'] ?? '',
+                        'numero_comprobante'     => $itemContable['numero_comprobante'] ?? '',
+                        'fecha'                  => $itemContable['fecha'] ?? '',
+                        'monto'                  => $itemContable['monto'] ?? 0,
+                        'cpe_estado_sunat'       => $itemContable['cpe_estado_sunat'],
+                        'cpe_estado_ruc'         => $itemContable['cpe_estado_ruc'] ?? '',
+                        'cpe_condicion_ruc'      => $itemContable['cpe_condicion_ruc'] ?? '',
+                        'fecha_verificacion_cpe' => $itemContable['fecha_verificacion_cpe'] ?? '',
+                    ]);
+                }
+            }
         }
 
         if ($documentoNoContable) {

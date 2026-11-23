@@ -56,7 +56,7 @@ function obtenerEvidenciasContablesParaPdf(int $documentoId): array
 {
     $pdo = obtenerConexion();
     $stmt = $pdo->prepare(
-        "SELECT a.nombre_archivo, a.ruta, d.item
+        "SELECT a.detalle_id, a.nombre_archivo, a.ruta, d.item
          FROM adjunto_documento_contable a
          INNER JOIN documento_contable_detalle d ON d.id = a.detalle_id
          WHERE a.documento_contable_id = ? AND a.tipo_archivo = 'EVIDENCIA'

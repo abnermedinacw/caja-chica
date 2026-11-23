@@ -238,7 +238,12 @@ function vistaVerResumen(
                                             <tr v-for="(it, idx) in contable.items" :key="idx">
                                                 <td>{{ idx + 1 }}</td>
                                                 <td>{{ formatearFecha(it.fecha) }}</td>
-                                                <td>{{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}</td>
+                                                <td>
+                                                    {{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}
+                                                    <div v-if="it.cpe_estado_sunat" class="badge-cpe" :class="it.cpe_estado_sunat === 'ACEPTADO' && it.cpe_estado_ruc === 'ACTIVO' && it.cpe_condicion_ruc === 'HABIDO' ? 'badge-cpe-ok' : 'badge-cpe-error'">
+                                                        SUNAT: {{ it.cpe_estado_sunat }}
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <strong>{{ it.proveedor_ruc || '-' }}</strong><br>
                                                     <small>{{ it.proveedor_razon_social || 'Sin razón social' }}</small><br>
@@ -305,7 +310,12 @@ function vistaVerResumen(
                                                 <td>{{ idx + 1 }}</td>
                                                 <td>{{ it.fecha }}</td>
                                                 <td>{{ it.concepto }}</td>
-                                                <td>{{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}</td>
+                                                <td>
+                                                    {{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}
+                                                    <div v-if="it.cpe_estado_sunat" class="badge-cpe" :class="it.cpe_estado_sunat === 'ACEPTADO' && it.cpe_estado_ruc === 'ACTIVO' && it.cpe_condicion_ruc === 'HABIDO' ? 'badge-cpe-ok' : 'badge-cpe-error'">
+                                                        SUNAT: {{ it.cpe_estado_sunat }}
+                                                    </div>
+                                                </td>
                                                 <td>{{ formatearSoles(it.monto) }}</td>
                                                 <td class="celda-acciones">
                                                     <button type="button" class="boton boton-chico" @click="abrirModalItemContable(idx)"><?= icono('editar') ?> Editar</button>
@@ -794,28 +804,28 @@ function vistaVerResumen(
                 <input type="text" v-model="nuevoItemContable.concepto" spellcheck="true" required>
 
                 <label>Fecha de emisión</label>
-                <input type="date" v-model="nuevoItemContable.fecha" :min="contable.periodoInicio" :max="contable.periodoFin" required>
+                <input type="date" v-model="nuevoItemContable.fecha" :min="contable.periodoInicio" :max="contable.periodoFin" @change="alCambiarDatosCpe" required>
 
                 <label>Tipo de comprobante</label>
-                <select v-model="nuevoItemContable.tipo_comprobante_id" required>
+                <select v-model="nuevoItemContable.tipo_comprobante_id" @change="alCambiarDatosCpe" required>
                     <option value="">-- Selecciona --</option>
                     <option v-for="tc in datos.tiposComprobante" :key="tc.id" :value="tc.id">{{ tc.nombre }}</option>
                 </select>
 
                 <label>Serie</label>
-                <input type="text" v-model="nuevoItemContable.serie" maxlength="10" placeholder="F001 o 001" required>
+                <input type="text" v-model="nuevoItemContable.serie" maxlength="10" placeholder="F001 o 001" @input="alCambiarDatosCpe" required>
 
                 <label>Número</label>
-                <input type="text" v-model="nuevoItemContable.numero_comprobante" maxlength="8" inputmode="numeric" placeholder="00012345" required>
+                <input type="text" v-model="nuevoItemContable.numero_comprobante" maxlength="8" inputmode="numeric" placeholder="00012345" @input="alCambiarDatosCpe" required>
 
                 <label>Monto</label>
-                <input type="number" step="0.01" min="0.01" max="50000" v-model="nuevoItemContable.monto" required>
+                <input type="number" step="0.01" min="0.01" max="50000" v-model="nuevoItemContable.monto" @input="alCambiarDatosCpe" required>
 
                 <label>RUC del proveedor</label>
                 <div class="campo-ruc">
                     <input type="text" v-model="nuevoItemContable.proveedor_ruc" maxlength="11" inputmode="numeric" @input="alCambiarRucContable">
                     <button type="button" class="boton boton-chico" :disabled="verificandoRuc" @click="verificarRuc">
-                        {{ verificandoRuc ? 'Verificando…' : 'Verificar' }}
+                        {{ verificandoRuc ? 'Verificando…' : 'Verificar RUC' }}
                     </button>
                 </div>
                 <p class="texto-vacio" v-if="nuevoItemContable.proveedor_estado">
@@ -824,6 +834,25 @@ function vistaVerResumen(
 
                 <label>Razón social</label>
                 <input type="text" v-model="nuevoItemContable.proveedor_razon_social">
+
+                <div v-if="requiereVerificacionCpe" class="bloque-verificacion-cpe">
+                    <div class="bloque-verificacion-cpe-cabecera">
+                        <span>Validación de comprobante (SUNAT)</span>
+                        <button type="button" class="boton boton-chico" :disabled="verificandoCpe" @click="verificarComprobante">
+                            {{ verificandoCpe ? 'Consultando SUNAT…' : 'Verificar comprobante' }}
+                        </button>
+                    </div>
+                    <div v-if="nuevoItemContable.cpe_estado_sunat" class="resultado-cpe" :class="cpeEsValido ? 'resultado-cpe-ok' : 'resultado-cpe-error'">
+                        <strong>{{ cpeEsValido ? '✓ Comprobante válido ante SUNAT' : '✕ Comprobante no cumple validación' }}</strong>
+                        <span>Comprobante: <b>{{ nuevoItemContable.cpe_estado_sunat }}</b></span>
+                        <span>RUC (a la emisión): <b>{{ nuevoItemContable.cpe_estado_ruc || '-' }}</b></span>
+                        <span>Domicilio (a la emisión): <b>{{ nuevoItemContable.cpe_condicion_ruc || '-' }}</b></span>
+                        <small v-for="(obs, idxObs) in observacionesCpe" :key="idxObs">Obs.: {{ obs }}</small>
+                    </div>
+                    <p v-else class="texto-vacio texto-cpe-pendiente">
+                        Requiere verificación estricta SUNAT (Aceptado, Activo y Habido). La constancia se anexará automáticamente al PDF.
+                    </p>
+                </div>
 
                 <template v-if="editandoIdxContable !== null && adjuntosItemEditandoContable.length">
                     <label>Adjuntos guardados</label>

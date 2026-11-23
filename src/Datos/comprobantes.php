@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/database.php';
 function listarTiposComprobante(): array
 {
     $pdo = obtenerConexion();
-    $stmt = $pdo->query("SELECT id, nombre FROM tipo_comprobante ORDER BY id");
+    $stmt = $pdo->query("SELECT id, nombre, codigo_sunat FROM tipo_comprobante ORDER BY id");
     return $stmt->fetchAll();
 }
 
@@ -19,7 +19,11 @@ function crearComprobante(
     ?string $proveedorRazonSocial,
     ?string $proveedorCondicion,
     ?string $proveedorEstado,
-    ?bool $proveedorValido
+    ?bool $proveedorValido,
+    ?string $cpeEstadoSunat = null,
+    ?string $cpeEstadoRuc = null,
+    ?string $cpeCondicionRuc = null,
+    ?string $fechaVerificacionCpe = null
 ): int 
 {
     $pdo = obtenerConexion();
@@ -33,13 +37,20 @@ function crearComprobante(
     $stmt->execute([$tipoComprobanteId, $serie, $numero]);
     $existente = $stmt->fetch();
 
+    // Si hay verificación CPE pero no vino fecha explícita, registramos el momento actual.
+    $fechaCpeFinal = $cpeEstadoSunat !== null
+        ? ($fechaVerificacionCpe ?: date('Y-m-d H:i:s'))
+        : null;
+
     if ($existente) {
         // Si corrigen fecha, monto o datos SUNAT sobre la misma serie/número, actualizamos el comprobante.
         $stmtUpd = $pdo->prepare(
             "UPDATE comprobante
              SET fecha = ?, monto = ?, proveedor_ruc = ?, proveedor_razon_social = ?,
                  proveedor_condicion_sunat = ?, proveedor_estado_sunat = ?, proveedor_valido = ?,
-                 fecha_verificacion_proveedor = COALESCE(?, fecha_verificacion_proveedor)
+                 fecha_verificacion_proveedor = COALESCE(?, fecha_verificacion_proveedor),
+                 cpe_estado_sunat = ?, cpe_estado_ruc = ?, cpe_condicion_ruc = ?,
+                 fecha_verificacion_cpe = ?
              WHERE id = ?"
         );
         $stmtUpd->execute([
@@ -47,14 +58,16 @@ function crearComprobante(
             $proveedorCondicion, $proveedorEstado,
             $proveedorValido === null ? null : ($proveedorValido ? 1 : 0),
             $proveedorRuc !== null ? date('Y-m-d H:i:s') : null,
+            $cpeEstadoSunat, $cpeEstadoRuc, $cpeCondicionRuc,
+            $fechaCpeFinal,
             (int)$existente['id'],
         ]);
         return (int)$existente['id'];
     }
 
     $stmt = $pdo->prepare(
-        "INSERT INTO comprobante (tipo_comprobante_id, serie, numero, fecha, monto, proveedor_ruc, proveedor_razon_social, proveedor_condicion_sunat, proveedor_estado_sunat, proveedor_valido, fecha_verificacion_proveedor)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO comprobante (tipo_comprobante_id, serie, numero, fecha, monto, proveedor_ruc, proveedor_razon_social, proveedor_condicion_sunat, proveedor_estado_sunat, proveedor_valido, fecha_verificacion_proveedor, cpe_estado_sunat, cpe_estado_ruc, cpe_condicion_ruc, fecha_verificacion_cpe)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 
     $stmt->execute([
@@ -62,15 +75,23 @@ function crearComprobante(
         $proveedorRuc, $proveedorRazonSocial, $proveedorCondicion, $proveedorEstado,
         $proveedorValido === null ? null : ($proveedorValido ? 1 : 0),
         $proveedorRuc !== null ? date('Y-m-d H:i:s') : null,
+        $cpeEstadoSunat, $cpeEstadoRuc, $cpeCondicionRuc,
+        $fechaCpeFinal,
     ]);
     return(int)$pdo->lastInsertId();
 }
 
-function obtenerNombreTipoComprobante(int $id): ?string
+function obtenerTipoComprobantePorId(int $id): ?array
 {
     $pdo = obtenerConexion();
-    $stmt = $pdo->prepare("SELECT nombre FROM tipo_comprobante WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, nombre, codigo_sunat FROM tipo_comprobante WHERE id = ?");
     $stmt->execute([$id]);
     $fila = $stmt->fetch();
-    return $fila ? $fila['nombre'] : null;
+    return $fila ?: null;
+}
+
+function obtenerNombreTipoComprobante(int $id): ?string
+{
+    $tipo = obtenerTipoComprobantePorId($id);
+    return $tipo ? $tipo['nombre'] : null;
 }

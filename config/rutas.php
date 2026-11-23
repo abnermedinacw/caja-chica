@@ -26,6 +26,7 @@ return[
     'rechazar-resumen' => 'rechazarResumenController.php',
     'continuar-cascada-rechazo' => 'continuarCascadaRechazoController.php',
     'verificar-ruc' => 'verificarRucController.php',
+    'verificar-comprobante' => 'verificarComprobanteController.php',
     'exportar-resumen-pdf' => 'exportarResumenController.php',
     'historial-aprobaciones' => 'historialAprobacionesController.php',
     'historial' => 'historialResumenesController.php',

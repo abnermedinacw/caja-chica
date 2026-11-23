@@ -507,4 +507,75 @@ class ResumenPdf extends Fpdi
 
         $this->Image($ruta, ($this->w - $ancho) / 2, ($this->h - $alto) / 2, $ancho, $alto);
     }
+
+    /**
+     * Anexa una página A4 con la constancia visual de Consulta Individual de SUNAT
+     * usando la plantilla base y los datos reales guardados en la verificación CPE.
+     */
+    public function anexarConstanciaSunat(array $datos): void
+    {
+        $plantilla = __DIR__ . '/plantillas/sunat_consulta_cpe.jpg';
+        if (!is_file($plantilla)) {
+            throw new RuntimeException('No se encontró la plantilla de constancia SUNAT.');
+        }
+
+        $tipoNombre = match (strtoupper((string)($datos['codigo_sunat'] ?? ''))) {
+            '01' => 'Factura',
+            '03' => 'Boleta de venta',
+            'R1' => 'Recibo por honorarios',
+            '07' => 'Nota de Crédito',
+            '08' => 'Nota de Débito',
+            '04' => 'Liquidación de compra',
+            'R7' => 'Nota de Crédito de RxH',
+            default => (string)($datos['tipo_comprobante'] ?? 'Comprobante'),
+        };
+
+        $tsConsulta = !empty($datos['fecha_verificacion_cpe']) ? strtotime((string)$datos['fecha_verificacion_cpe']) : false;
+        $fechaCabecera = $tsConsulta !== false ? date('d/m/y, H:i', $tsConsulta) : date('d/m/y, H:i');
+
+        $tsEmision = !empty($datos['fecha']) ? strtotime((string)$datos['fecha']) : false;
+        $fechaEmision = $tsEmision !== false ? date('d/m/Y', $tsEmision) : (string)($datos['fecha'] ?? '');
+
+        $monto = number_format((float)($datos['monto'] ?? 0), 2, '.', '');
+        $rucEmisor = (string)($datos['proveedor_ruc'] ?? '');
+        $rucReceptor = (string)($datos['empresa_ruc'] ?? $this->rucEmpresa);
+        $serie = strtoupper((string)($datos['serie'] ?? ''));
+        $numero = (string)($datos['numero_comprobante'] ?? '');
+        $estadoCp = (string)($datos['cpe_estado_sunat'] ?? '');
+        $estadoRuc = (string)($datos['cpe_estado_ruc'] ?? '');
+        $condicionRuc = (string)($datos['cpe_condicion_ruc'] ?? '');
+
+        // Desactivamos salto automático porque los campos de resultado se ubican hasta Y = 250mm.
+        $this->SetAutoPageBreak(false);
+        try {
+            $this->siguientePaginaEsAnexo = true;
+            $this->AddPage('P', 'A4');
+            $this->Image($plantilla, 0, 0, 210, 297, 'JPG');
+
+            $this->SetTextColor(0, 0, 0);
+            $this->SetFont('Arial', '', 7.5);
+            $this->SetXY(10, 4.5);
+            $this->Cell(50, 4, textoPdf($fechaCabecera), 0, 0, 'L');
+
+            $this->SetFont('Arial', '', 10);
+            $campos = [
+                [112, 76.5, $rucEmisor],
+                [112, 89.5, $tipoNombre],
+                [112, 102.5, $serie],
+                [156, 102.5, $numero],
+                [156, 115.5, $rucReceptor],
+                [156, 130.5, $fechaEmision],
+                [170, 143.5, $monto],
+                [25, 205.5, $estadoCp],
+                [25, 227.5, $estadoRuc],
+                [25, 249.5, $condicionRuc],
+            ];
+            foreach ($campos as [$x, $y, $valor]) {
+                $this->SetXY($x, $y);
+                $this->Cell(90, 5, textoPdf($valor), 0, 0, 'L');
+            }
+        } finally {
+            $this->SetAutoPageBreak(true, 20);
+        }
+    }
 }

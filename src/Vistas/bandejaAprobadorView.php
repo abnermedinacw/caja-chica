@@ -18,7 +18,7 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
         <section>
             <h2>Pendientes de aprobación</h2>
             <?php if (empty($resumenes)): ?>
-                <p class="texto-vacio">No tienes Resúmenes pendientes de aprobación por ahora.</p>
+                <p class="texto-vacio">No tienes cajas pendientes de aprobación por ahora.</p>
             <?php else: ?>
                 <div class="tabla-scroll tabla-scroll-vertical">
                 <table class="tabla">
@@ -95,14 +95,14 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
 
             <section>
                 <div class="cabecera-mis-resumenes">
-                    <h2>Mis resúmenes</h2>
+                    <h2>Mis Cajas en curso</h2>
                     <div class="cabecera-mis-resumenes-acciones">
                         <a href="<?= BASE_URL ?>/historial" class="boton boton-secundario">Ver historial</a>
                         <a href="<?= BASE_URL ?>/crear-resumen" class="boton boton-primario"><?= icono('mas') ?> Rendir Caja</a>
                     </div>
                 </div>
                 <?php if (empty($misResumenes)): ?>
-                    <p class="texto-vacio">Sin resúmenes en curso.</p>
+                    <p class="texto-vacio">Sin cajas en curso.</p>
                 <?php else: ?>
                     <div class="tabla-scroll">
                     <table class="tabla">

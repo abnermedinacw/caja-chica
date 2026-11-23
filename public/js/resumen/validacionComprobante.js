@@ -13,6 +13,10 @@ export function itemContableVacio() {
         proveedor_condicion: '',
         proveedor_estado: '',
         proveedor_valido: null,
+        cpe_estado_sunat: '',
+        cpe_estado_ruc: '',
+        cpe_condicion_ruc: '',
+        fecha_verificacion_cpe: '',
     };
 }
 
@@ -20,6 +24,17 @@ export function esRucValido(valor) {
     return valor === true || valor === 1 || valor === '1';
 }
 
+export function tipoRequiereCpe(tiposComprobante, tipoId) {
+    const tipo = (tiposComprobante || []).find(tc => String(tc.id) === String(tipoId));
+    return Boolean(tipo && tipo.codigo_sunat);
+}
+
+// Regla estricta SUNAT: solo es válido si está ACEPTADO (1), ACTIVO (00) y HABIDO (00).
+export function esCpeValido(item) {
+    return String(item?.cpe_estado_sunat || '').toUpperCase() === 'ACEPTADO'
+        && String(item?.cpe_estado_ruc || '').toUpperCase() === 'ACTIVO'
+        && String(item?.cpe_condicion_ruc || '').toUpperCase() === 'HABIDO';
+}
 
 function nombreTipoComprobante(tiposComprobante, tipoId) {
     const tipo = tiposComprobante.find(tc => String(tc.id) === String(tipoId));
@@ -52,6 +67,13 @@ export function validarItemContableCliente(tiposComprobante, item) {
         if (!esRucValido(item.proveedor_valido)) {
             return 'Verifica el RUC del proveedor antes de guardar.';
         }
+    }
+
+    if (tipoRequiereCpe(tiposComprobante, item.tipo_comprobante_id) && !esCpeValido(item)) {
+        if (!item.cpe_estado_sunat) {
+            return 'Verifica el comprobante en SUNAT antes de guardar.';
+        }
+        return 'El comprobante no cumple la validación SUNAT (debe estar ACEPTADO, ACTIVO y HABIDO).';
     }
     return null;
 }

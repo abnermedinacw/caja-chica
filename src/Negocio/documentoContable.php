@@ -103,13 +103,29 @@ function guardarDocumentoContable(
         $idsPorTempId = [];
         $item = 1;
         foreach ($items as $it) {
-            $tipoComprobante = obtenerNombreTipoComprobante((int)$it['tipo_comprobante_id']) ?? '';
+            $tipoInfo = obtenerTipoComprobantePorId((int)$it['tipo_comprobante_id']);
+            $tipoComprobante = $tipoInfo['nombre'] ?? '';
+            $codigoSunat = $tipoInfo['codigo_sunat'] ?? null;
+
             if ($error = validarSerieComprobante($it['serie'], $tipoComprobante)) {
                 throw new InvalidArgumentException($error);
             }
             $proveedorValido = isset($it['proveedor_valido']) ? (bool)$it['proveedor_valido'] : null;
             if ($error = validarRucComprobante($it['proveedor_ruc'] ?? null, $proveedorValido, $tipoComprobante)) {
                 throw new InvalidArgumentException($error);
+            }
+
+            $cpeEstadoSunat = !empty($it['cpe_estado_sunat']) ? trim((string)$it['cpe_estado_sunat']) : null;
+            $cpeEstadoRuc = !empty($it['cpe_estado_ruc']) ? trim((string)$it['cpe_estado_ruc']) : null;
+            $cpeCondicionRuc = !empty($it['cpe_condicion_ruc']) ? trim((string)$it['cpe_condicion_ruc']) : null;
+            $fechaVerificacionCpe = !empty($it['fecha_verificacion_cpe']) ? trim((string)$it['fecha_verificacion_cpe']) : null;
+
+            // Solo exigimos verificación CPE a los tipos mapeados con código SUNAT (Factura, Boleta, RxH).
+            if ($error = validarCpeComprobante($cpeEstadoSunat, $cpeEstadoRuc, $cpeCondicionRuc, $codigoSunat, $tipoComprobante)) {
+                throw new InvalidArgumentException($error);
+            }
+            if ($codigoSunat === null || $codigoSunat === '') {
+                $cpeEstadoSunat = $cpeEstadoRuc = $cpeCondicionRuc = $fechaVerificacionCpe = null;
             }
 
             $rucLimpio = (!empty($it['proveedor_ruc'])) ? $it['proveedor_ruc'] : null;
@@ -124,7 +140,11 @@ function guardarDocumentoContable(
                 $it['proveedor_razon_social'] ?? null,
                 $it['proveedor_condicion'] ?? null,
                 $it['proveedor_estado'] ?? null,
-                isset($it['proveedor_valido']) ? (bool)$it['proveedor_valido'] : null
+                isset($it['proveedor_valido']) ? (bool)$it['proveedor_valido'] : null,
+                $cpeEstadoSunat,
+                $cpeEstadoRuc,
+                $cpeCondicionRuc,
+                $fechaVerificacionCpe
             );
 
             $detalleId = isset($it['id']) ? (int)$it['id'] : 0;

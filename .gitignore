@@ -2,6 +2,7 @@
 cookies.txt
 /config/correo.php
 /config/ruc.php
+/config/sunat.php
 
 # 2. Base de datos y backups
 /backups/

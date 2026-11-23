@@ -5,6 +5,7 @@ import { usarModales } from './resumen/modales.js';
 import { usarToast } from './resumen/toast.js';
 import { usarCabecera } from './resumen/cabecera.js';
 import { usarVerificacionRuc } from './resumen/verificacionRuc.js';
+import { usarVerificacionCpe } from './resumen/verificacionCpe.js';
 import { crearPanelDocumento } from './resumen/panelDocumento.js';
 
 const { createApp, ref, computed, watch } = Vue;
@@ -83,7 +84,20 @@ createApp({
         });
         function editarContable() { iniciarEdicionDocumento('contable', panelContable); }
 
-        const { verificandoRuc, verificarRuc, alCambiarRucContable } = usarVerificacionRuc(datos, panelContable.nuevoItem, { mostrarAviso });
+        const { verificandoRuc, verificarRuc, alCambiarRucContable: limpiarRucContable } = usarVerificacionRuc(datos, panelContable.nuevoItem, { mostrarAviso });
+        const {
+            verificandoCpe, observacionesCpe, requiereVerificacionCpe, cpeEsValido,
+            limpiarVerificacionCpe, alCambiarDatosCpe, verificarComprobante,
+        } = usarVerificacionCpe(datos, panelContable.nuevoItem, { mostrarAviso });
+
+        // Al cambiar el RUC limpiamos tanto la verificación del proveedor como la del comprobante CPE.
+        function alCambiarRucContable() {
+            limpiarRucContable();
+            limpiarVerificacionCpe();
+        }
+
+        // Limpia observaciones temporales de SUNAT cada vez que se abre o cierra el modal contable.
+        watch(panelContable.modalItemAbierto, () => { observacionesCpe.value = []; });
 
         // Documento No Contable
         const panelNoContable = crearPanelDocumento({
@@ -441,6 +455,8 @@ createApp({
             guardarItemContable: panelContable.guardarItem, quitarItemContable: panelContable.quitarItem,
             guardarDocumentoContable: panelContable.guardarDocumento, quitarDocumentoContable: panelContable.quitarDocumento,
             verificandoRuc, verificarRuc, alCambiarRucContable,
+            verificandoCpe, observacionesCpe, requiereVerificacionCpe, cpeEsValido,
+            alCambiarDatosCpe, verificarComprobante,
             adjuntosItemEditandoContable: panelContable.adjuntosItemEditando,
             quitarAdjuntoExistenteContable: panelContable.quitarAdjuntoExistente,
 

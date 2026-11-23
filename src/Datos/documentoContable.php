@@ -94,13 +94,18 @@ function obtenerDetalleDocumentoContable(int $documentoId): array
             dcd.monto,
             c.tipo_comprobante_id,
             tc.nombre AS tipo_comprobante,
+            tc.codigo_sunat,
             c.serie,
             c.numero AS numero_comprobante,
             c.proveedor_ruc,
             c.proveedor_razon_social,
             c.proveedor_estado_sunat AS proveedor_estado,
             c.proveedor_condicion_sunat AS proveedor_condicion,
-            c.proveedor_valido
+            c.proveedor_valido,
+            c.cpe_estado_sunat,
+            c.cpe_estado_ruc,
+            c.cpe_condicion_ruc,
+            c.fecha_verificacion_cpe
         FROM documento_contable_detalle dcd
         LEFT JOIN  comprobante c ON c.id = dcd.comprobante_id
         LEFT JOIN tipo_comprobante tc ON tc.id = c.tipo_comprobante_id
