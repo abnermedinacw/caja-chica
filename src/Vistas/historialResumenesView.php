@@ -41,6 +41,7 @@ function vistaHistorialResumenes(array $resumenes): void
                     <option value="EN_REVISION">En revisión</option>
                     <option value="RECHAZADO">Rechazado</option>
                     <option value="VISADO">Visado</option>
+                    <option value="ANULADO">Anulado</option>
                 </select>
             </div>
             <div class="campo">

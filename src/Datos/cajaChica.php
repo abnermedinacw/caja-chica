@@ -62,9 +62,17 @@ function obtenerResumenPorId(int $id, int $trabajadorId): ?array
     return $fila ?: null;
 }
 
-function listarResumenesPorTrabajador(int $trabajadorId, ?int $limite = null): array
+function listarResumenesPorTrabajador(int $trabajadorId, ?int $limite = null, ?array $estados = null): array
 {
     $pdo = obtenerConexion();
+    $whereEstados = '';
+
+    // Manejo de estados para mostrar otro dato en el inicio
+    if (!empty($estados)) {
+        $placeholders = implode(', ', array_fill(0, count($estados), '?'));
+        $whereEstados = " AND cc.estado_general IN ($placeholders)";
+    }
+
     $sql =
         "SELECT 
             cc.id, 
@@ -80,14 +88,20 @@ function listarResumenesPorTrabajador(int $trabajadorId, ?int $limite = null): a
         FROM caja_chica cc
         JOIN empresa e ON e.id = cc.empresa_id
         LEFT JOIN nivel_aprobacion na ON na.id = cc.nivel_actual_id
-        WHERE cc.trabajador_id = ?
+        WHERE cc.trabajador_id = ?{$whereEstados}
         ORDER BY cc.fecha_emision DESC, cc.id DESC";
 
     if ($limite !== null) $sql .= ' LIMIT ?';
 
     $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(1, $trabajadorId, PDO::PARAM_INT);
-    if ($limite !== null) $stmt->bindValue(2, max(1, $limite), PDO::PARAM_INT);
+    $pos = 1;
+    $stmt->bindValue($pos++, $trabajadorId, PDO::PARAM_INT);
+    if (!empty($estados)) {
+        foreach ($estados as $estado) {
+            $stmt->bindValue($pos++, $estado, PDO::PARAM_STR);
+        }
+    }
+    if ($limite !== null) $stmt->bindValue($pos, max(1, $limite), PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchAll();
 }

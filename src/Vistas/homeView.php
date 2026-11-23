@@ -51,7 +51,7 @@ function vistaHome(array $fondos, array $resumenes): void
             </div>
         </div>
         <?php if (empty($resumenes)): ?>
-            <p class="texto-vacio">Todavia no has creado ningun documento.</p>
+            <p class="texto-vacio">Sin resúmenes en curso.</p>
         <?php else: ?>
             <div class="tabla-scroll">
             <table class="tabla">

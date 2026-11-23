@@ -14,11 +14,12 @@ require_once __DIR__ . '/../Vistas/bandejaAprobadorView.php';
 $rol = $_SESSION['rol'];
 $esJefe = !empty($_SESSION['es_jefe']);
 $esAprobadorPorRol = in_array($rol, ['CONTABILIDAD', 'CONTROL', 'GERENCIA', 'TESORERIA'], true);
+$estadosEnCurso = ['BORRADOR', 'EN_REVISION', 'RECHAZADO'];
 
 if (!$esAprobadorPorRol && !$esJefe) {
     $trabajadorId = $_SESSION['trabajador_id'];
     $fondos = obtenerFondosActivos($trabajadorId);
-    $resumenes = listarResumenesPorTrabajador($trabajadorId, 8);
+    $resumenes = listarResumenesPorTrabajador($trabajadorId, 8, $estadosEnCurso);
     vistaHome($fondos, $resumenes);
     exit;
 } 
@@ -44,7 +45,7 @@ $misResumenes = [];
 if (!empty($_SESSION['trabajador_id'])) {
     $trabajadorId = (int)$_SESSION['trabajador_id'];
     $misFondos = obtenerFondosActivos($trabajadorId);
-    $misResumenes = listarResumenesPorTrabajador($trabajadorId, 8);
+    $misResumenes = listarResumenesPorTrabajador($trabajadorId, 8, $estadosEnCurso);
 }
 
 vistaBandejaAprobador($rol, $resumenesBandeja, !empty($_SESSION['trabajador_id']), $misFondos, $misResumenes);

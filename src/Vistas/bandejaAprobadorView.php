@@ -102,7 +102,7 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
                     </div>
                 </div>
                 <?php if (empty($misResumenes)): ?>
-                    <p class="texto-vacio">Todavía no creaste ningún Resumen propio</p>
+                    <p class="texto-vacio">Sin resúmenes en curso.</p>
                 <?php else: ?>
                     <div class="tabla-scroll">
                     <table class="tabla">
