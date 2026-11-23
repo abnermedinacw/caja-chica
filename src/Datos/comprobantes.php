@@ -33,7 +33,22 @@ function crearComprobante(
     $stmt->execute([$tipoComprobanteId, $serie, $numero]);
     $existente = $stmt->fetch();
 
-    if ($existente){
+    if ($existente) {
+        // Si corrigen fecha, monto o datos SUNAT sobre la misma serie/número, actualizamos el comprobante.
+        $stmtUpd = $pdo->prepare(
+            "UPDATE comprobante
+             SET fecha = ?, monto = ?, proveedor_ruc = ?, proveedor_razon_social = ?,
+                 proveedor_condicion_sunat = ?, proveedor_estado_sunat = ?, proveedor_valido = ?,
+                 fecha_verificacion_proveedor = COALESCE(?, fecha_verificacion_proveedor)
+             WHERE id = ?"
+        );
+        $stmtUpd->execute([
+            $fecha, $monto, $proveedorRuc, $proveedorRazonSocial,
+            $proveedorCondicion, $proveedorEstado,
+            $proveedorValido === null ? null : ($proveedorValido ? 1 : 0),
+            $proveedorRuc !== null ? date('Y-m-d H:i:s') : null,
+            (int)$existente['id'],
+        ]);
         return (int)$existente['id'];
     }
 

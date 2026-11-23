@@ -4,8 +4,9 @@ requiereSesion();
 
 require_once __DIR__ . '/../Negocio/adjuntos.php';
 
-$trabajadorId = (int) $_SESSION['trabajador_id'];
-$usuarioId = (int) $_SESSION['usuario_id'];
+$trabajadorId = (int)($_SESSION['trabajador_id'] ?? 0);
+$usuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+$rol = (string)($_SESSION['rol'] ?? '');
 $planillaId = (int)($_POST['planilla_id'] ?? 0);
 $detalleId = (int)($_POST['detalle_id'] ?? 0);
 $tipoArchivo = $_POST['tipo_archivo'] ?? TIPO_ADJUNTO_EVIDENCIA;
@@ -17,5 +18,5 @@ if (empty($_FILES['archivo']) || ($_FILES['archivo']['error'] ?? UPLOAD_ERR_NO_F
     exit;
 }
 
-$resultado = subirAdjuntoPlanilla($trabajadorId, $usuarioId, $planillaId, $detalleId, $_FILES['archivo'], $tipoArchivo);
+$resultado = subirAdjuntoPlanilla($trabajadorId, $usuarioId, $planillaId, $detalleId, $_FILES['archivo'], $tipoArchivo, $rol);
 echo json_encode($resultado);

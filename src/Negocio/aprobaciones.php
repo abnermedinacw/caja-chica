@@ -225,3 +225,50 @@ function esResumenEditable(array $resumen): bool
     }
     return $resumen['estado_general'] === 'RECHAZADO' && $resumen['nivel_actual_id'] === null;
 }
+
+// Contabilidad solo puede corregir ítems/adjuntos cuando la caja está EN_REVISION en su turno actual.
+function puedeEditarItemsComoContabilidad(array $resumen, int $usuarioId, string $rol): bool
+{
+    return $rol === 'CONTABILIDAD'
+        && ($resumen['estado_general'] ?? '') === 'EN_REVISION'
+        && puedeAtenderNivel($resumen, $usuarioId, $rol);
+}
+
+// Portero único de edición: autoriza al propietario en estado editable o a Contabilidad en su turno.
+function resolverAccesoEdicionResumen(int $resumenId, int $trabajadorId, int $usuarioId, string $rol): array
+{
+    $resumen = obtenerResumenAprobador($resumenId);
+    if (!$resumen) {
+        return ['ok' => false, 'error' => 'Resumen no encontrado.'];
+    }
+
+    if ($trabajadorId > 0 && (int)$resumen['trabajador_id'] === $trabajadorId) {
+        if (!esResumenEditable($resumen)) {
+            return ['ok' => false, 'error' => 'Este Resumen ya está en proceso de aprobación y no se puede editar.'];
+        }
+        return ['ok' => true, 'resumen' => $resumen, 'esContabilidad' => false];
+    }
+
+    if ($usuarioId > 0 && puedeEditarItemsComoContabilidad($resumen, $usuarioId, $rol)) {
+        return ['ok' => true, 'resumen' => $resumen, 'esContabilidad' => true];
+    }
+
+    return ['ok' => false, 'error' => 'No tienes permiso para editar este Resumen.'];
+}
+
+// Impide que Contabilidad agregue o elimine ítems: debe conservar exactamente los IDs existentes.
+function validarMismosItemsContabilidad(array $items, array $idsExistentes): ?string
+{
+    $idsEnviados = array_map(static fn(array $it): int => (int)($it['id'] ?? 0), $items);
+    if (in_array(0, $idsEnviados, true)) {
+        return 'Contabilidad solo puede editar ítems existentes, no añadir nuevos.';
+    }
+    $esperados = array_map('intval', $idsExistentes);
+    sort($esperados);
+    $recibidos = array_values(array_unique($idsEnviados));
+    sort($recibidos);
+    if ($esperados !== $recibidos || count($idsEnviados) !== count($esperados)) {
+        return 'Contabilidad solo puede editar ítems existentes, no añadir ni quitar filas.';
+    }
+    return null;
+}

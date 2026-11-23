@@ -16,8 +16,10 @@ function vistaVerResumen(
     array $eventos,
     string $modo = 'LECTURA',
     array $regreso = [],
-    array $adjuntosSueltos = []
+    array $adjuntosSueltos = [],
+    bool $puedeEditarItems = false
 ): void {
+    $mostrarColumnaAcciones = $esEditable || $puedeEditarItems;
     $regreso += [
         'url' => BASE_URL . '/home',
         'texto' => 'Volver al inicio',
@@ -129,16 +131,29 @@ function vistaVerResumen(
             <div class="encabezado-documentos">
                 <h2>Documentos del Resumen</h2>
                 <div class="acciones-documentos">
+                    <button
+                        v-if="esEdicionContabilidad"
+                        type="button"
+                        class="boton boton-chico"
+                        :class="{ 'boton-primario': modoCorreccion }"
+                        :disabled="hayPanelesEnEdicion || procesando"
+                        @click="alternarModoCorreccion"
+                        title="Habilitar edición puntual de ítems y adjuntos">
+                        <?= icono('editar') ?> {{ modoCorreccion ? 'Salir de corrección' : 'Corregir ítems' }}
+                    </button>
                     <button type="button" class="boton boton-chico" @click="mostrarVistaPrevia = true" title="Vista previa del Resumen">
                         <?= icono('ver') ?> Vista previa
                     </button>
                 </div>
             </div>
+            <p v-if="esEdicionContabilidad && modoCorreccion" class="aviso-modo-correccion" role="status">
+                Modo corrección activo: presiona <strong>Editar</strong> en el documento que necesites corregir. Solo puedes modificar ítems existentes y sus adjuntos; los cambios quedarán registrados.
+            </p>
 
             <div class="tabla-scroll tabla-scroll-vertical tabla-scroll-resumen">
             <table class="tabla tabla-resumen-documentos">
                 <colgroup>
-                    <?php if ($esEditable): ?>
+                    <?php if ($mostrarColumnaAcciones): ?>
                         <col style="width:5%">
                         <col style="width:29%">
                         <col style="width:8%">
@@ -173,7 +188,7 @@ function vistaVerResumen(
                         <th>N°</th>
                         <th>Fecha</th>
                         <th>Total</th>
-                        <?php if ($esEditable): ?>
+                        <?php if ($mostrarColumnaAcciones): ?>
                             <th></th>
                         <?php endif; ?>
                     </tr>
@@ -188,20 +203,20 @@ function vistaVerResumen(
                             <td>{{ contable.documento ? numeroDocumento(contable.documento.numero) : '(nuevo)' }}</td>
                             <td>{{ contable.documento ? formatearFecha(contable.documento.fecha_rendicion) : '-' }}</td>
                             <td>{{ formatearSoles(totalContable) }}</td>
-                            <?php if ($esEditable): ?>
+                            <?php if ($mostrarColumnaAcciones): ?>
                                 <td class="celda-acciones" @click.stop>
                                     <button
-                                        v-if="contable.documento && !contable.editando" type="button"
+                                        v-if="(esEditable || modoCorreccion) && contable.documento && !contable.editando" type="button"
                                         class="boton boton-chico"
                                         :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando"
                                         @click="editarContable">
                                         <?= icono('editar') ?> Editar</button>
-                                    <button v-if="contable.documento && !contable.editando" type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando" @click="quitarDocumentoContable"><?= icono('quitar') ?> Quitar</button>
+                                    <button v-if="esEditable && contable.documento && !contable.editando" type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando" @click="quitarDocumentoContable"><?= icono('quitar') ?> Quitar</button>
                                 </td>
                             <?php endif; ?>
                         </tr>
                         <tr v-if="filaEstaAbierta('contable')">
-                            <td colspan="<?= $esEditable ? 6 : 5 ?>" class="celda-expandida celda-expandida-contable">
+                            <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="celda-expandida celda-expandida-contable">
                                 <p class="subtitulo-documento subtitulo-documento-contable">
                                     <strong>Documento Contable</strong> - {{ contable.editando ? 'Editando' : 'Detalle' }}
                                 </p>
@@ -294,7 +309,7 @@ function vistaVerResumen(
                                                 <td>{{ formatearSoles(it.monto) }}</td>
                                                 <td class="celda-acciones">
                                                     <button type="button" class="boton boton-chico" @click="abrirModalItemContable(idx)"><?= icono('editar') ?> Editar</button>
-                                                    <button type="button" class="boton boton-chico" @click="quitarItemContable(idx)"><?= icono('quitar') ?> Quitar</button>
+                                                    <button v-if="esEditable" type="button" class="boton boton-chico" @click="quitarItemContable(idx)"><?= icono('quitar') ?> Quitar</button>
                                                     <br><small v-if="it._archivoPendienteNombre">📎 {{ it._archivoPendienteNombre }}</small>
                                                 </td>
                                             </tr>
@@ -309,7 +324,7 @@ function vistaVerResumen(
                                     </div>
                                     <p class="texto-vacio" v-if="contable.items.length === 0">Todavía no agregaste ningún comprobante.</p>
 
-                                    <div class="acciones-edicion-documento-items">
+                                    <div v-if="esEditable" class="acciones-edicion-documento-items">
                                         <button type="button" class="boton boton-chico" @click="abrirModalItemContable()"><?= icono('mas') ?> Añadir comprobante</button>
                                     </div>
                                     <div class="error" v-if="contable.error">{{ contable.error }}</div>
@@ -332,21 +347,21 @@ function vistaVerResumen(
                             <td>{{ noContable.documento ? numeroDocumento(noContable.documento.numero) : '(nuevo)' }}</td>
                             <td>{{ noContable.documento ? formatearFecha(noContable.documento.fecha_rendicion) : '-' }}</td>
                             <td>{{ formatearSoles(totalNoContable) }}</td>
-                            <?php if ($esEditable): ?>
+                            <?php if ($mostrarColumnaAcciones): ?>
                                 <td class="celda-acciones" @click.stop>
                                     <button
-                                        v-if="noContable.documento && !noContable.editando" type="button"
+                                        v-if="(esEditable || modoCorreccion) && noContable.documento && !noContable.editando" type="button"
                                         class="boton boton-chico"
                                         :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando"
                                         @click="editarNoContable">
                                         <?= icono('editar') ?> Editar
                                     </button>
-                                    <button v-if="noContable.documento && !noContable.editando" type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando" @click="quitarDocumentoNoContable"><?= icono('quitar') ?> Quitar</button>
+                                    <button v-if="esEditable && noContable.documento && !noContable.editando" type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando" @click="quitarDocumentoNoContable"><?= icono('quitar') ?> Quitar</button>
                                 </td>
                             <?php endif; ?>
                         </tr>
                         <tr v-if="filaEstaAbierta('no_contable')">
-                            <td colspan="<?= $esEditable ? 6 : 5 ?>" class="celda-expandida celda-expandida-no_contable">
+                            <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="celda-expandida celda-expandida-no_contable">
                                 <p class="subtitulo-documento subtitulo-documento-contable">
                                     <strong>Documento No Contable</strong> - {{ noContable.editando ? 'Editando' : 'Detalle' }}
                                 </p>
@@ -439,7 +454,7 @@ function vistaVerResumen(
                                                 <td>{{ formatearSoles(it.monto) }}</td>
                                                 <td class="celda-acciones">
                                                     <button type="button" class="boton boton-chico" @click="abrirModalItemNoContable(idx)"><?= icono('editar') ?> Editar</button>
-                                                    <button type="button" class="boton boton-chico" @click="quitarItemNoContable(idx)"><?= icono('quitar') ?> Quitar</button>
+                                                    <button v-if="esEditable" type="button" class="boton boton-chico" @click="quitarItemNoContable(idx)"><?= icono('quitar') ?> Quitar</button>
                                                     <br><small v-if="it._archivoPendienteNombre">📎 {{ it._archivoPendienteNombre }}</small>
                                                 </td>
                                             </tr>
@@ -454,7 +469,7 @@ function vistaVerResumen(
                                     </div>
                                     <p class="texto-vacio" v-if="noContable.items.length === 0">Todavía no agregaste ningún item.</p>
 
-                                    <div class="acciones-edicion-documento-items">
+                                    <div v-if="esEditable" class="acciones-edicion-documento-items">
                                         <button type="button" class="boton boton-chico" @click="abrirModalItemNoContable()"><?= icono('mas') ?> Añadir item</button>
                                     </div>
                                     <div class="error" v-if="noContable.error">{{ noContable.error }}</div>
@@ -477,22 +492,22 @@ function vistaVerResumen(
                             <td>{{ planilla.documento ? numeroDocumento(planilla.documento.numero) : '(nuevo)' }}</td>
                             <td>{{ planilla.documento ? formatearFecha(planilla.documento.fecha_emision) : '-' }}</td>
                             <td>{{ formatearSoles(totalPlanilla) }}</td>
-                            <?php if ($esEditable): ?>
+                            <?php if ($mostrarColumnaAcciones): ?>
                                 <td class="celda-acciones" @click.stop>
                                     <button
-                                        v-if="planilla.documento && !planilla.editando"
+                                        v-if="(esEditable || modoCorreccion) && planilla.documento && !planilla.editando"
                                         type="button"
                                         class="boton boton-chico"
                                         :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando"
                                         @click="editarPlanilla">
                                         <?= icono('editar') ?> Editar
                                     </button>
-                                    <button v-if="planilla.documento && !planilla.editando" type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando" @click="quitarPlanilla"><?= icono('quitar') ?> Quitar</button>
+                                    <button v-if="esEditable && planilla.documento && !planilla.editando" type="button" class="boton boton-chico" :disabled="hayPanelesEnEdicion || cabeceraEditando || procesando" @click="quitarPlanilla"><?= icono('quitar') ?> Quitar</button>
                                 </td>
                             <?php endif; ?>
                         </tr>
                         <tr v-if="filaEstaAbierta('planilla')">
-                            <td colspan="<?= $esEditable ? 6 : 5 ?>" class="celda-expandida celda-expandida-planilla">
+                            <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="celda-expandida celda-expandida-planilla">
                                 <p class="subtitulo-documento subtitulo-documento-contable">
                                     <strong>Planilla de movilidad</strong> - {{ planilla.editando ? 'Editando' : 'Detalle' }}
                                 </p>
@@ -615,7 +630,7 @@ function vistaVerResumen(
                                                     <td>{{ it.tipo_evidencia }}</td>
                                                     <td class="celda-acciones">
                                                         <button type="button" class="boton boton-chico" @click="abrirModalItemPlanilla(idx)"><?= icono('editar') ?> Editar</button>
-                                                        <button type="button" class="boton boton-chico" @click="quitarItemPlanilla(idx)"><?= icono('quitar') ?> Quitar</button>
+                                                        <button v-if="esEditable" type="button" class="boton boton-chico" @click="quitarItemPlanilla(idx)"><?= icono('quitar') ?> Quitar</button>
                                                         <br><small v-if="it._archivoPendienteNombre">📎 {{ it._archivoPendienteNombre }}</small>
                                                     </td>
                                                 </tr>
@@ -630,7 +645,7 @@ function vistaVerResumen(
                                         </div>
                                         <p class="texto-vacio" v-if="planilla.items.length === 0">Todavía no agregaste ningún viaje.</p>
 
-                                        <div class="acciones-edicion-documento-items">
+                                        <div v-if="esEditable" class="acciones-edicion-documento-items">
                                             <button type="button" class="boton boton-chico" @click="abrirModalItemPlanilla()"><?= icono('mas') ?> Añadir ítem</button>
                                         </div>
                                         <div class="error" v-if="planilla.error">{{ planilla.error }}</div>
@@ -647,14 +662,14 @@ function vistaVerResumen(
                     </template>
 
                     <tr v-if="!contable.documento && !contable.editando && !noContable.documento && !noContable.editando && !planilla.documento && !planilla.editando">
-                        <td colspan="<?= $esEditable ? 6 : 5 ?>" class="texto-vacio">Todavía no añadiste ningún documento a este Resumen.</td>
+                        <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="texto-vacio">Todavía no añadiste ningún documento a este Resumen.</td>
                     </tr>
                 </tbody>
                 <tfoot v-if="contable.documento || noContable.documento || planilla.documento">
                     <tr class="fila-totales">
                         <td colspan="4" class="texto-derecha">Total general</td>
                         <td>{{ formatearSoles(totalGeneral) }}</td>
-                        <?php if ($esEditable): ?>
+                        <?php if ($mostrarColumnaAcciones): ?>
                             <td></td>
                         <?php endif; ?>
                     </tr>
@@ -721,8 +736,8 @@ function vistaVerResumen(
                     <p class="texto-vacio">Revisa el detalle, los adjuntos, el historial y el PDF antes de decidir.</p>
                 </div>
                 <div class="resolver-aprobacion-acciones">
-                    <button type="button" id="botonDevolverResumen" class="boton boton-peligro"><?= icono('quitar') ?> Devolver para corrección</button>
-                    <button type="button" id="botonAprobarResumen" class="boton boton-primario"><?= icono('check') ?> Aprobar y continuar</button>
+                    <button type="button" id="botonDevolverResumen" class="boton boton-peligro" :disabled="hayPanelesEnEdicion || procesando" :title="hayPanelesEnEdicion ? 'Guarda o cancela la edición en curso antes de continuar' : ''"><?= icono('quitar') ?> Devolver para corrección</button>
+                    <button type="button" id="botonAprobarResumen" class="boton boton-primario" :disabled="hayPanelesEnEdicion || procesando" :title="hayPanelesEnEdicion ? 'Guarda o cancela la edición en curso antes de continuar' : ''"><?= icono('check') ?> Aprobar y continuar</button>
                 </div>
             </section>
 
@@ -1031,6 +1046,8 @@ function vistaVerResumen(
                                         'hoy' => date('Y-m-d'),
                                         'resumenId' => $resumen['id'],
                                         'esEditable' => $esEditable,
+                                        'puedeEditarItems' => $esEditable || $puedeEditarItems,
+                                        'esEdicionContabilidad' => !$esEditable && $puedeEditarItems,
                                         'resumenEstado' => $resumen['estado_general'],
                                         'resumen' => [
                                             'periodo_inicio' => $resumen['periodo_inicio'],

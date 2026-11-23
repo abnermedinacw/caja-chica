@@ -11,19 +11,26 @@ function guardarDocumentoNoContable(
     int $areaId,
     int $resumenId,
     array $datos,
-    array $items
+    array $items,
+    int $usuarioId = 0,
+    string $rol = ''
 ): array {
+    $acceso = resolverAccesoEdicionResumen($resumenId, $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return ['ok' => false, 'error' => $acceso['error']];
+    }
+    $resumen = $acceso['resumen'];
+    $esContabilidad = $acceso['esContabilidad'];
+
+    $existentePrevio = obtenerDocumentoNoContablePorResumen($resumenId);
+    if ($esContabilidad && !$existentePrevio) {
+        return ['ok' => false, 'error' => 'Contabilidad solo puede editar documentos ya registrados.'];
+    }
+
     $periodoInicio = $datos['periodo_inicio'] ?? '';
     $periodoFin = $datos['periodo_fin'] ?? '';
     $fechaRendicion = $datos['fecha_rendicion'] ?? '';
 
-    $resumen = obtenerResumenPorId($resumenId, $trabajadorId);
-    if (!$resumen) {
-        return ['ok' => false, 'error' => 'Resumen no encontrado.'];
-    }
-    if (!esResumenEditable($resumen)) {
-        return ['ok' => false, 'error' => 'Este Resumen ya está en proceso de aprobación y no se puede editar.'];
-    }
     if ($periodoInicio === '' || $periodoFin === '' || $fechaRendicion === '') {
         return ['ok' => false, 'error' => 'Completa periodo y fecha de rendición.'];
     }
@@ -63,8 +70,13 @@ function guardarDocumentoNoContable(
 
        if ($existente) {
         $documentoId = (int)$existente['id'];
-        actualizarCabeceraDocumentoNoContable($documentoId, $periodoInicio, $periodoFin, $fechaRendicion);
         $idsExistentes = obtenerDetallesIdsDocumentoNoContable($documentoId);
+        if ($esContabilidad) {
+            if ($error = validarMismosItemsContabilidad($items, $idsExistentes)) {
+                throw new InvalidArgumentException($error);
+            }
+        }
+        actualizarCabeceraDocumentoNoContable($documentoId, $periodoInicio, $periodoFin, $fechaRendicion);
        } else {
         $numero = sgteNumeroDocumentoNoContable($trabajadorId);
         $documentoId = crearDocumentoNoContable($trabajadorId, $areaId, $numero, $periodoInicio, $periodoFin, $fechaRendicion, $resumenId);
@@ -100,11 +112,15 @@ function guardarDocumentoNoContable(
        }
 
        sincronizarTotalesResumen($resumenId);
+       if ($esContabilidad) {
+           registrarEventoResumen($resumenId, 'EDITADO_CONTABILIDAD', $usuarioId, (int)$resumen['nivel_actual_id'], 'Corrección de ítems en Documento No Contable');
+       }
        $pdo->commit();
        return ['ok' => true, 'id' => $documentoId, 'items' => obtenerDetalleDocumentoNoContable($documentoId), 'idsPorTempId' => $idsPorTempId];
     } catch (Throwable $e) {
         $pdo->rollBack();
-        return ['ok' => false, 'error' => 'No se pudo guardar: ' . $e->getMessage()];
+        $mensaje = $e instanceof InvalidArgumentException ? $e->getMessage() : ('No se pudo guardar: ' . $e->getMessage());
+        return ['ok' => false, 'error' => $mensaje];
     }
 }
 

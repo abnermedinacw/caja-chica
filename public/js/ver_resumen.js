@@ -27,8 +27,16 @@ createApp({
 
         const resumen = datos.resumen;
         const esEditable = datos.esEditable;
+        // true solo cuando Contabilidad atiende este resumen en EN_REVISION.
+        const esEdicionContabilidad = Boolean(datos.esEdicionContabilidad);
+        const modoCorreccion = ref(false);
         const resumenEstado = datos.resumenEstado;
         const hoy = datos.hoy;
+
+        function alternarModoCorreccion() {
+            if (!esEdicionContabilidad || hayPanelesEnEdicion.value || procesando.value) return;
+            modoCorreccion.value = !modoCorreccion.value;
+        }
 
         const mostrarSelectorTipo = ref(false);
         const modoPlanilla = ref(datos.planillasDisponibles.length > 0 ? null : 'nueva');
@@ -407,7 +415,7 @@ createApp({
         };
 
         return {
-            datos, resumen, esEditable, resumenEstado, hoy,
+            datos, resumen, esEditable, esEdicionContabilidad, modoCorreccion, alternarModoCorreccion, resumenEstado, hoy,
             cabeceraEditando, guardandoCabecera, errorCabecera, cabeceraForm,
             iniciarEdicionCabecera, cancelarEdicionCabecera, guardarCabecera,
             enviando, puedeEnviar, enviarAAprobacion,

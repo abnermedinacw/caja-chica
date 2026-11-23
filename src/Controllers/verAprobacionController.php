@@ -26,6 +26,8 @@ if (!in_array($resumen['estado_general'], $estadosValidos, true)
 
 $detalle = cargarDetalleResumen($resumenId);
 $regreso = resolverRegresoResumen($_GET['origen'] ?? null, 'APROBACION');
+// Solo Contabilidad en turno (EN_REVISION) puede habilitar la corrección de ítems y adjuntos.
+$puedeEditarItems = puedeEditarItemsComoContabilidad($resumen, (int)$_SESSION['usuario_id'], $_SESSION['rol']);
 
 vistaVerResumen(
     $resumen,
@@ -39,5 +41,6 @@ vistaVerResumen(
         'contable' => $detalle['adjuntosSueltosContable'],
         'no_contable' => $detalle['adjuntosSueltosNoContable'],
         'movilidad' => $detalle['adjuntosSueltosPlanilla'],
-    ]
+    ],
+    $puedeEditarItems
 );

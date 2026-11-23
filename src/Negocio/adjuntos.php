@@ -180,20 +180,21 @@ function procesarAdjuntosGeneralesMovilidad(int $planillaId, int $usuarioId, arr
     }
 }
 
-// Documento Contable: un adjunto por comprobante 
-function subirAdjuntoDocumentoContable(int $trabajadorId, int $usuarioId, int $documentoId, int $detalleId, array $archivo, string $tipoArchivo): array
+// Documento Contable: múltiples evidencias por comprobante (XML sigue siendo 1)
+function subirAdjuntoDocumentoContable(int $trabajadorId, int $usuarioId, int $documentoId, int $detalleId, array $archivo, string $tipoArchivo, string $rol = ''): array
 {
     require_once __DIR__ . '/../Datos/documentoContable.php';
     require_once __DIR__ . '/../Datos/cajaChica.php';
     require_once __DIR__ . '/../Datos/adjuntos.php';
 
-    $documento = obtenerDocumentoContablePorId($documentoId, $trabajadorId);
-    if (!$documento) {
+    $documento = obtenerDocumentoContableParaDescarga($documentoId);
+    if (!$documento || empty($documento['resumen_id'])) {
         return ['ok' => false, 'error' => 'Documento no encontrado.'];
     }
-    $resumen = obtenerResumenPorId((int)$documento['resumen_id'], $trabajadorId);
-    if (!$resumen || !esResumenEditable($resumen)) {
-        return ['ok' => false, 'error' => 'Este Resumen ya no se puede editar.'];
+    // Valida si es el dueño en estado editable o Contabilidad en su turno de revisión.
+    $acceso = resolverAccesoEdicionResumen((int)$documento['resumen_id'], $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return ['ok' => false, 'error' => $acceso['error']];
     }
     if (!in_array($detalleId, obtenerDetallesIdsDocumentoContable($documentoId), true)) {
         return ['ok' => false, 'error' => 'Ese comprobante no pertenece a este documento.'];
@@ -220,19 +221,19 @@ function subirAdjuntoDocumentoContable(int $trabajadorId, int $usuarioId, int $d
     return ['ok' => true];
 }
 
-function quitarAdjuntoDocumentoContable(int $trabajadorId, int $documentoId, int $adjuntoId): array
+function quitarAdjuntoDocumentoContable(int $trabajadorId, int $documentoId, int $adjuntoId, int $usuarioId = 0, string $rol = ''): array
 {
     require_once __DIR__ . '/../Datos/documentoContable.php';
     require_once __DIR__ . '/../Datos/cajaChica.php';
     require_once __DIR__ . '/../Datos/adjuntos.php';
 
-    $documento = obtenerDocumentoContablePorId($documentoId, $trabajadorId);
-    if (!$documento) {
+    $documento = obtenerDocumentoContableParaDescarga($documentoId);
+    if (!$documento || empty($documento['resumen_id'])) {
         return ['ok' => false, 'error' => 'Documento no encontrado.'];
     }
-    $resumen = obtenerResumenPorId((int)$documento['resumen_id'], $trabajadorId);
-    if (!$resumen || !esResumenEditable($resumen)) {
-        return ['ok' => false, 'error' => 'Este Resumen ya no se puede editar.'];
+    $acceso = resolverAccesoEdicionResumen((int)$documento['resumen_id'], $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return ['ok' => false, 'error' => $acceso['error']];
     }
 
     $adjunto = obtenerAdjuntoDocumentoContablePorId($adjuntoId, $documentoId);
@@ -242,24 +243,27 @@ function quitarAdjuntoDocumentoContable(int $trabajadorId, int $documentoId, int
 
     eliminarAdjuntoDocumentoContablePorId($adjuntoId);
     eliminarArchivosAdjuntos([$adjunto['ruta']]);
+    if ($acceso['esContabilidad']) {
+        registrarEventoResumen((int)$documento['resumen_id'], 'EDITADO_CONTABILIDAD', $usuarioId, (int)$acceso['resumen']['nivel_actual_id'], 'Adjunto eliminado en Documento Contable');
+    }
     return ['ok' => true];
 }
 
 // Documento No Contable
-function subirAdjuntoDocumentoNoContable(int $trabajadorId, int $usuarioId, int $documentoId, int $detalleId, array $archivo, string $tipoArchivo): array
+function subirAdjuntoDocumentoNoContable(int $trabajadorId, int $usuarioId, int $documentoId, int $detalleId, array $archivo, string $tipoArchivo, string $rol = ''): array
 {
     require_once __DIR__ . '/../Datos/documentoNoContable.php';
     require_once __DIR__ . '/../Datos/cajaChica.php';
     require_once __DIR__ . '/../Datos/adjuntos.php';
 
-    $documento = obtenerDocumentoNoContablePorId($documentoId, $trabajadorId);
-    if (!$documento) {
+    $documento = obtenerDocumentoNoContableParaDescarga($documentoId);
+    if (!$documento || empty($documento['resumen_id'])) {
         return ['ok' => false, 'error' => 'Documento no encontrado.'];
     }
 
-    $resumen = obtenerResumenPorId((int)$documento['resumen_id'], $trabajadorId);
-    if (!$resumen || !esResumenEditable($resumen)) {
-        return ['ok' => false, 'error' => 'Este Resumen ya no se puede editar.'];
+    $acceso = resolverAccesoEdicionResumen((int)$documento['resumen_id'], $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return ['ok' => false, 'error' => $acceso['error']];
     }
 
     if (!in_array($detalleId, obtenerDetallesIdsDocumentoNoContable($documentoId), true)) {
@@ -292,20 +296,20 @@ function subirAdjuntoDocumentoNoContable(int $trabajadorId, int $usuarioId, int 
     return['ok' => true];
 }
 
-function quitarAdjuntoDocumentoNoContable(int $trabajadorId, int $documentoId, int $adjuntoId): array
+function quitarAdjuntoDocumentoNoContable(int $trabajadorId, int $documentoId, int $adjuntoId, int $usuarioId = 0, string $rol = ''): array
 {
     require_once __DIR__ . '/../Datos/documentoNoContable.php';
     require_once __DIR__ . '/../Datos/cajaChica.php';
     require_once __DIR__ . '/../Datos/adjuntos.php';
     
-    $documento = obtenerDocumentoNoContablePorId($documentoId, $trabajadorId);
-    if (!$documento) {
+    $documento = obtenerDocumentoNoContableParaDescarga($documentoId);
+    if (!$documento || empty($documento['resumen_id'])) {
         return ['ok' => false, 'error' => 'Documento no encontrado.'];
     }
 
-    $resumen = obtenerResumenPorId((int)$documento['resumen_id'], $trabajadorId);
-    if (!$resumen || !esResumenEditable($resumen)) {
-        return ['ok' => false, 'error' => 'Este Resumen ya no se puede editar.'];
+    $acceso = resolverAccesoEdicionResumen((int)$documento['resumen_id'], $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return ['ok' => false, 'error' => $acceso['error']];
     }
 
     $adjunto = obtenerAdjuntoDocumentoNoContablePorId($adjuntoId, $documentoId);
@@ -315,24 +319,27 @@ function quitarAdjuntoDocumentoNoContable(int $trabajadorId, int $documentoId, i
 
     eliminarAdjuntoDocumentoNoContablePorId($adjuntoId);
     eliminarArchivosAdjuntos([$adjunto['ruta']]);
+    if ($acceso['esContabilidad']) {
+        registrarEventoResumen((int)$documento['resumen_id'], 'EDITADO_CONTABILIDAD', $usuarioId, (int)$acceso['resumen']['nivel_actual_id'], 'Adjunto eliminado en Documento No Contable');
+    }
     return['ok' => true];
 }
 
 // Planilla de movilidad
-function subirAdjuntoPlanilla(int $trabajadorId, int $usuarioId, int $planillaId, int $detalleId, array $archivo, string $tipoArchivo): array
+function subirAdjuntoPlanilla(int $trabajadorId, int $usuarioId, int $planillaId, int $detalleId, array $archivo, string $tipoArchivo, string $rol = ''): array
 {
     require_once __DIR__ . '/../Datos/planillaMovilidad.php';
     require_once __DIR__ . '/../Datos/cajaChica.php';
     require_once __DIR__ . '/../Datos/adjuntos.php';
 
-    $planilla = obtenerPlanillaPorId($planillaId, $trabajadorId);
-    if (!$planilla) {
+    $planilla = obtenerPlanillaParaDescarga($planillaId);
+    if (!$planilla || empty($planilla['resumen_id'])) {
         return['ok' => false, 'error' => 'Planilla no encontrada.'];
     }
 
-    $resumen = obtenerResumenPorId((int)$planilla['resumen_id'], $trabajadorId);
-    if (!$resumen || !esResumenEditable($resumen)) {
-        return['ok' => false, 'error' => 'Este resumen ya no se puede editar.'];
+    $acceso = resolverAccesoEdicionResumen((int)$planilla['resumen_id'], $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return['ok' => false, 'error' => $acceso['error']];
     }
 
     if(!in_array($detalleId, obtenerDetallesIdsPlanilla($planillaId), true)) {
@@ -361,20 +368,20 @@ function subirAdjuntoPlanilla(int $trabajadorId, int $usuarioId, int $planillaId
     return ['ok' => true];
 }
 
-function quitarAdjuntoPlanilla(int $trabajadorId, int $planillaId, int $adjuntoId): array
+function quitarAdjuntoPlanilla(int $trabajadorId, int $planillaId, int $adjuntoId, int $usuarioId = 0, string $rol = ''): array
 {
     require_once __DIR__ . '/../Datos/planillaMovilidad.php';
     require_once __DIR__ . '/../Datos/cajaChica.php';
     require_once __DIR__ . '/../Datos/adjuntos.php';
 
-    $planilla = obtenerPlanillaPorId($planillaId, $trabajadorId);
-    if (!$planilla) {
+    $planilla = obtenerPlanillaParaDescarga($planillaId);
+    if (!$planilla || empty($planilla['resumen_id'])) {
         return['ok' => false, 'error' => 'Planilla no encontrada.'];
     }
 
-    $resumen = obtenerResumenPorId((int)$planilla['resumen_id'], $trabajadorId);
-    if (!$resumen || !esResumenEditable($resumen)) {
-        return['ok' => false, 'error' => 'Este resumen ya no se puede editar.'];
+    $acceso = resolverAccesoEdicionResumen((int)$planilla['resumen_id'], $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return['ok' => false, 'error' => $acceso['error']];
     }
 
     $adjunto = obtenerAdjuntoMovilidadPorId($adjuntoId, $planillaId);
@@ -384,5 +391,8 @@ function quitarAdjuntoPlanilla(int $trabajadorId, int $planillaId, int $adjuntoI
 
     eliminarAdjuntoMovilidadPorId($adjuntoId);
     eliminarArchivosAdjuntos([$adjunto['ruta']]);
+    if ($acceso['esContabilidad']) {
+        registrarEventoResumen((int)$planilla['resumen_id'], 'EDITADO_CONTABILIDAD', $usuarioId, (int)$acceso['resumen']['nivel_actual_id'], 'Adjunto eliminado en Planilla de Movilidad');
+    }
     return ['ok' => true];
 }

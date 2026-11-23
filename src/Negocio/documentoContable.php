@@ -12,20 +12,27 @@ function guardarDocumentoContable(
     int $areaId,
     int $resumenId,
     array $datos,
-    array $items
+    array $items,
+    int $usuarioId = 0,
+    string $rol = ''
 ): array
 {
+    $acceso = resolverAccesoEdicionResumen($resumenId, $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return ['ok' => false, 'error' => $acceso['error']];
+    }
+    $resumen = $acceso['resumen'];
+    $esContabilidad = $acceso['esContabilidad'];
+
+    $existentePrevio = obtenerDocumentoContablePorResumen($resumenId);
+    if ($esContabilidad && !$existentePrevio) {
+        return ['ok' => false, 'error' => 'Contabilidad solo puede editar documentos ya registrados.'];
+    }
+
     $periodoInicio = $datos['periodo_inicio'] ?? '';
     $periodoFin = $datos['periodo_fin'] ?? '';
     $fechaRendicion = $datos['fecha_rendicion'] ?? '';
 
-    $resumen = obtenerResumenPorId($resumenId, $trabajadorId);
-    if (!$resumen) {
-        return ['ok' => false, 'error' => 'Resumen no encontrado.'];
-    }
-    if (!esResumenEditable($resumen)) {
-        return ['ok' => false, 'error' => 'El Resumen ya está en proceso de aprobación y no se puede editar.'];
-    }
     if ($periodoInicio === '' || $periodoFin === '' || $fechaRendicion === '') {
         return ['ok' => false, 'error' => 'Completa el periodo y la fecha de rendición.'];
     }
@@ -73,8 +80,13 @@ function guardarDocumentoContable(
 
         if ($existente) {
             $documentoId = (int)$existente['id'];
-            actualizarCabeceraDocumentoContable($documentoId, $periodoInicio, $periodoFin, $fechaRendicion);
             $idsExistentes = obtenerDetallesIdsDocumentoContable($documentoId);
+            if ($esContabilidad) {
+                if ($error = validarMismosItemsContabilidad($items, $idsExistentes)) {
+                    throw new InvalidArgumentException($error);
+                }
+            }
+            actualizarCabeceraDocumentoContable($documentoId, $periodoInicio, $periodoFin, $fechaRendicion);
         } else {
             $numero = sgteNumeroDocumentoContable($trabajadorId);
             $documentoId = crearDocumentoContable($trabajadorId, $areaId, $numero, $periodoInicio, $periodoFin, $fechaRendicion, $resumenId);
@@ -133,6 +145,9 @@ function guardarDocumentoContable(
             eliminarDetalleDocumentoContablePorId($detalleId);
         }
         sincronizarTotalesResumen($resumenId);
+        if ($esContabilidad) {
+            registrarEventoResumen($resumenId, 'EDITADO_CONTABILIDAD', $usuarioId, (int)$resumen['nivel_actual_id'], 'Corrección de ítems en Documento Contable');
+        }
         $pdo->commit();
         return ['ok' => true, 'id' => $documentoId, 'items' => obtenerDetalleDocumentoContable($documentoId), 'idsPorTempId' => $idsPorTempId];
 

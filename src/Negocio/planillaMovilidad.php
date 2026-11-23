@@ -5,19 +5,24 @@ require_once __DIR__ . '/cajaChica.php';
 require_once __DIR__ . '/validaciones.php';
 require_once __DIR__ . '/../../config/database.php';
 
-function guardarPlanillaMovilidad(int $trabajadorId, int $resumenId, array $datos, array $items): array
+function guardarPlanillaMovilidad(int $trabajadorId, int $resumenId, array $datos, array $items, int $usuarioId = 0, string $rol = ''): array
 {
+    $acceso = resolverAccesoEdicionResumen($resumenId, $trabajadorId, $usuarioId, $rol);
+    if (!$acceso['ok']) {
+        return ['ok' => false, 'error' => $acceso['error']];
+    }
+    $resumen = $acceso['resumen'];
+    $esContabilidad = $acceso['esContabilidad'];
+
+    $existentePrevio = obtenerPlanillaPorResumen($resumenId);
+    if ($esContabilidad && !$existentePrevio) {
+        return ['ok' => false, 'error' => 'Contabilidad solo puede editar planillas ya registradas.'];
+    }
+
     $periodoInicio = $datos['periodo_inicio'] ?? '';
     $periodoFin = $datos['periodo_fin'] ?? '';
     $fechaEmision = $datos['fecha_emision'] ?? '';
 
-    $resumen = obtenerResumenPorId($resumenId, $trabajadorId);
-    if (!$resumen) {
-        return ['ok' => false, 'error' => 'Resumen no encontrado.'];
-    }
-    if (!esResumenEditable($resumen)) {
-        return ['ok' => false, 'error' => 'Este Resumen ya está en proceso de aprobación y no se puede editar.'];
-    }
     if ($periodoInicio === '' || $periodoFin === '' || $fechaEmision === '') {
         return ['ok' => false, 'error' => 'Completa el periodo y la fecha de emisión.'];
     }
@@ -57,8 +62,13 @@ function guardarPlanillaMovilidad(int $trabajadorId, int $resumenId, array $dato
 
         if ($existente) {
             $planillaId = (int)$existente['id'];
-            actualizarCabeceraPlanilla($planillaId, $periodoInicio, $periodoFin, $fechaEmision);
             $idsExistentes = obtenerDetallesIdsPlanilla($planillaId);
+            if ($esContabilidad) {
+                if ($error = validarMismosItemsContabilidad($items, $idsExistentes)) {
+                    throw new InvalidArgumentException($error);
+                }
+            }
+            actualizarCabeceraPlanilla($planillaId, $periodoInicio, $periodoFin, $fechaEmision);
         } else {
             $numero = sgteNumeroPlanillaMovilidad($trabajadorId);
             $planillaId = crearPlanillaBorrador($trabajadorId, $numero, $periodoInicio, $periodoFin, $fechaEmision, $resumenId);
@@ -95,6 +105,9 @@ function guardarPlanillaMovilidad(int $trabajadorId, int $resumenId, array $dato
 
         recalcularTotalPlanilla($planillaId);
         sincronizarTotalesResumen($resumenId);
+        if ($esContabilidad) {
+            registrarEventoResumen($resumenId, 'EDITADO_CONTABILIDAD', $usuarioId, (int)$resumen['nivel_actual_id'], 'Corrección de ítems en Planilla de Movilidad');
+        }
         $pdo->commit();
         return ['ok' => true, 'id' => $planillaId, 'items' => obtenerDetallePlanilla($planillaId), 'idsPorTempId' => $idsPorTempId];
 
