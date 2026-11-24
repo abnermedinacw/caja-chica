@@ -198,13 +198,13 @@ function vistaVerResumen(
                     <!-- Documento Contable -->
                     <template v-if="contable.documento || contable.editando">
                         <tr class="fila-documento fila-documento-contable" :class="{ 'fila-documento-abierta': filaEstaAbierta('contable') }" @click="toggleFila('contable')">
-                            <td>{{ filaEstaAbierta('contable') ? '▾' : '▸' }}</td>
-                            <td><span class="punto-tipo punto-tipo-contable"></span>Documento Contable</td>
-                            <td>{{ contable.documento ? numeroDocumento(contable.documento.numero) : '(nuevo)' }}</td>
-                            <td>{{ contable.documento ? formatearFecha(contable.documento.fecha_rendicion) : '-' }}</td>
-                            <td>{{ formatearSoles(totalContable) }}</td>
+                            <td data-col="chevron">{{ filaEstaAbierta('contable') ? '▾' : '▸' }}</td>
+                            <td data-col="tipo"><span class="punto-tipo punto-tipo-contable"></span>Documento Contable</td>
+                            <td data-col="numero">{{ contable.documento ? numeroDocumento(contable.documento.numero) : '(nuevo)' }}</td>
+                            <td data-col="fecha">{{ contable.documento ? formatearFecha(contable.documento.fecha_rendicion) : '-' }}</td>
+                            <td data-col="total">{{ formatearSoles(totalContable) }}</td>
                             <?php if ($mostrarColumnaAcciones): ?>
-                                <td class="celda-acciones" @click.stop>
+                                <td data-col="acciones" class="celda-acciones" :class="{ 'celda-acciones-oculta-movil': !((esEditable || modoCorreccion) && contable.documento && !contable.editando) }" @click.stop>
                                     <button
                                         v-if="(esEditable || modoCorreccion) && contable.documento && !contable.editando" type="button"
                                         class="boton boton-chico"
@@ -215,14 +215,14 @@ function vistaVerResumen(
                                 </td>
                             <?php endif; ?>
                         </tr>
-                        <tr v-if="filaEstaAbierta('contable')">
+                        <tr v-if="filaEstaAbierta('contable')" class="fila-detalle-documento">
                             <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="celda-expandida celda-expandida-contable">
                                 <p class="subtitulo-documento subtitulo-documento-contable">
                                     <strong>Documento Contable</strong> - {{ contable.editando ? 'Editando' : 'Detalle' }}
                                 </p>
                                 <template v-if="!contable.editando">
-                                    <div class="tabla-scroll tabla-scroll-detalle">
-                                    <table class="tabla">
+                                    <div class="tabla-scroll tabla-scroll-detalle tabla-scroll-tarjetas">
+                                    <table class="tabla tabla-tarjetas tabla-tarjetas-detalle">
                                         <thead>
                                             <tr>
                                                 <th>Item</th>
@@ -236,22 +236,22 @@ function vistaVerResumen(
                                         </thead>
                                         <tbody>
                                             <tr v-for="(it, idx) in contable.items" :key="idx">
-                                                <td>{{ idx + 1 }}</td>
-                                                <td>{{ formatearFecha(it.fecha) }}</td>
-                                                <td>
-                                                    {{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}
+                                                <td data-label="Item" class="celda-item-num">{{ idx + 1 }}</td>
+                                                <td data-label="Fecha">{{ formatearFecha(it.fecha) }}</td>
+                                                <td data-label="Comprobante" class="celda-comprobante">
+                                                    <span>{{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}</span>
                                                     <div v-if="it.cpe_estado_sunat" class="badge-cpe" :class="it.cpe_estado_sunat === 'ACEPTADO' && it.cpe_estado_ruc === 'ACTIVO' && it.cpe_condicion_ruc === 'HABIDO' ? 'badge-cpe-ok' : 'badge-cpe-error'">
                                                         SUNAT: {{ it.cpe_estado_sunat }}
                                                     </div>
                                                 </td>
-                                                <td>
+                                                <td data-label="Proveedor" class="celda-proveedor">
                                                     <strong>{{ it.proveedor_ruc || '-' }}</strong><br>
                                                     <small>{{ it.proveedor_razon_social || 'Sin razón social' }}</small><br>
                                                     <small v-if="it.proveedor_estado || it.proveedor_condicion">{{ [it.proveedor_estado, it.proveedor_condicion].filter(Boolean).join(' · ') }}</small>
                                                 </td>
-                                                <td>{{ it.concepto }}</td>
-                                                <td>{{ formatearSoles(it.monto) }}</td>
-                                                <td class="celda-adjuntos">
+                                                <td data-label="Concepto">{{ it.concepto }}</td>
+                                                <td data-label="Monto" class="celda-monto">{{ formatearSoles(it.monto) }}</td>
+                                                <td data-label="Adjuntos" class="celda-adjuntos">
                                                     <a v-for="adj in it.adjuntos" :key="adj.id"
                                                         :href="datos.baseUrl + '/descargar?tipo=contable&id=' + contable.documento.id + '&adjunto=' + adj.id"
                                                         target="_blank" rel="noopener" class="chip-adjunto"
@@ -293,8 +293,8 @@ function vistaVerResumen(
                                         </div>
                                     </section>
 
-                                    <div class="tabla-scroll tabla-scroll-detalle">
-                                    <table class="tabla">
+                                    <div class="tabla-scroll tabla-scroll-detalle tabla-scroll-tarjetas">
+                                    <table class="tabla tabla-tarjetas tabla-tarjetas-detalle">
                                         <thead>
                                             <tr>
                                                 <th>Item</th>
@@ -307,17 +307,17 @@ function vistaVerResumen(
                                         </thead>
                                         <tbody>
                                             <tr v-for="(it, idx) in contable.items" :key="idx">
-                                                <td>{{ idx + 1 }}</td>
-                                                <td>{{ it.fecha }}</td>
-                                                <td>{{ it.concepto }}</td>
-                                                <td>
-                                                    {{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}
+                                                <td data-label="Item" class="celda-item-num">{{ idx + 1 }}</td>
+                                                <td data-label="Fecha">{{ it.fecha }}</td>
+                                                <td data-label="Concepto">{{ it.concepto }}</td>
+                                                <td data-label="Comprobante" class="celda-comprobante">
+                                                    <span>{{ [it.tipo_comprobante_nombre || it.tipo_comprobante, it.serie, it.numero_comprobante].filter(Boolean).join(' ') }}</span>
                                                     <div v-if="it.cpe_estado_sunat" class="badge-cpe" :class="it.cpe_estado_sunat === 'ACEPTADO' && it.cpe_estado_ruc === 'ACTIVO' && it.cpe_condicion_ruc === 'HABIDO' ? 'badge-cpe-ok' : 'badge-cpe-error'">
                                                         SUNAT: {{ it.cpe_estado_sunat }}
                                                     </div>
                                                 </td>
-                                                <td>{{ formatearSoles(it.monto) }}</td>
-                                                <td class="celda-acciones">
+                                                <td data-label="Monto" class="celda-monto">{{ formatearSoles(it.monto) }}</td>
+                                                <td class="celda-acciones celda-accion-tarjeta">
                                                     <button type="button" class="boton boton-chico" @click="abrirModalItemContable(idx)"><?= icono('editar') ?> Editar</button>
                                                     <button v-if="esEditable" type="button" class="boton boton-chico" @click="quitarItemContable(idx)"><?= icono('quitar') ?> Quitar</button>
                                                     <br><small v-if="it._archivoPendienteNombre">📎 {{ it._archivoPendienteNombre }}</small>
@@ -325,7 +325,7 @@ function vistaVerResumen(
                                             </tr>
                                         </tbody>
                                         <tfoot>
-                                            <tr>
+                                            <tr class="fila-total-detalle">
                                                 <td colspan="4" class="texto-derecha"><strong>Total</strong></td>
                                                 <td colspan="2"><strong>{{ formatearSoles(totalContable) }}</strong></td>
                                             </tr>
@@ -352,13 +352,13 @@ function vistaVerResumen(
                     <!-- Documento No Contable -->
                     <template v-if="noContable.documento || noContable.editando">
                         <tr class="fila-documento fila-documento-no_contable" :class="{ 'fila-documento-abierta': filaEstaAbierta('no_contable') }" @click="toggleFila('no_contable')">
-                            <td>{{ filaEstaAbierta('no_contable') ? '▾' : '▸' }}</td>
-                            <td><span class="punto-tipo punto-tipo-no_contable"></span>Documento No Contable</td>
-                            <td>{{ noContable.documento ? numeroDocumento(noContable.documento.numero) : '(nuevo)' }}</td>
-                            <td>{{ noContable.documento ? formatearFecha(noContable.documento.fecha_rendicion) : '-' }}</td>
-                            <td>{{ formatearSoles(totalNoContable) }}</td>
+                            <td data-col="chevron">{{ filaEstaAbierta('no_contable') ? '▾' : '▸' }}</td>
+                            <td data-col="tipo"><span class="punto-tipo punto-tipo-no_contable"></span>Documento No Contable</td>
+                            <td data-col="numero">{{ noContable.documento ? numeroDocumento(noContable.documento.numero) : '(nuevo)' }}</td>
+                            <td data-col="fecha">{{ noContable.documento ? formatearFecha(noContable.documento.fecha_rendicion) : '-' }}</td>
+                            <td data-col="total">{{ formatearSoles(totalNoContable) }}</td>
                             <?php if ($mostrarColumnaAcciones): ?>
-                                <td class="celda-acciones" @click.stop>
+                                <td data-col="acciones" class="celda-acciones" :class="{ 'celda-acciones-oculta-movil': !((esEditable || modoCorreccion) && noContable.documento && !noContable.editando) }" @click.stop>
                                     <button
                                         v-if="(esEditable || modoCorreccion) && noContable.documento && !noContable.editando" type="button"
                                         class="boton boton-chico"
@@ -370,14 +370,14 @@ function vistaVerResumen(
                                 </td>
                             <?php endif; ?>
                         </tr>
-                        <tr v-if="filaEstaAbierta('no_contable')">
+                        <tr v-if="filaEstaAbierta('no_contable')" class="fila-detalle-documento">
                             <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="celda-expandida celda-expandida-no_contable">
                                 <p class="subtitulo-documento subtitulo-documento-contable">
                                     <strong>Documento No Contable</strong> - {{ noContable.editando ? 'Editando' : 'Detalle' }}
                                 </p>
                                 <template v-if="!noContable.editando">
-                                    <div class="tabla-scroll tabla-scroll-detalle">
-                                    <table class="tabla">
+                                    <div class="tabla-scroll tabla-scroll-detalle tabla-scroll-tarjetas">
+                                    <table class="tabla tabla-tarjetas tabla-tarjetas-detalle">
                                         <thead>
                                             <tr>
                                                 <th>Item</th>
@@ -391,17 +391,17 @@ function vistaVerResumen(
                                         </thead>
                                         <tbody>
                                             <tr v-for="(it, idx) in noContable.items" :key="idx">
-                                                <td>{{ idx + 1 }}</td>
-                                                <td>{{ formatearFecha(it.fecha_documento) }}</td>
-                                                <td>{{ it.tipo_documento_nombre }}</td>
-                                                <td>{{ it.descripcion }}</td>
-                                                <td>
+                                                <td data-label="Item" class="celda-item-num">{{ idx + 1 }}</td>
+                                                <td data-label="Fecha">{{ formatearFecha(it.fecha_documento) }}</td>
+                                                <td data-label="Tipo">{{ it.tipo_documento_nombre }}</td>
+                                                <td data-label="Descripción">{{ it.descripcion }}</td>
+                                                <td data-label="Sustento">
                                                     <span v-if="it.numero_paginas">{{ it.numero_paginas }} pág.</span>
                                                     <span v-if="it.numero_paginas && it.observaciones"> · </span>
                                                     <span>{{ it.observaciones || (it.numero_paginas ? '' : '-') }}</span>
                                                 </td>
-                                                <td>{{ formatearSoles(it.monto) }}</td>
-                                                <td class="celda-adjuntos">
+                                                <td data-label="Monto" class="celda-monto">{{ formatearSoles(it.monto) }}</td>
+                                                <td data-label="Adjuntos" class="celda-adjuntos">
                                                     <a v-for="adj in it.adjuntos" :key="adj.id"
                                                         :href="datos.baseUrl + '/descargar?tipo=no_contable&id=' + noContable.documento.id + '&adjunto=' + adj.id"
                                                         target="_blank" rel="noopener" class="chip-adjunto"
@@ -443,8 +443,8 @@ function vistaVerResumen(
                                         </div>
                                     </section>
 
-                                    <div class="tabla-scroll tabla-scroll-detalle">
-                                    <table class="tabla">
+                                    <div class="tabla-scroll tabla-scroll-detalle tabla-scroll-tarjetas">
+                                    <table class="tabla tabla-tarjetas tabla-tarjetas-detalle">
                                         <thead>
                                             <tr>
                                                 <th>Item</th>
@@ -457,12 +457,12 @@ function vistaVerResumen(
                                         </thead>
                                         <tbody>
                                             <tr v-for="(it, idx) in noContable.items" :key="idx">
-                                                <td>{{ idx + 1 }}</td>
-                                                <td>{{ formatearFecha(it.fecha_documento) }}</td>
-                                                <td>{{ it.tipo_documento_nombre }}</td>
-                                                <td>{{ it.descripcion }}</td>
-                                                <td>{{ formatearSoles(it.monto) }}</td>
-                                                <td class="celda-acciones">
+                                                <td data-label="Item" class="celda-item-num">{{ idx + 1 }}</td>
+                                                <td data-label="Fecha">{{ formatearFecha(it.fecha_documento) }}</td>
+                                                <td data-label="Tipo">{{ it.tipo_documento_nombre }}</td>
+                                                <td data-label="Descripción">{{ it.descripcion }}</td>
+                                                <td data-label="Monto" class="celda-monto">{{ formatearSoles(it.monto) }}</td>
+                                                <td class="celda-acciones celda-accion-tarjeta">
                                                     <button type="button" class="boton boton-chico" @click="abrirModalItemNoContable(idx)"><?= icono('editar') ?> Editar</button>
                                                     <button v-if="esEditable" type="button" class="boton boton-chico" @click="quitarItemNoContable(idx)"><?= icono('quitar') ?> Quitar</button>
                                                     <br><small v-if="it._archivoPendienteNombre">📎 {{ it._archivoPendienteNombre }}</small>
@@ -470,7 +470,7 @@ function vistaVerResumen(
                                             </tr>
                                         </tbody>
                                         <tfoot>
-                                            <tr>
+                                            <tr class="fila-total-detalle">
                                                 <td colspan="4" class="texto-derecha"><strong>Total</strong></td>
                                                 <td colspan="2"><strong>{{ formatearSoles(totalNoContable) }}</strong></td>
                                             </tr>
@@ -497,13 +497,13 @@ function vistaVerResumen(
                     <!-- Planilla de Movilidad -->
                     <template v-if="planilla.documento || planilla.editando">
                         <tr class="fila-documento fila-documento-planilla" :class="{ 'fila-documento-abierta': filaEstaAbierta('planilla') }" @click="toggleFila('planilla')">
-                            <td>{{ filaEstaAbierta('planilla') ? '▾' : '▸' }}</td>
-                            <td><span class="punto-tipo punto-tipo-planilla"></span>Planilla de Movilidad</td>
-                            <td>{{ planilla.documento ? numeroDocumento(planilla.documento.numero) : '(nuevo)' }}</td>
-                            <td>{{ planilla.documento ? formatearFecha(planilla.documento.fecha_emision) : '-' }}</td>
-                            <td>{{ formatearSoles(totalPlanilla) }}</td>
+                            <td data-col="chevron">{{ filaEstaAbierta('planilla') ? '▾' : '▸' }}</td>
+                            <td data-col="tipo"><span class="punto-tipo punto-tipo-planilla"></span>Planilla de Movilidad</td>
+                            <td data-col="numero">{{ planilla.documento ? numeroDocumento(planilla.documento.numero) : '(nuevo)' }}</td>
+                            <td data-col="fecha">{{ planilla.documento ? formatearFecha(planilla.documento.fecha_emision) : '-' }}</td>
+                            <td data-col="total">{{ formatearSoles(totalPlanilla) }}</td>
                             <?php if ($mostrarColumnaAcciones): ?>
-                                <td class="celda-acciones" @click.stop>
+                                <td data-col="acciones" class="celda-acciones" :class="{ 'celda-acciones-oculta-movil': !((esEditable || modoCorreccion) && planilla.documento && !planilla.editando) }" @click.stop>
                                     <button
                                         v-if="(esEditable || modoCorreccion) && planilla.documento && !planilla.editando"
                                         type="button"
@@ -516,14 +516,14 @@ function vistaVerResumen(
                                 </td>
                             <?php endif; ?>
                         </tr>
-                        <tr v-if="filaEstaAbierta('planilla')">
+                        <tr v-if="filaEstaAbierta('planilla')" class="fila-detalle-documento">
                             <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="celda-expandida celda-expandida-planilla">
                                 <p class="subtitulo-documento subtitulo-documento-contable">
                                     <strong>Planilla de movilidad</strong> - {{ planilla.editando ? 'Editando' : 'Detalle' }}
                                 </p>
                                 <template v-if="!planilla.editando">
-                                    <div class="tabla-scroll tabla-scroll-detalle">
-                                    <table class="tabla">
+                                    <div class="tabla-scroll tabla-scroll-detalle tabla-scroll-tarjetas">
+                                    <table class="tabla tabla-tarjetas tabla-tarjetas-detalle">
                                         <thead>
                                             <tr>
                                                 <th>Item</th>
@@ -538,16 +538,16 @@ function vistaVerResumen(
                                         </thead>
                                         <tbody>
                                             <tr v-for="(it, idx) in planilla.items" :key="idx">
-                                                <td>{{ idx + 1 }}</td>
-                                                <td>{{ formatearFecha(it.fecha) }}</td>
-                                                <td>{{ it.motivo }}</td>
-                                                <td>{{ it.origen }}</td>
-                                                <td>{{ it.destino }}</td>
-                                                <td>{{ formatearSoles(it.monto) }}</td>
-                                                <td>
+                                                <td data-label="Item" class="celda-item-num">{{ idx + 1 }}</td>
+                                                <td data-label="Fecha">{{ formatearFecha(it.fecha) }}</td>
+                                                <td data-label="Motivo">{{ it.motivo }}</td>
+                                                <td data-label="Origen">{{ it.origen }}</td>
+                                                <td data-label="Destino">{{ it.destino }}</td>
+                                                <td data-label="Monto" class="celda-monto">{{ formatearSoles(it.monto) }}</td>
+                                                <td data-label="Evidencia">
                                                     {{ it.tipo_evidencia || 'NINGUNO' }}
                                                 </td>
-                                                <td class="celda-adjuntos">
+                                                <td data-label="Adjuntos" class="celda-adjuntos">
                                                     <a 
                                                         v-for="adj in it.adjuntos" 
                                                         :key="adj.id" 
@@ -615,8 +615,8 @@ function vistaVerResumen(
                                             </div>
                                         </section>
 
-                                        <div class="tabla-scroll tabla-scroll-detalle">
-                                        <table class="tabla">
+                                        <div class="tabla-scroll tabla-scroll-detalle tabla-scroll-tarjetas">
+                                        <table class="tabla tabla-tarjetas tabla-tarjetas-detalle">
                                             <thead>
                                                 <tr>
                                                     <th>Item</th>
@@ -631,14 +631,14 @@ function vistaVerResumen(
                                             </thead>
                                             <tbody>
                                                 <tr v-for="(it, idx) in planilla.items" :key="idx">
-                                                    <td>{{ idx + 1 }}</td>
-                                                    <td>{{ formatearFecha(it.fecha) }}</td>
-                                                    <td>{{ it.motivo }}</td>
-                                                    <td>{{ it.origen }}</td>
-                                                    <td>{{ it.destino }}</td>
-                                                    <td>{{ formatearSoles(it.monto) }}</td>
-                                                    <td>{{ it.tipo_evidencia }}</td>
-                                                    <td class="celda-acciones">
+                                                    <td data-label="Item" class="celda-item-num">{{ idx + 1 }}</td>
+                                                    <td data-label="Fecha">{{ formatearFecha(it.fecha) }}</td>
+                                                    <td data-label="Motivo">{{ it.motivo }}</td>
+                                                    <td data-label="Origen">{{ it.origen }}</td>
+                                                    <td data-label="Destino">{{ it.destino }}</td>
+                                                    <td data-label="Monto" class="celda-monto">{{ formatearSoles(it.monto) }}</td>
+                                                    <td data-label="Evidencia">{{ it.tipo_evidencia }}</td>
+                                                    <td class="celda-acciones celda-accion-tarjeta">
                                                         <button type="button" class="boton boton-chico" @click="abrirModalItemPlanilla(idx)"><?= icono('editar') ?> Editar</button>
                                                         <button v-if="esEditable" type="button" class="boton boton-chico" @click="quitarItemPlanilla(idx)"><?= icono('quitar') ?> Quitar</button>
                                                         <br><small v-if="it._archivoPendienteNombre">📎 {{ it._archivoPendienteNombre }}</small>
@@ -646,7 +646,7 @@ function vistaVerResumen(
                                                 </tr>
                                             </tbody>
                                             <tfoot>
-                                                <tr>
+                                                <tr class="fila-total-detalle">
                                                     <td colspan="5" class="texto-derecha"><strong>Total</strong></td>
                                                     <td colspan="3"><strong>{{ formatearSoles(totalPlanilla) }}</strong></td>
                                                 </tr>
@@ -671,7 +671,7 @@ function vistaVerResumen(
                         </tr>
                     </template>
 
-                    <tr v-if="!contable.documento && !contable.editando && !noContable.documento && !noContable.editando && !planilla.documento && !planilla.editando">
+                    <tr class="fila-vacia-documentos" v-if="!contable.documento && !contable.editando && !noContable.documento && !noContable.editando && !planilla.documento && !planilla.editando">
                         <td colspan="<?= $mostrarColumnaAcciones ? 6 : 5 ?>" class="texto-vacio">Todavía no añadiste ningún documento a este Resumen.</td>
                     </tr>
                 </tbody>
@@ -680,7 +680,7 @@ function vistaVerResumen(
                         <td colspan="4" class="texto-derecha">Total general</td>
                         <td>{{ formatearSoles(totalGeneral) }}</td>
                         <?php if ($mostrarColumnaAcciones): ?>
-                            <td></td>
+                            <td class="celda-total-vacia"></td>
                         <?php endif; ?>
                     </tr>
                 </tfoot>
@@ -1059,7 +1059,15 @@ function vistaVerResumen(
             </table>
             </div>
 
-            <iframe v-if="tabVistaPrevia === 'pdf'" :src="datos.baseUrl + '/exportar-resumen-pdf?id=' + datos.resumenId" class="iframe-pdf"></iframe>
+            <template v-if="tabVistaPrevia === 'pdf'">
+                <iframe :src="datos.baseUrl + '/exportar-resumen-pdf?id=' + datos.resumenId" class="iframe-pdf"></iframe>
+                <div class="vista-previa-pdf-movil">
+                    <p>En móvil el PDF se visualiza mejor directamente en el visor de tu dispositivo.</p>
+                    <a :href="datos.baseUrl + '/exportar-resumen-pdf?id=' + datos.resumenId" target="_blank" rel="noopener" class="boton boton-primario">
+                        <?= icono('ver') ?> Abrir PDF completo
+                    </a>
+                </div>
+            </template>
 
             <div class="acciones-modal">
                 <button type="button" class="boton boton-primario" @click="mostrarVistaPrevia = false">Cerrar</button>

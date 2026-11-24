@@ -78,12 +78,28 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
         <link rel="stylesheet" href="<?= assetUrl('/css/base.css') ?>">
         <link rel="stylesheet" href="<?= assetUrl('/css/componentes.css') ?>">
         <link rel="stylesheet" href="<?= assetUrl('/css/modulos.css') ?>">
+        <link rel="stylesheet" href="<?= assetUrl('/css/responsive.css') ?>">
         <link rel="icon" type="image/svg+xml" href="<?= assetUrl('/favicon.svg') ?>">
         <script type="importmap"><?= json_encode(mapaModulosJs(), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
     </head>
     <body class="con-barra-lateral">
-        <aside class="barra-lateral">
-            <a href="<?= BASE_URL ?>/home" class="barra-lateral-marca" aria-label="T-RINDE — Inicio"><?= logoMarca(26) ?></a>
+        <header class="barra-movil">
+            <button type="button" id="botonAbrirMenu" class="boton-menu-movil" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="barraLateral">
+                <?= icono('menu') ?>
+            </button>
+            <a href="<?= BASE_URL ?>/home" class="barra-movil-marca" aria-label="T-RINDE — Inicio"><?= logoMarca(22) ?></a>
+            <a href="<?= BASE_URL ?>/perfil" class="barra-movil-perfil" title="Mi perfil" aria-label="Mi perfil">
+                <span class="usuario-avatar"><?= htmlspecialchars($inicialUsuario) ?></span>
+            </a>
+        </header>
+        <div class="barra-lateral-backdrop" id="backdropMenu" hidden></div>
+        <aside id="barraLateral" class="barra-lateral">
+            <div class="barra-lateral-cabecera">
+                <a href="<?= BASE_URL ?>/home" class="barra-lateral-marca" aria-label="T-RINDE — Inicio"><?= logoMarca(26) ?></a>
+                <button type="button" id="botonCerrarMenu" class="barra-lateral-cerrar" aria-label="Cerrar menú">
+                    <?= icono('cerrar') ?>
+                </button>
+            </div>
             <nav class="barra-lateral-nav" aria-label="Navegación principal">
                 <?php foreach ($secciones as $seccion): ?>
                     <?php if (isset($seccion['titulo'])): ?>
@@ -159,6 +175,9 @@ function cierreLayout(): void
         </script>
         <script
             src="<?= assetUrl('/js/sesion_inactividad.js') ?>" defer>
+        </script>
+        <script
+            src="<?= assetUrl('/js/menu_movil.js') ?>" defer>
         </script>
 
     </body>

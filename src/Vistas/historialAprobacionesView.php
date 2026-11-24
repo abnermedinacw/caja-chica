@@ -63,8 +63,8 @@ function vistaHistorialAprobaciones(array $resumenes): void
 
         <p class="texto-vacio" v-if="resumenes.length === 0">Todavía no aprobaste ni rechazaste ningún Resumen.</p>
         <p class="texto-vacio" v-else-if="resumenesFiltrados.length === 0">Ningún Resumen coincide con estos filtros.</p>
-        <div class="tabla-scroll tabla-scroll-vertical tabla-scroll-historial-aprobaciones" v-else>
-        <table class="tabla">
+        <div class="tabla-scroll tabla-scroll-vertical tabla-scroll-historial-aprobaciones tabla-scroll-tarjetas" v-else>
+        <table class="tabla tabla-tarjetas tabla-tarjetas-resumen">
             <thead>
                 <tr>
                     <th>Número</th>
@@ -79,14 +79,14 @@ function vistaHistorialAprobaciones(array $resumenes): void
             </thead>
             <tbody>
                 <tr v-for="r in resumenesFiltrados" :key="r.id">
-                    <td>{{ r.numero_formateado }}</td>
-                    <td>{{ r.empresa }}</td>
-                    <td>{{ r.solicitante }}</td>
-                    <td>{{ formatearSoles(r.total_egresos) }}</td>
-                    <td>{{ r.accion === 'APROBADO' ? 'Aprobado' : 'Rechazado' }}</td>
-                    <td>{{ formatearFecha(r.fecha_accion) }}</td>
-                    <td><span class="estado" :class="'estado-' + r.estado_general.toLowerCase()">{{ r.estado_general }}</span></td>
-                    <td><a :href="datos.baseUrl + '/ver-resumen?id=' + r.id + '&amp;origen=historial-aprobaciones'" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
+                    <td data-label="Número" class="celda-cabecera-izq">{{ r.numero_formateado }}</td>
+                    <td data-label="Empresa">{{ r.empresa }}</td>
+                    <td data-label="Responsable" class="celda-destacada">{{ r.solicitante }}</td>
+                    <td data-label="Total" class="celda-monto">{{ formatearSoles(r.total_egresos) }}</td>
+                    <td data-label="Acción">{{ r.accion === 'APROBADO' ? 'Aprobado' : 'Rechazado' }}</td>
+                    <td data-label="Fecha">{{ formatearFecha(r.fecha_accion) }}</td>
+                    <td data-label="Estado actual" class="celda-cabecera-der"><span class="estado" :class="'estado-' + r.estado_general.toLowerCase()">{{ r.estado_general }}</span></td>
+                    <td class="celda-accion-tarjeta"><a :href="datos.baseUrl + '/ver-resumen?id=' + r.id + '&amp;origen=historial-aprobaciones'" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
                 </tr>
             </tbody>
         </table>

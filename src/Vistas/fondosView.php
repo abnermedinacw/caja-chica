@@ -37,8 +37,8 @@ function vistaFondos(array $fondos): void
                 </div>
 
                 <?php if (!empty($f['resumenes'])): ?>
-                    <div class="tabla-scroll tabla-scroll-vertical tabla-scroll-compacta">
-                    <table class="tabla tabla-fondo-resumenes">
+                    <div class="tabla-scroll tabla-scroll-vertical tabla-scroll-compacta tabla-scroll-tarjetas">
+                    <table class="tabla tabla-fondo-resumenes tabla-tarjetas tabla-tarjetas-resumen">
                         <thead>
                             <tr>
                                 <th>N°</th>
@@ -51,11 +51,11 @@ function vistaFondos(array $fondos): void
                         <tbody>
                             <?php foreach($f['resumenes'] as $r): ?>
                                 <tr>
-                                    <td><?= numeroDocumento($r['numero']) ?></td>
-                                    <td><?= formatearFecha($r['periodo_inicio']) ?> - <?= formatearFecha($r['periodo_fin']) ?></td>
-                                    <td><?= soles($r['total_egresos']) ?></td>
-                                    <td><span class="estado estado-<?= strtolower($r['estado_general']) ?>"><?= htmlspecialchars($r['estado_general']) ?></span></td>
-                                    <td><a href="<?= BASE_URL ?>/ver-resumen?id=<?= (int)$r['id'] ?>&amp;origen=fondos" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
+                                    <td data-label="N°" class="celda-cabecera-izq"><?= numeroDocumento($r['numero']) ?></td>
+                                    <td data-label="Periodo"><?= formatearFecha($r['periodo_inicio']) ?> - <?= formatearFecha($r['periodo_fin']) ?></td>
+                                    <td data-label="Total egresos" class="celda-monto"><?= soles($r['total_egresos']) ?></td>
+                                    <td data-label="Estado" class="celda-cabecera-der"><span class="estado estado-<?= strtolower($r['estado_general']) ?>"><?= htmlspecialchars($r['estado_general']) ?></span></td>
+                                    <td class="celda-accion-tarjeta"><a href="<?= BASE_URL ?>/ver-resumen?id=<?= (int)$r['id'] ?>&amp;origen=fondos" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

@@ -54,8 +54,8 @@ function vistaHistorialResumenes(array $resumenes): void
         </section>
         <p class="texto-vacio" v-if="resumenes.length === 0">Todavía no rendiste ninguna Caja Chica</p>
         <p class="texto-vacio" v-else-if="resumenesFiltrados.length === 0">Ningún Resumen coincide con estos filtros</p>
-        <div class="tabla-scroll tabla-scroll-vertical" v-else>
-        <table class="tabla">
+        <div class="tabla-scroll tabla-scroll-vertical tabla-scroll-tarjetas" v-else>
+        <table class="tabla tabla-tarjetas tabla-tarjetas-resumen">
             <thead>
                 <tr>
                     <th>Número</th>
@@ -69,13 +69,13 @@ function vistaHistorialResumenes(array $resumenes): void
             </thead>
             <tbody>
                 <tr v-for="r in resumenesFiltrados" :key="r.id">
-                    <td>{{ r.numero_formateado }}</td>
-                    <td>{{ r.empresa }}</td>
-                    <td>{{ formatearFecha(r.periodo_inicio) }} - {{ formatearFecha(r.periodo_fin) }}</td>
-                    <td>{{ formatearSoles(r.total_egresos) }}</td>
-                    <td><span class="estado" :class="'estado-'+ r.estado_general.toLowerCase()">{{ r.estado_general }}</span></td>
-                    <td>{{ r.nivel_actual_nombre || '-' }}</td>
-                    <td><a :href="datos.baseUrl + '/ver-resumen?id=' + r.id + '&amp;origen=historial'" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
+                    <td data-label="Número" class="celda-cabecera-izq">{{ r.numero_formateado }}</td>
+                    <td data-label="Empresa">{{ r.empresa }}</td>
+                    <td data-label="Periodo">{{ formatearFecha(r.periodo_inicio) }} - {{ formatearFecha(r.periodo_fin) }}</td>
+                    <td data-label="Total egresos" class="celda-monto">{{ formatearSoles(r.total_egresos) }}</td>
+                    <td data-label="Estado" class="celda-cabecera-der"><span class="estado" :class="'estado-'+ r.estado_general.toLowerCase()">{{ r.estado_general }}</span></td>
+                    <td data-label="Nivel actual">{{ r.nivel_actual_nombre || '-' }}</td>
+                    <td class="celda-accion-tarjeta"><a :href="datos.baseUrl + '/ver-resumen?id=' + r.id + '&amp;origen=historial'" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
                 </tr>
             </tbody>
         </table>

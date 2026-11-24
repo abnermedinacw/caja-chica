@@ -17,8 +17,8 @@ function vistaHome(array $fondos, array $resumenes): void
         <?php if (empty($fondos)): ?>
             <p class="texto-vacio">Todavia no tienes ningun fondo asignado.</p>
         <?php else: ?>
-            <div class="tabla-scroll tabla-scroll-vertical tabla-home-fondos">
-            <table class="tabla">
+            <div class="tabla-scroll tabla-scroll-vertical tabla-home-fondos tabla-scroll-tarjetas">
+            <table class="tabla tabla-tarjetas">
                 <thead>
                     <tr>
                         <th>Empresa</th>
@@ -30,10 +30,10 @@ function vistaHome(array $fondos, array $resumenes): void
                 <tbody>
                     <?php foreach ($fondos as $f): ?>
                         <tr>
-                            <td><?= htmlspecialchars($f['empresa']) ?></td>
-                            <td><?= htmlspecialchars($f['tipo']) ?></td>
-                            <td><?= soles($f['monto_asignado']) ?></td>
-                            <td><?= soles($f['saldo_disponible']) ?></td>
+                            <td data-label="Empresa" class="celda-destacada"><?= htmlspecialchars($f['empresa']) ?></td>
+                            <td data-label="Tipo"><?= htmlspecialchars($f['tipo']) ?></td>
+                            <td data-label="Monto asignado"><?= soles($f['monto_asignado']) ?></td>
+                            <td data-label="Saldo disponible" class="celda-monto"><?= soles($f['saldo_disponible']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -53,8 +53,8 @@ function vistaHome(array $fondos, array $resumenes): void
         <?php if (empty($resumenes)): ?>
             <p class="texto-vacio">Sin resúmenes en curso.</p>
         <?php else: ?>
-            <div class="tabla-scroll">
-            <table class="tabla">
+            <div class="tabla-scroll tabla-scroll-tarjetas">
+            <table class="tabla tabla-tarjetas tabla-tarjetas-resumen">
                 <thead>
                     <tr>
                         <th>Número</th>
@@ -69,13 +69,13 @@ function vistaHome(array $fondos, array $resumenes): void
                 <tbody>
                     <?php foreach ($resumenes as $r): ?>
                         <tr>
-                            <td><?= numeroDocumento($r['numero']) ?></td>
-                            <td><?= htmlspecialchars($r['empresa']) ?></td>
-                            <td><?= formatearFecha(htmlspecialchars($r['periodo_inicio'])) ?>  -  <?= formatearFecha(htmlspecialchars($r['periodo_fin'])) ?></td>
-                            <td><?= soles($r['total_egresos']) ?></td>
-                            <td><span class="estado estado-<?= strtolower($r['estado_general']) ?>"><?= htmlspecialchars($r['estado_general']) ?></span></td>
-                            <td><?= htmlspecialchars($r['nivel_actual_nombre'] ?? '-') ?></td>
-                            <td>
+                            <td data-label="Número" class="celda-cabecera-izq"><?= numeroDocumento($r['numero']) ?></td>
+                            <td data-label="Empresa"><?= htmlspecialchars($r['empresa']) ?></td>
+                            <td data-label="Periodo"><?= formatearFecha(htmlspecialchars($r['periodo_inicio'])) ?>  -  <?= formatearFecha(htmlspecialchars($r['periodo_fin'])) ?></td>
+                            <td data-label="Total egresos" class="celda-monto"><?= soles($r['total_egresos']) ?></td>
+                            <td data-label="Estado" class="celda-cabecera-der"><span class="estado estado-<?= strtolower($r['estado_general']) ?>"><?= htmlspecialchars($r['estado_general']) ?></span></td>
+                            <td data-label="Nivel actual"><?= htmlspecialchars($r['nivel_actual_nombre'] ?? '-') ?></td>
+                            <td class="celda-accion-tarjeta">
                                 <a href="<?= BASE_URL ?>/ver-resumen?id=<?= (int)$r['id']?>&amp;origen=home" class="boton boton-chico"><?= icono('ver') ?> Ver</a>
                             </td>
                         </tr>

@@ -1,4 +1,5 @@
-/* Hoja de entrada conservada por compatibilidad. Los estilos se organizan en base.css, componentes.css y modulos.css. */
+/* Hoja de entrada conservada por compatibilidad. Los estilos se organizan en base.css, componentes.css, modulos.css y responsive.css. */
 @import url("base.css");
 @import url("componentes.css");
 @import url("modulos.css");
+@import url("responsive.css");

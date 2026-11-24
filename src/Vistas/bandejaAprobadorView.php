@@ -20,8 +20,8 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
             <?php if (empty($resumenes)): ?>
                 <p class="texto-vacio">No tienes cajas pendientes de aprobación por ahora.</p>
             <?php else: ?>
-                <div class="tabla-scroll tabla-scroll-vertical">
-                <table class="tabla">
+                <div class="tabla-scroll tabla-scroll-vertical tabla-scroll-tarjetas">
+                <table class="tabla tabla-tarjetas tabla-tarjetas-resumen">
                     <thead>
                         <tr>
                             <th>Número</th>
@@ -38,20 +38,20 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
                         <?php foreach ($resumenes as $r): ?>
                             <?php $esRechazoEnCamino = $r['estado_general'] === 'RECHAZADO'; ?>
                             <tr>
-                                <td><?= numeroDocumento($r['numero']) ?></td>
-                                <td><?= htmlspecialchars($r['empresa']) ?></td>
-                                <td><?= htmlspecialchars($r['solicitante']) ?></td>
-                                <td><?= formatearFecha($r['fecha_emision']) ?></td>
-                                <td><?= soles($r['total_egresos']) ?></td>
-                                <td>
+                                <td data-label="Número" class="celda-cabecera-izq"><?= numeroDocumento($r['numero']) ?></td>
+                                <td data-label="Empresa"><?= htmlspecialchars($r['empresa']) ?></td>
+                                <td data-label="Solicitante" class="celda-destacada"><?= htmlspecialchars($r['solicitante']) ?></td>
+                                <td data-label="Fecha de emisión"><?= formatearFecha($r['fecha_emision']) ?></td>
+                                <td data-label="Total egresos" class="celda-monto"><?= soles($r['total_egresos']) ?></td>
+                                <td data-label="Situación" class="celda-cabecera-der">
                                     <?php if ($esRechazoEnCamino): ?>
                                         <span class="estado estado-rechazado">Rechazo en revisión</span>
                                     <?php else: ?>
                                         <span class="estado estado-en_revision">Pendiente</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= htmlspecialchars($r['etapa']) ?></td>
-                                <td>
+                                <td data-label="Etapa"><?= htmlspecialchars($r['etapa']) ?></td>
+                                <td class="celda-accion-tarjeta">
                                     <a href="<?= BASE_URL ?>/ver-aprobacion?id=<?= (int)$r['id'] ?>&amp;origen=bandeja-aprobaciones" class="boton boton-chico"><?= icono('ver') ?> Ver</a>
                                 </td>
                             </tr>
@@ -68,8 +68,8 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
                 <?php if (empty($misFondos)): ?>
                     <p class="texto-vacio">Todavía no tienes ningún fondo asignado.</p>
                 <?php else: ?>
-                    <div class="tabla-scroll tabla-scroll-vertical tabla-home-fondos">
-                    <table class="tabla">
+                    <div class="tabla-scroll tabla-scroll-vertical tabla-home-fondos tabla-scroll-tarjetas">
+                    <table class="tabla tabla-tarjetas">
                         <thead>
                             <tr>
                                 <th>Empresa</th>
@@ -81,10 +81,10 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
                         <tbody>
                             <?php foreach ($misFondos as $f): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($f['empresa']) ?></td>
-                                    <td><?= htmlspecialchars($f['tipo']) ?></td>
-                                    <td><?= soles($f['monto_asignado']) ?></td>
-                                    <td><?= soles($f['saldo_disponible']) ?></td>
+                                    <td data-label="Empresa" class="celda-destacada"><?= htmlspecialchars($f['empresa']) ?></td>
+                                    <td data-label="Tipo"><?= htmlspecialchars($f['tipo']) ?></td>
+                                    <td data-label="Monto asignado"><?= soles($f['monto_asignado']) ?></td>
+                                    <td data-label="Saldo disponible" class="celda-monto"><?= soles($f['saldo_disponible']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -104,8 +104,8 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
                 <?php if (empty($misResumenes)): ?>
                     <p class="texto-vacio">Sin cajas en curso.</p>
                 <?php else: ?>
-                    <div class="tabla-scroll">
-                    <table class="tabla">
+                    <div class="tabla-scroll tabla-scroll-tarjetas">
+                    <table class="tabla tabla-tarjetas tabla-tarjetas-resumen">
                         <thead>
                             <tr>
                                 <th>Número</th>
@@ -120,13 +120,13 @@ function vistaBandejaAprobador(string $rol, array $resumenes, bool $tieneTrabaja
                         <tbody>
                             <?php foreach($misResumenes as $r): ?>
                                 <tr>
-                                    <td><?= numeroDocumento($r['numero']) ?></td>
-                                    <td><?= htmlspecialchars($r['empresa']) ?></td>
-                                    <td><?= formatearFecha($r['periodo_inicio']) ?> - <?= formatearFecha($r['periodo_fin']) ?></td>
-                                    <td><?= soles($r['total_egresos']) ?></td>
-                                    <td><span class="estado estado-<?= strtolower($r['estado_general']) ?>"><?= htmlspecialchars($r['estado_general']) ?></span></td>
-                                    <td><?= htmlspecialchars($r['nivel_actual_nombre'] ?? '-') ?></td>
-                                    <td><a href="<?= BASE_URL ?>/ver-resumen?id=<?= (int)$r['id'] ?>&amp;origen=home" class="boton boton-chico"><?= icono('ver') ?>Ver</a></td>
+                                    <td data-label="Número" class="celda-cabecera-izq"><?= numeroDocumento($r['numero']) ?></td>
+                                    <td data-label="Empresa"><?= htmlspecialchars($r['empresa']) ?></td>
+                                    <td data-label="Periodo"><?= formatearFecha($r['periodo_inicio']) ?> - <?= formatearFecha($r['periodo_fin']) ?></td>
+                                    <td data-label="Total egresos" class="celda-monto"><?= soles($r['total_egresos']) ?></td>
+                                    <td data-label="Estado" class="celda-cabecera-der"><span class="estado estado-<?= strtolower($r['estado_general']) ?>"><?= htmlspecialchars($r['estado_general']) ?></span></td>
+                                    <td data-label="Nivel actual"><?= htmlspecialchars($r['nivel_actual_nombre'] ?? '-') ?></td>
+                                    <td class="celda-accion-tarjeta"><a href="<?= BASE_URL ?>/ver-resumen?id=<?= (int)$r['id'] ?>&amp;origen=home" class="boton boton-chico"><?= icono('ver') ?> Ver</a></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
