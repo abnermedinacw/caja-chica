@@ -5,7 +5,13 @@ require_once __DIR__ . '/../../config/database.php';
 function sgteNumeroResumen(int $trabajadorId, int $empresaId): int
 {
     $pdo = obtenerConexion();
-    $stmt = $pdo->prepare("SELECT MAX(numero) AS maximo FROM caja_chica WHERE trabajador_id = ? AND empresa_id = ?");
+    $stmt = $pdo->prepare(
+        "SELECT MAX(numero) AS maximo
+        FROM caja_chica
+        WHERE trabajador_id = ?
+          AND empresa_id = ?
+          AND estado_general <> 'ANULADO'"
+    );
     $stmt->execute([$trabajadorId, $empresaId]);
     $fila = $stmt->fetch();
     return ((int)($fila['maximo'] ?? 0)) + 1;

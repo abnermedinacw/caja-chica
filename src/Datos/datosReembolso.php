@@ -61,7 +61,14 @@ function listarCajasPagosBbva(int $empresaId): array
             cc.id,
             cc.numero,
             cc.fecha_emision,
-            COALESCE(cc.monto_rendicion, cc.total_egresos) AS importe,
+            cc.saldo_inicial,
+            COALESCE(cc.monto_rendicion, cc.total_egresos) AS total_rendido,
+            f.tipo AS fondo_tipo,
+            CASE
+                WHEN f.tipo = 'NO_RECURRENTE'
+                    THEN GREATEST(0, ROUND(COALESCE(cc.monto_rendicion, cc.total_egresos) - cc.saldo_inicial, 2))
+                ELSE COALESCE(cc.monto_rendicion, cc.total_egresos)
+            END AS importe,
             cc.txt_bbva_descargado,
             cc.txt_bbva_fecha_descarga,
             t.id AS trabajador_id,
@@ -70,7 +77,15 @@ function listarCajasPagosBbva(int $empresaId): array
             t.cuenta_bbva
         FROM caja_chica cc
         INNER JOIN trabajador t ON t.id = cc.trabajador_id
-        WHERE cc.empresa_id = ? AND cc.estado_general = 'VISADO'
+        LEFT JOIN fondo f ON f.id = cc.fondo_id
+        WHERE cc.empresa_id = ?
+            AND cc.estado_general = 'VISADO'
+            AND (
+                cc.txt_bbva_descargado = 1
+                OR f.tipo IS NULL
+                OR f.tipo <> 'NO_RECURRENTE'
+                OR ROUND(COALESCE(cc.monto_rendicion, cc.total_egresos) - cc.saldo_inicial, 2) > 0
+            )
         ORDER BY cc.txt_bbva_descargado, cc.fecha_emision, cc.id"
     );
 
@@ -93,7 +108,14 @@ function bloquearCajasPagosBbva(array $cajasIds): array
             cc.empresa_id,
             cc.estado_general,
             cc.txt_bbva_descargado,
-            COALESCE(cc.monto_rendicion, cc.total_egresos) AS importe,
+            cc.saldo_inicial,
+            COALESCE(cc.monto_rendicion, cc.total_egresos) AS total_rendido,
+            f.tipo AS fondo_tipo,
+            CASE
+                WHEN f.tipo = 'NO_RECURRENTE'
+                    THEN GREATEST(0, ROUND(COALESCE(cc.monto_rendicion, cc.total_egresos) - cc.saldo_inicial, 2))
+                ELSE COALESCE(cc.monto_rendicion, cc.total_egresos)
+            END AS importe,
             t.id AS trabajador_id,
             t.nombres AS trabajador,
             t.dni,
@@ -109,6 +131,7 @@ function bloquearCajasPagosBbva(array $cajasIds): array
             ) AS fecha_visado_tesoreria
         FROM caja_chica cc
         INNER JOIN trabajador t ON t.id = cc.trabajador_id
+        LEFT JOIN fondo f ON f.id = cc.fondo_id
         WHERE cc.id IN ($marcadores)
         ORDER BY cc.numero
         FOR UPDATE"

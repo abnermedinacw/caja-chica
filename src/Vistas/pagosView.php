@@ -175,7 +175,9 @@ function vistaPagos(
                             <td>{{ caja.trabajador }}</td>
                             <td>{{ caja.dni }}</td>
                             <td>{{ caja.cuenta_enmascarada }}</td>
-                            <td>{{ formatearSoles(caja.importe) }}</td>
+                            <td>
+                                {{ formatearSoles(caja.importe) }}
+                            </td>
                             <td>
                                 <span v-if="caja.descargada" class="estado estado-txt-descargado">
                                     TXT descargado
@@ -236,7 +238,12 @@ function vistaPagos(
                             <td>{{ caja.trabajador }}</td>
                             <td>{{ caja.dni }}</td>
                             <td>{{ caja.cuenta_enmascarada }}</td>
-                            <td>{{ formatearSoles(caja.importe) }}</td>
+                            <td>
+                                {{ formatearSoles(caja.importe) }}
+                                <small v-if="caja.fondo_tipo === 'NO_RECURRENTE'" class="texto-vacio" style="display:block;font-size:11.5px;">
+                                    Excedente ({{ formatearSoles(caja.total_rendido) }} - {{ formatearSoles(caja.saldo_inicial) }})
+                                </small>
+                            </td>
                             <td>{{ formatearFecha(caja.txt_bbva_fecha_descarga) }}</td>
                         </tr>
                     </tbody>
