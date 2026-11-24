@@ -1,0 +1,1071 @@
+/* ============================================================================
+   Adaptación móvil y tablet (Fase 1 + Fase 2)
+   ----------------------------------------------------------------------------
+   Regla de arquitectura:
+   - En laptop/desktop (>= 901px) NO se altera ningún estilo existente.
+   - Los elementos exclusivos de móvil permanecen ocultos en desktop.
+   - Todas las adaptaciones viven dentro de @media (max-width: ...).
+   ============================================================================ */
+
+.barra-movil,
+.barra-lateral-backdrop,
+.barra-lateral-cerrar,
+.vista-previa-pdf-movil {
+    display: none;
+}
+
+.barra-lateral-cabecera {
+    display: block;
+}
+
+/* ============================================================================
+   <= 900px : Shell móvil (Topbar sticky + Drawer off-canvas + scroll natural)
+   ============================================================================ */
+@media (max-width: 900px) {
+    body.con-barra-lateral {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        /* overflow-x: clip recorta desbordamientos sin romper position: sticky */
+        overflow-x: clip;
+        overflow-y: auto;
+    }
+
+    body.con-barra-lateral.menu-movil-abierto {
+        overflow: hidden;
+    }
+
+    /* ---------------- Topbar móvil ---------------- */
+    .barra-movil {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        height: 56px;
+        padding: 0 10px;
+        background: var(--color-navy-900);
+        color: #ffffff;
+        border-bottom: 1px solid rgba(255, 255, 255, .08);
+        box-shadow: 0 2px 10px rgba(14, 28, 45, .16);
+    }
+
+    .boton-menu-movil,
+    .barra-movil-perfil {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: #e6eef8;
+        text-decoration: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+    }
+
+    .boton-menu-movil:hover,
+    .boton-menu-movil:active,
+    .barra-movil-perfil:hover,
+    .barra-movil-perfil:active {
+        background: rgba(255, 255, 255, .1);
+        color: #ffffff;
+    }
+
+    .boton-menu-movil:focus-visible,
+    .barra-movil-perfil:focus-visible,
+    .barra-movil-marca:focus-visible,
+    .barra-lateral-cerrar:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
+    }
+
+    .barra-movil-marca {
+        display: inline-flex;
+        align-items: center;
+        font-family: Manrope, 'Segoe UI', sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -.01em;
+        color: #ffffff;
+        text-decoration: none;
+    }
+
+    /* ---------------- Backdrop + Drawer off-canvas ---------------- */
+    .barra-lateral-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: rgba(14, 28, 45, .52);
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms var(--ease);
+    }
+
+    .barra-lateral-backdrop[hidden] {
+        display: none;
+    }
+
+    body.menu-movil-abierto .barra-lateral-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .barra-lateral {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 60;
+        width: min(280px, 84vw);
+        height: 100vh;
+        height: 100dvh;
+        padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform 220ms var(--ease), visibility 220ms;
+        overscroll-behavior: contain;
+    }
+
+    body.menu-movil-abierto .barra-lateral {
+        transform: translateX(0);
+        visibility: visible;
+        box-shadow: 0 24px 48px rgba(10, 20, 35, .45);
+    }
+
+    .barra-lateral-cabecera {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .barra-lateral-marca {
+        margin-bottom: 0;
+        padding-left: 8px;
+        font-size: 17px;
+    }
+
+    .barra-lateral-cerrar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border: 0;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: #c3ccd9;
+        cursor: pointer;
+    }
+
+    .barra-lateral-cerrar:hover,
+    .barra-lateral-cerrar:active {
+        background: rgba(255, 255, 255, .1);
+        color: #ffffff;
+    }
+
+    .enlace-lateral {
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+
+    .usuario-chip {
+        min-height: 44px;
+    }
+
+    /* ---------------- Contenido principal y contenedores ---------------- */
+    .contenido-principal {
+        overflow: visible;
+        padding: 20px 16px calc(32px + env(safe-area-inset-bottom));
+    }
+
+    section {
+        margin-bottom: 24px;
+    }
+
+    .toast {
+        top: 66px;
+        width: calc(100vw - 24px);
+        max-width: 520px;
+        padding: 12px 12px 12px 14px;
+    }
+
+    .ficha-formulario {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .tabla-scroll {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    .tabla-scroll-vertical,
+    .tabla-scroll-historial-aprobaciones,
+    .tabla-home-fondos {
+        max-height: none;
+    }
+
+    .campo-busqueda {
+        max-width: none;
+    }
+}
+
+/* ============================================================================
+   <= 768px : Ergonomía táctil, Fichas, Cabeceras, Cards y Acordeón Resumen
+   ============================================================================ */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 20px;
+        line-height: 1.25;
+        margin-bottom: 16px;
+    }
+
+    section h2 {
+        font-size: 15.5px;
+    }
+
+    /* Evita el auto-zoom en iOS Safari y mejora el área táctil */
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+        min-height: 0;
+        padding: 0;
+    }
+
+    input[type="file"] {
+        font-size: 14px;
+        padding: 10px;
+        background: var(--color-bg);
+        border-style: dashed;
+    }
+
+    .boton {
+        min-height: 44px;
+        padding: 10px 14px;
+    }
+
+    .boton-chico {
+        min-height: 38px;
+        padding: 8px 12px;
+        font-size: 13.5px;
+    }
+
+    .volver {
+        min-height: 36px;
+        margin-bottom: 6px;
+    }
+
+    .dialogo-cerrar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        top: 6px;
+        right: 6px;
+    }
+
+    .boton-quitar-adjunto-modal,
+    .boton-limpiar-archivo {
+        min-width: 36px;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ---------------- Cabeceras de pantalla ---------------- */
+    .barra-superior {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .barra-superior-derecha {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .barra-superior-derecha .estado {
+        margin-right: auto;
+    }
+
+    .encabezado-documentos {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .encabezado-documentos h2 {
+        margin: 0;
+    }
+
+    .acciones-documentos {
+        justify-content: flex-start;
+    }
+
+    .cabecera-mis-resumenes {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .cabecera-mis-resumenes-acciones {
+        width: 100%;
+    }
+
+    .cabecera-mis-resumenes-acciones .boton {
+        flex: 1 1 140px;
+    }
+
+    /* ---------------- Fichas y cabecera del Resumen ---------------- */
+    .ficha {
+        padding: 14px;
+        margin-bottom: 18px;
+    }
+
+    .ficha-cabecera-acciones {
+        position: static;
+        max-width: none;
+        width: 100%;
+        align-items: stretch;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .ficha-cabecera-botones {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .ficha-cabecera-acciones .error,
+    .ficha-cabecera-error {
+        text-align: left;
+        margin: 4px 0 0;
+    }
+
+    .ficha-fila {
+        grid-template-columns: 118px minmax(0, 1fr);
+        gap: 6px 10px;
+        padding: 8px 0;
+        font-size: 13.5px;
+    }
+
+    .ficha-valor {
+        overflow-wrap: anywhere;
+    }
+
+    .ficha-valor-edicion {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .ficha-valor-edicion input[type="date"] {
+        max-width: none;
+        width: 100%;
+    }
+
+    .texto-ayuda-guardar {
+        text-align: left;
+    }
+
+    /* ---------------- Patrón Table -> Cards (.tabla-tarjetas) ---------------- */
+    .tabla-scroll-tarjetas,
+    .tabla-scroll:has(> .tabla-tarjetas) {
+        overflow: visible;
+        max-height: none;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .tabla-scroll-tarjetas > .tabla.tabla-tarjetas,
+    .tabla-scroll > .tabla.tabla-tarjetas {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        background: transparent;
+        border-radius: 0;
+        overflow: visible;
+    }
+
+    .tabla-tarjetas > thead {
+        display: none;
+    }
+
+    .tabla-tarjetas > tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .tabla-tarjetas > tbody > tr {
+        display: flex;
+        flex-direction: column;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .tabla-tarjetas > tbody > tr:hover {
+        background: var(--color-surface);
+    }
+
+    .tabla-tarjetas > tbody > tr > td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f3f7;
+        font-size: 13.5px;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .tabla-tarjetas > tbody > tr > td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+        padding-top: 1px;
+    }
+
+    .tabla-tarjetas > tbody > tr > td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .tabla-tarjetas > tbody > tr > td:first-child {
+        padding-top: 0;
+    }
+
+    /* Variación con encabezado de tarjeta (N° a la izq + Estado a la der) */
+    .tabla-tarjetas-resumen > tbody > tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 10px;
+    }
+
+    .tabla-tarjetas-resumen > tbody > tr > td {
+        grid-column: 1 / -1;
+    }
+
+    .tabla-tarjetas-resumen > tbody > tr > td.celda-cabecera-izq {
+        grid-column: 1;
+        grid-row: 1;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 6px;
+        padding: 0 0 10px;
+        border-bottom: 1px solid #edf0f4;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--color-navy-900);
+        text-align: left;
+    }
+
+    .tabla-tarjetas-resumen > tbody > tr > td.celda-cabecera-izq::before {
+        content: "N°";
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        padding-top: 0;
+    }
+
+    .tabla-tarjetas-resumen > tbody > tr > td.celda-cabecera-der {
+        grid-column: 2;
+        grid-row: 1;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 0 0 10px;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .tabla-tarjetas-resumen > tbody > tr > td.celda-cabecera-der::before {
+        display: none;
+    }
+
+    .tabla-tarjetas > tbody > tr > td.celda-destacada {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .tabla-tarjetas > tbody > tr > td.celda-monto {
+        font-weight: 700;
+        color: var(--color-navy-900);
+        font-size: 14.5px;
+    }
+
+    .tabla-tarjetas > tbody > tr > td.celda-accion-tarjeta {
+        padding: 10px 0 0;
+        margin-top: 4px;
+        border-top: 1px solid #edf0f4;
+        border-bottom: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: stretch;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .tabla-tarjetas > tbody > tr > td.celda-accion-tarjeta::before {
+        display: none;
+    }
+
+    .tabla-tarjetas > tbody > tr > td.celda-accion-tarjeta .boton {
+        flex: 1 1 120px;
+        margin-left: 0;
+        min-height: 40px;
+    }
+
+    .tabla-tarjetas > tbody > tr > td.celda-accion-tarjeta br {
+        display: none;
+    }
+
+    .tabla-tarjetas > tbody > tr > td.celda-accion-tarjeta small {
+        flex: 1 0 100%;
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+
+    /* ---------------- Acordeón de Documentos en Ver Resumen ---------------- */
+    .tabla-scroll-resumen {
+        overflow: visible;
+        max-height: none;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .tabla-scroll-resumen > .tabla.tabla-resumen-documentos {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        table-layout: auto;
+        background: transparent;
+        border-radius: 0;
+        overflow: visible;
+    }
+
+    .tabla-resumen-documentos colgroup,
+    .tabla-resumen-documentos > thead {
+        display: none;
+    }
+
+    .tabla-resumen-documentos > tbody,
+    .tabla-resumen-documentos > tfoot {
+        display: block;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+            "tipo tipo chevron"
+            "numero fecha total"
+            "acciones acciones acciones";
+        gap: 6px 10px;
+        align-items: center;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-left-width: 4px;
+        border-radius: var(--radius-md);
+        padding: 13px 14px;
+        margin-bottom: 12px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento-contable {
+        border-left-color: var(--color-contable);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento-no_contable {
+        border-left-color: var(--color-no-contable);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento-planilla {
+        border-left-color: var(--color-planilla);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento.fila-documento-abierta {
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+        margin-bottom: 0;
+        border-bottom-color: rgba(20, 40, 63, .12);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td {
+        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    /* Anula el border-left de desktop que caía en el chevron */
+    .tabla-resumen-documentos tr.fila-documento-abierta.fila-documento-contable td:first-child,
+    .tabla-resumen-documentos tr.fila-documento-abierta.fila-documento-no_contable td:first-child,
+    .tabla-resumen-documentos tr.fila-documento-abierta.fila-documento-planilla td:first-child {
+        border-left: 0;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="chevron"] {
+        grid-area: chevron;
+        text-align: right;
+        font-size: 16px;
+        line-height: 1;
+        color: var(--color-navy-700);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="tipo"] {
+        grid-area: tipo;
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--color-navy-900);
+        text-align: left;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="numero"] {
+        grid-area: numero;
+        font-size: 12.5px;
+        color: var(--text-muted);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="numero"]::before {
+        content: "N° ";
+        font-weight: 600;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="fecha"] {
+        grid-area: fecha;
+        font-size: 12.5px;
+        color: var(--text-muted);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="total"] {
+        grid-area: total;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--color-navy-900);
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="acciones"] {
+        grid-area: acciones;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 10px;
+        margin-top: 4px;
+        border-top: 1px solid rgba(20, 40, 63, .1);
+        white-space: normal;
+        text-align: left;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="acciones"].celda-acciones-oculta-movil {
+        display: none;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento > td[data-col="acciones"] .boton {
+        flex: 1 1 110px;
+        margin-left: 0;
+        min-height: 40px;
+    }
+
+    /* Panel expandido de cada documento */
+    .tabla-resumen-documentos > tbody > tr.fila-detalle-documento {
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-detalle-documento:hover {
+        background: transparent;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-detalle-documento > td.celda-expandida {
+        display: block;
+        width: 100%;
+        padding: 14px 12px;
+        border: 1px solid var(--color-border);
+        border-top: 0;
+        border-left-width: 4px;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        text-align: left;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-detalle-documento > td.celda-expandida-contable {
+        border-left-color: var(--color-contable);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-detalle-documento > td.celda-expandida-no_contable {
+        border-left-color: var(--color-no-contable);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-detalle-documento > td.celda-expandida-planilla {
+        border-left-color: var(--color-planilla);
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-vacia-documentos {
+        display: block;
+        background: var(--color-surface);
+        border: 1px dashed var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-vacia-documentos > td {
+        display: block;
+        padding: 0;
+        border: 0;
+        text-align: center;
+    }
+
+    /* Detalle interno dentro de cada documento (sin scroll horizontal anidado) */
+    .celda-expandida .tabla-scroll-detalle {
+        overflow: visible;
+        max-height: none;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .celda-expandida .tabla-scroll-detalle > .tabla.tabla-tarjetas-detalle {
+        background: transparent;
+    }
+
+    .tabla-tarjetas-detalle > tbody > tr > td.celda-item-num {
+        justify-content: space-between;
+        padding: 0 0 8px;
+        font-weight: 700;
+        color: var(--color-navy-700);
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .tabla-tarjetas-detalle > tbody > tr > td.celda-comprobante,
+    .tabla-tarjetas-detalle > tbody > tr > td.celda-proveedor {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        text-align: left;
+    }
+
+    .tabla-tarjetas-detalle > tbody > tr > td.celda-comprobante .badge-cpe {
+        align-self: flex-start;
+    }
+
+    .tabla-tarjetas-detalle > tbody > tr > td.celda-proveedor br {
+        display: none;
+    }
+
+    .tabla-tarjetas-detalle > tbody > tr > td.celda-adjuntos {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        text-align: left;
+    }
+
+    .tabla-tarjetas-detalle > tbody > tr > td.celda-adjuntos .chip-adjunto {
+        max-width: 100%;
+        margin: 0;
+        padding: 7px 10px;
+    }
+
+    .tabla-tarjetas-detalle > tfoot {
+        display: block;
+        margin-top: 10px;
+    }
+
+    .tabla-tarjetas-detalle > tfoot > tr.fila-total-detalle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: #f7f9fb;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+    }
+
+    .tabla-tarjetas-detalle > tfoot > tr.fila-total-detalle > td {
+        display: block;
+        padding: 0;
+        border: 0;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    /* Total general del Resumen */
+    .tabla-resumen-documentos > tfoot > tr.fila-totales {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 13px 14px;
+    }
+
+    .tabla-resumen-documentos > tfoot > tr.fila-totales > td {
+        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-size: 15px;
+        color: var(--color-navy-900);
+    }
+
+    .tabla-resumen-documentos > tfoot > tr.fila-totales > td.celda-total-vacia {
+        display: none;
+    }
+
+    /* Acciones dentro de edición de documento */
+    .acciones-edicion-documento-items {
+        padding-inline: 0;
+    }
+
+    .acciones-edicion-documento-items .boton {
+        width: 100%;
+    }
+
+    .acciones-edicion-documento-cierre {
+        padding-inline: 0;
+    }
+
+    .acciones-edicion-documento-cierre .boton {
+        flex: 1 1 120px;
+    }
+
+    /* Bloque de resolución de aprobación */
+    .resolver-aprobacion-acciones {
+        width: 100%;
+    }
+
+    .resolver-aprobacion-acciones .boton {
+        flex: 1 1 160px;
+    }
+
+    /* Paginación */
+    .paginacion-trabajadores {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .paginacion-trabajadores nav {
+        justify-content: center;
+    }
+
+    .paginacion-trabajadores .boton {
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .lista-planillas li {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .lista-planillas li .boton {
+        width: 100%;
+    }
+
+    .trabajador-seleccionado {
+        flex-wrap: wrap;
+    }
+}
+
+/* ============================================================================
+   <= 640px : Teléfonos — Formularios 1 col, Modales Bottom Sheet, PDF nativo
+   ============================================================================ */
+@media (max-width: 640px) {
+    .ficha-formulario,
+    .filtros-historial {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .barra-superior-derecha > .boton,
+    .acciones-documentos > .boton,
+    .acciones-crear > .boton {
+        flex: 1 1 140px;
+    }
+
+    .selector-tipo-documento .boton {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    /* Modales tipo Bottom Sheet con pie fijo para el pulgar */
+    dialog,
+    dialog.dialogo-vista-previa,
+    dialog.dialogo-historial,
+    dialog.dialogo-sesion-inactiva,
+    dialog.dialogo-asignar-fondo {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92vh;
+        max-height: 92dvh;
+        margin: auto 0 0 0;
+        padding: 20px 16px 0;
+        border-radius: 16px 16px 0 0;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    dialog h2 {
+        padding-right: 34px;
+        font-size: 17px;
+    }
+
+    dialog .acciones-modal {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        background: var(--color-surface);
+        margin: 18px -16px 0;
+        padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--color-border);
+    }
+
+    dialog .acciones-modal .boton {
+        flex: 1 1 120px;
+        min-height: 44px;
+    }
+
+    /* En móvil el visor nativo del teléfono funciona mejor que un iframe pequeño */
+    .dialogo-vista-previa .iframe-pdf {
+        display: none;
+    }
+
+    .vista-previa-pdf-movil {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 24px 16px;
+        text-align: center;
+        background: var(--color-bg);
+        border: 1px dashed var(--color-border);
+        border-radius: var(--radius-md);
+    }
+
+    .vista-previa-pdf-movil p {
+        margin: 0;
+        font-size: 13.5px;
+        color: var(--text-secondary);
+    }
+
+    .vista-previa-pdf-movil .boton {
+        width: 100%;
+    }
+
+    /* Tabla compacta dentro de Vista previa -> Vista del sistema */
+    .dialogo-vista-previa .tabla-scroll > .tabla {
+        min-width: 440px;
+    }
+
+    .tabs-vista-previa {
+        gap: 0;
+    }
+
+    .tabs-vista-previa button {
+        flex: 1;
+        min-height: 42px;
+        text-align: center;
+    }
+
+    .tabs-vista-previa button + button {
+        margin-left: 0;
+    }
+}
+
+/* ============================================================================
+   <= 480px : Teléfonos angostos (320px - 480px)
+   ============================================================================ */
+@media (max-width: 480px) {
+    .contenido-principal {
+        padding: 16px 12px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    .ficha-fila {
+        grid-template-columns: 1fr;
+        gap: 2px;
+    }
+
+    .ficha-fila .ficha-label {
+        font-size: 12px;
+        margin-top: 6px;
+    }
+
+    .ficha-fila .ficha-label:first-child {
+        margin-top: 0;
+    }
+
+    .campo-ruc {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .campo-ruc .boton {
+        width: 100%;
+    }
+
+    .bloque-verificacion-cpe-cabecera {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .bloque-verificacion-cpe-cabecera .boton {
+        width: 100%;
+    }
+
+    .tabla-resumen-documentos > tbody > tr.fila-documento {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "tipo chevron"
+            "numero total"
+            "fecha total"
+            "acciones acciones";
+    }
+}
