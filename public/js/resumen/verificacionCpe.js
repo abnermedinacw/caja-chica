@@ -19,6 +19,7 @@ export function usarVerificacionCpe(datos, nuevoItem, { mostrarAviso }) {
         nuevoItem.value.cpe_estado_ruc = '';
         nuevoItem.value.cpe_condicion_ruc = '';
         nuevoItem.value.fecha_verificacion_cpe = '';
+        nuevoItem.value.cpe_error = '';
         observacionesCpe.value = [];
     }
 
@@ -52,7 +53,8 @@ export function usarVerificacionCpe(datos, nuevoItem, { mostrarAviso }) {
 
             if (!resultado.ok) {
                 limpiarVerificacionCpe();
-                mostrarAviso(resultado.error || 'No se pudo verificar el comprobante en SUNAT.');
+                nuevoItem.value.cpe_error = resultado.error || 'No se pudo verificar el comprobante en SUNAT.';
+                mostrarAviso(nuevoItem.value.cpe_error);
                 return;
             }
 
@@ -60,6 +62,7 @@ export function usarVerificacionCpe(datos, nuevoItem, { mostrarAviso }) {
             nuevoItem.value.cpe_estado_ruc = resultado.cpe_estado_ruc || '';
             nuevoItem.value.cpe_condicion_ruc = resultado.cpe_condicion_ruc || '';
             nuevoItem.value.fecha_verificacion_cpe = resultado.fecha_verificacion_cpe || '';
+            nuevoItem.value.cpe_error = '';
             observacionesCpe.value = Array.isArray(resultado.observaciones) ? resultado.observaciones : [];
 
             if (!resultado.valido) {

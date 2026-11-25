@@ -17,6 +17,7 @@ export function itemContableVacio() {
         cpe_estado_ruc: '',
         cpe_condicion_ruc: '',
         fecha_verificacion_cpe: '',
+        cpe_error: '',
     };
 }
 
@@ -71,6 +72,9 @@ export function validarItemContableCliente(tiposComprobante, item) {
 
     if (tipoRequiereCpe(tiposComprobante, item.tipo_comprobante_id) && !esCpeValido(item)) {
         if (!item.cpe_estado_sunat) {
+            if (String(item.cpe_error || '').trim()) {
+                return `No se pudo verificar el comprobante en SUNAT: ${item.cpe_error}`;
+            }
             return 'Verifica el comprobante en SUNAT antes de guardar.';
         }
         return 'El comprobante no cumple la validación SUNAT (debe estar ACEPTADO, ACTIVO y HABIDO).';

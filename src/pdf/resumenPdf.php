@@ -514,8 +514,20 @@ class ResumenPdf extends Fpdi
      */
     public function anexarConstanciaSunat(array $datos): void
     {
-        $plantilla = __DIR__ . '/plantillas/sunat_consulta_cpe.jpg';
-        if (!is_file($plantilla)) {
+        $plantilla = null;
+        foreach ([
+            __DIR__ . '/plantillas',
+            __DIR__ . '/Plantillas',
+        ] as $carpetaPlantillas) {
+            foreach (['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG'] as $ext) {
+                $ruta = $carpetaPlantillas . '/sunat_consulta_cpe.' . $ext;
+                if (is_file($ruta)) {
+                    $plantilla = $ruta;
+                    break 2;
+                }
+            }
+        }
+        if ($plantilla === null) {
             throw new RuntimeException('No se encontró la plantilla de constancia SUNAT.');
         }
 
@@ -550,7 +562,13 @@ class ResumenPdf extends Fpdi
         try {
             $this->siguientePaginaEsAnexo = true;
             $this->AddPage('P', 'A4');
-            $this->Image($plantilla, 0, 0, 210, 297, 'JPG');
+            $extension = strtolower((string)pathinfo($plantilla, PATHINFO_EXTENSION));
+            $tipoImagen = match ($extension) {
+                'jpg', 'jpeg' => 'JPG',
+                'png' => 'PNG',
+                default => '',
+            };
+            $this->Image($plantilla, 0, 0, 210, 297, $tipoImagen);
 
             $this->SetTextColor(0, 0, 0);
             $this->SetFont('Arial', '', 7.5);
