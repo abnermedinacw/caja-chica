@@ -29,7 +29,7 @@ export async function descargarTxtReporte(respuesta, nombreTxt, nombrePdf) {
 
         // Reporte pdf
         if (data.pdf?.contenido) {
-            await new Promise(r => setTimeout(r, 400));
+            await new Promise(r => setTimeout(r, 800));
             const blobPdf = base64ToBlob(data.pdf.contenido, 'application/pdf');
             descargarBlob(blobPdf, data.pdf.nombre_archivo || nombrePdf);
             await new Promise(r => setTimeout(r, 400));
@@ -55,5 +55,5 @@ function descargarBlob(blob, nombreArchivo) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
