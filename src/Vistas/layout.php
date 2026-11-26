@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/../Negocio/auth.php';
+require_once __DIR__ . '/../Datos/trabajadores.php';
 
 function aperturaLayout(string $titulo, string $rutaActiva): void
 {
@@ -33,13 +34,15 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
     }
 
     if ($rol === 'TESORERIA') {
+        $pendientesCuentas = contarCuentasPendientesValidacion();
         $secciones[] = [
             'titulo' => 'Pagos',
             'enlaces' => [
                 'pagos-bbva' => [
-                    'ruta' => '/pagos-bbva',
-                    'texto' => 'Pagos BBVA',
+                    'ruta' => '/pagos',
+                    'texto' => 'Pagos Bancarios',
                     'disponible' => true,
+                    'badge' => $pendientesCuentas > 0 ? $pendientesCuentas : null,
                 ],
             ],
         ];
@@ -49,7 +52,7 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
         $secciones[] = ['titulo' => 'Administración', 'enlaces' => [
             'trabajadores' => ['ruta' => '/trabajadores', 'texto' => 'Trabajadores', 'disponible' => true],
             'admin-resumenes' => ['ruta' => '/admin-resumenes', 'texto' => 'Resúmenes', 'disponible' => true],
-            'reactivar-txt-bbva' => ['ruta' => '/pagos-bbva?modo=reactivacion', 'texto' => 'Reactivar pagos BBVA', 'disponible' => true],
+            'reactivar-txt-bbva' => ['ruta' => '/pagos?modo=reactivacion', 'texto' => 'Reactivar pagos', 'disponible' => true],
         ]];
     }
 
@@ -109,6 +112,9 @@ function aperturaLayout(string $titulo, string $rutaActiva): void
                         <?php if ($enlace['disponible']): ?>
                             <a href="<?= BASE_URL . $enlace['ruta'] ?>" class="enlace-lateral <?= $rutaActiva === $clave ? 'enlace-lateral-activo' : '' ?>"<?= $rutaActiva === $clave ? ' aria-current="page"' : '' ?>>
                                 <?= htmlspecialchars($enlace['texto']) ?>
+                                <?php if (!empty($enlace['badge'])): ?>
+                                    <span class="badge-notificacion-nav" id="badgeCuentasPendientes" title="Cuentas bancarias pendientes de validación"><?= (int)$enlace['badge'] ?></span>
+                                <?php endif; ?>
                             </a>
                         <?php else: ?>
                             <span class="enlace-lateral enlace-lateral-pendiente" title="Próximamente">

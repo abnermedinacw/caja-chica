@@ -1338,3 +1338,457 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     font-size: 13px;
     line-height: 1.45;
 }
+
+
+/* ---------------- Multi-banco (BBVA + BCP) y validación de cuentas ---------------- */
+.badge-notificacion-nav {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-navy-900);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.caja-cuentas-pendientes {
+    border-color: var(--color-aviso-borde);
+    background: #fffaf5;
+}
+
+.cuenta-completa-texto {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+}
+
+.pagos-bbva-selector {
+    padding: 16px 20px;
+}
+
+.pagos-barra-contexto {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+}
+
+.pagos-contexto-etiqueta {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    line-height: 1.2;
+}
+
+.pagos-bloque-empresa {
+    flex: 1 1 200px;
+    min-width: 180px;
+    max-width: 260px;
+}
+
+.pagos-select-empresa {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background-color: #f3f5f8;
+    color: var(--color-navy-900);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.pagos-select-empresa:hover {
+    border-color: var(--color-border-input);
+    background-color: #eef2f6;
+}
+
+.pagos-select-empresa:focus {
+    outline: none;
+    background-color: var(--color-surface);
+    border-color: var(--color-navy-600);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, .14);
+}
+
+.pagos-contexto-divisor {
+    width: 1px;
+    height: 36px;
+    align-self: center;
+    margin-top: 16px;
+    background: var(--color-border);
+    flex-shrink: 0;
+}
+
+.pagos-bloque-banco {
+    flex: 0 0 auto;
+}
+
+.pagos-selector-banco {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    min-height: 44px;
+    border-radius: 10px;
+    background: #eef2f6;
+    border: 1px solid #e3e8ef;
+}
+
+.pagos-banco-opcion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13.5px;
+    line-height: 1.1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.pagos-banco-opcion:hover:not(.activo) {
+    background: rgba(255, 255, 255, .6);
+    color: var(--color-navy-900);
+}
+
+.pagos-banco-opcion:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-navy-600);
+}
+
+.pagos-banco-opcion.activo {
+    background: var(--color-surface);
+    color: var(--color-navy-900);
+    box-shadow: 0 1px 3px rgba(20, 40, 63, .12), 0 0 0 1px rgba(20, 40, 63, .04);
+}
+
+.pagos-banco-sigla {
+    font-family: Manrope, 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: -.01em;
+}
+
+.logo-banco {
+    display: block;
+    width: auto;
+    flex-shrink: 0;
+    opacity: .62;
+    filter: saturate(.55);
+    transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
+}
+
+.logo-banco-bbva {
+    height: 14px;
+}
+
+.logo-banco-bcp {
+    height: 15px;
+}
+
+.pagos-banco-opcion:hover .logo-banco,
+.pagos-banco-opcion.activo .logo-banco {
+    opacity: 1;
+    filter: none;
+}
+
+.pagos-titulo-con-logo {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.logo-banco-titulo {
+    display: block;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.logo-banco-titulo.logo-banco-bbva {
+    height: 15px;
+}
+
+.logo-banco-titulo.logo-banco-bcp {
+    height: 16px;
+}
+
+.logo-banco-perfil {
+    display: block;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.logo-banco-perfil.logo-banco-bbva {
+    height: 16px;
+}
+
+.logo-banco-perfil.logo-banco-bcp {
+    height: 17px;
+}
+
+.perfil-cuenta-tipo-tag {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.pagos-banco-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.pagos-banco-opcion.activo .pagos-banco-sub {
+    color: var(--text-secondary);
+}
+
+.pagos-banco-conteo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(20, 40, 63, .07);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pagos-banco-conteo.con-pendientes {
+    background: var(--color-navy-50);
+    color: var(--color-navy-700);
+}
+
+.pagos-banco-opcion.activo .pagos-banco-conteo.con-pendientes {
+    background: var(--color-accent);
+    color: var(--color-navy-900);
+}
+
+.pagos-cuenta-cargo-tarjeta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 285px;
+    margin-left: auto;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f4f6fa;
+    border: 1px solid #e4e9f0;
+    min-width: 0;
+}
+
+.pagos-cuenta-cargo-tarjeta.sin-cuenta {
+    background: #fdf6ef;
+    border-color: var(--color-aviso-borde);
+}
+
+.pagos-cuenta-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--color-navy-50);
+    color: var(--color-navy-700);
+}
+
+.pagos-cuenta-cargo-tarjeta.sin-cuenta .pagos-cuenta-icono {
+    background: var(--color-aviso-bg);
+    color: var(--color-aviso);
+}
+
+.pagos-cuenta-detalle {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    gap: 2px;
+}
+
+.pagos-cuenta-detalle .pagos-contexto-etiqueta {
+    margin-bottom: 1px;
+    font-size: 10.5px;
+}
+
+.pagos-cuenta-tipo {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-navy-900);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pagos-cuenta-faltante {
+    color: var(--color-aviso);
+}
+
+.pagos-cuenta-numero {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pagos-btn-configurar {
+    flex-shrink: 0;
+}
+
+.perfil-cuentas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.perfil-cuenta-bloque {
+    padding: 16px 18px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.perfil-cuenta-bloque.perfil-cuenta-activa {
+    border-color: var(--color-navy-700);
+    background: #f7faff;
+    box-shadow: 0 0 0 1px rgba(30, 58, 95, .18), 0 4px 12px -6px rgba(20, 40, 63, .14);
+}
+
+.perfil-cuenta-bloque.perfil-cuenta-seleccionable {
+    cursor: pointer;
+}
+
+.perfil-cuenta-bloque.perfil-cuenta-seleccionable:hover {
+    border-color: #93acc8;
+    background: #fafcff;
+}
+
+.perfil-cuenta-bloque.perfil-cuenta-seleccionable:focus-visible {
+    outline: none;
+    border-color: var(--color-navy-600);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, .18);
+}
+
+.perfil-cuenta-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.perfil-cuenta-cabecera-izq {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.perfil-cuenta-radio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-input);
+    background: var(--color-surface);
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+
+.perfil-cuenta-radio.activo {
+    border-color: var(--color-navy-700);
+}
+
+.perfil-cuenta-radio.activo::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-navy-700);
+}
+
+.perfil-cuenta-bloque.perfil-cuenta-seleccionable:hover .perfil-cuenta-radio {
+    border-color: var(--color-navy-600);
+}
+
+@media (max-width: 1120px) {
+    .pagos-cuenta-cargo-tarjeta {
+        flex-basis: 100%;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 760px) {
+    .perfil-cuentas-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pagos-bloque-empresa {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .pagos-contexto-divisor {
+        display: none;
+    }
+
+    .pagos-bloque-banco {
+        width: 100%;
+    }
+
+    .pagos-selector-banco {
+        display: flex;
+        width: 100%;
+    }
+
+    .pagos-banco-opcion {
+        flex: 1;
+        padding: 8px 10px;
+    }
+
+    .pagos-cuenta-cargo-tarjeta {
+        flex-wrap: wrap;
+    }
+
+    .pagos-btn-configurar {
+        width: 100%;
+    }
+}
+
+@media (max-width: 440px) {
+    .pagos-banco-sub {
+        display: none;
+    }
+}
