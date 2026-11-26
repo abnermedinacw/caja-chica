@@ -248,7 +248,7 @@ function _anularResumen(
         $resumen = obtenerResumenAprobador($resumenId);
         if (!$resumen) return ['ok' => false, 'error' => 'Resumen no encontrado.'];
         if ($resumen['estado_general'] === 'ANULADO') return ['ok' => false, 'error' => 'Caja chica anulada previamente.'];
-        if ((int)($resumen['txt_bbva_descargado'] ?? 0) === 1) return ['ok' => false, 'error' => 'No se puede anular Caja con pago en proceso.'];
+        if ((int)($resumen['txt_descargado'] ?? 0) === 1) return ['ok' => false, 'error' => 'No se puede anular Caja con pago en proceso.'];
         if ($validarRegla !== null && ($error = $validarRegla($resumen)) !== null) return ['ok' => false, 'error' => $error];
 
         actualizarEstadoResumen($resumenId, 'ANULADO', null, null);

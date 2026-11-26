@@ -15,5 +15,10 @@ if ($_SESSION['rol'] !== 'TESORERIA') {
 require_once __DIR__ . '/../Negocio/pagosBbva.php';
 require_once __DIR__ . '/respuestaDescargaBbva.php';
 
-$resultado = generarTxtBbva((int)($_POST['empresa_id'] ?? 0), $_POST['cajas'] ?? [], (int)$_SESSION['usuario_id']);
+$resultado = generarTxtBbva(
+    (int)($_POST['empresa_id'] ?? 0),
+    $_POST['cajas'] ?? [],
+    (int)$_SESSION['usuario_id'],
+    (string)($_POST['banco'] ?? 'BBVA')
+);
 responderDescargaBbva($resultado);

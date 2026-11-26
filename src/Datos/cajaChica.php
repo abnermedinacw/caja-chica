@@ -589,7 +589,7 @@ function listarResumenesAdmin(
             cc.fecha_emision,
             cc.total_egresos,
             cc.estado_general,
-            cc.txt_bbva_descargado,
+            cc.txt_descargado,
             e.razon_social AS empresa,
             t.nombres AS solicitante,
             t.dni,

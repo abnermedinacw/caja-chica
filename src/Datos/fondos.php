@@ -27,7 +27,7 @@ function obtenerFondoPorId(int $fondoId): ?array
                   AND (
                     cc.estado_general = 'EN_REVISION'
                     OR (cc.estado_general = 'RECHAZADO' AND cc.nivel_actual_id IS NOT NULL)
-                    OR (cc.estado_general = 'VISADO' AND cc.txt_bbva_descargado = 0)
+                    OR (cc.estado_general = 'VISADO' AND cc.txt_descargado = 0)
                   )
             ), 0) AS monto_comprometido
         FROM fondo f
@@ -68,7 +68,7 @@ function listarFondos(): array
                     AND (
                         cc.estado_general = 'EN_REVISION'
                         OR (cc.estado_general = 'RECHAZADO' AND cc.nivel_actual_id IS NOT NULL)
-                        OR (cc.estado_general = 'VISADO' AND cc.txt_bbva_descargado = 0)
+                        OR (cc.estado_general = 'VISADO' AND cc.txt_descargado = 0)
                     )
                 ),0) AS saldo_disponible
         FROM fondo f
@@ -113,7 +113,7 @@ function obtenerFondosActivos(int $trabajadorId): array
                     AND (
                         cc.estado_general = 'EN_REVISION'
                         OR (cc.estado_general = 'RECHAZADO' AND cc.nivel_actual_id IS NOT NULL)
-                        OR (cc.estado_general = 'VISADO' AND cc.txt_bbva_descargado = 0)
+                        OR (cc.estado_general = 'VISADO' AND cc.txt_descargado = 0)
                     )
                 ), 0) AS saldo_disponible
         FROM fondo f
@@ -155,7 +155,7 @@ function obtenerFondosTrabajador(int $trabajadorId): array
                     AND (
                         cc.estado_general = 'EN_REVISION'
                         OR (cc.estado_general = 'RECHAZADO' AND cc.nivel_actual_id IS NOT NULL)
-                        OR (cc.estado_general = 'VISADO' AND cc.txt_bbva_descargado = 0)
+                        OR (cc.estado_general = 'VISADO' AND cc.txt_descargado = 0)
                     )
                 ), 0) AS saldo_disponible
         FROM fondo f
@@ -202,7 +202,7 @@ function obtenerSaldoDisponibleFondo(int $fondoId): float
                 AND (
                     cc.estado_general = 'EN_REVISION'
                     OR (cc.estado_general = 'RECHAZADO' AND cc.nivel_actual_id IS NOT NULL)                
-                    OR (cc.estado_general = 'VISADO' AND cc.txt_bbva_descargado = 0)
+                    OR (cc.estado_general = 'VISADO' AND cc.txt_descargado = 0)
                 )
             ), 0) AS saldo
         FROM fondo f WHERE f.id = ?"
@@ -240,7 +240,7 @@ function contarResumenesEnCursoFondo(int $fondoId): int
         WHERE fondo_id = ?
             AND (
                 estado_general IN ('BORRADOR', 'EN_REVISION', 'RECHAZADO')
-                OR (estado_general = 'VISADO' AND txt_bbva_descargado = 0)
+                OR (estado_general = 'VISADO' AND txt_descargado = 0)
             )"
     );
     $stmt->execute([$fondoId]);

@@ -8,6 +8,8 @@ function generarReporteDesembolsoPdf(array $data): string
     $fechaInicio = $data['fechaInicio'];
     $fechaFin = $data['fechaFin'];
     $tipoDesembolso = $data['tipoDesembolso'];
+    $banco = strtoupper((string)($data['banco'] ?? 'BBVA'));
+    $nombreBancoPie = $banco === 'BCP' ? 'BANCO DE CRÉDITO DEL PERÚ' : 'BANCO CONTINENTAL';
 
     $pdf = new FPDF('P', 'mm', 'A4');
     $pdf->SetMargins(12, 12, 12);
@@ -28,7 +30,7 @@ function generarReporteDesembolsoPdf(array $data): string
     $pdf->Ln(4);
 
     $pdf->SetFont('Arial', 'B', 10);
-    $pdf->Cell(0, 6, textoPdf('REPORTE DE TRABAJADORES GENERADOS PARA BBVA'), 0, 1, 'C');
+    $pdf->Cell(0, 6, textoPdf('REPORTE DE TRABAJADORES GENERADOS PARA ' . $banco), 0, 1, 'C');
     $pdf->Ln(2);
 
     $pdf->SetFont('Arial', 'B', 9);
@@ -40,7 +42,7 @@ function generarReporteDesembolsoPdf(array $data): string
         'TIPO DESEMBOLSO' => $tipoDesembolso,
         'CLIENTE' => $empresa['razon_social'] ?? '-',
         'TIPO TRABAJADOR' => 'EMPLEADO',
-        'ENTIDAD FINANCIERA' => 'BBVA',
+        'ENTIDAD FINANCIERA' => $banco,
     ];
     foreach ($campos as $etiqueta => $valor) {
         $pdf->SetFont('Arial', 'B', 9);
@@ -91,7 +93,7 @@ function generarReporteDesembolsoPdf(array $data): string
 
     $pdf->Ln(18);
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->Cell($anchoCodigo + $anchoNombre, 5, 'BANCO CONTINENTAL', 0, 0, 'L');
+    $pdf->Cell($anchoCodigo + $anchoNombre, 5, textoPdf($nombreBancoPie), 0, 0, 'L');
     $pdf->Cell($anchoImporte, 5, number_format($totalImporte, 2, '.', ''), 0, 1, 'R');
 
     return $pdf->Output('S');

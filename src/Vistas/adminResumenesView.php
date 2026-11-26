@@ -111,8 +111,8 @@ function vistaAdminResumenes(array $resumenes, array $empresas, array $paginacio
                                         v-if="r.estado_general !== 'ANULADO'"
                                         type="button"
                                         class="boton boton-peligro boton-chico"
-                                        :disabled="Number(r.txt_bbva_descargado) === 1"
-                                        :title="Number(r.txt_bbva_descargado) === 1 ? 'No se puede anular porque su TXT BBVA ya fue descargado' : 'Anular resumen'"
+                                        :disabled="Number(r.txt_descargado) === 1"
+                                        :title="Number(r.txt_descargado) === 1 ? 'No se puede anular porque su archivo TXT de pago ya fue descargado' : 'Anular resumen'"
                                         @click="abrirModalAnular(r)">
                                         <?= icono('quitar') ?> Anular
                                     </button>

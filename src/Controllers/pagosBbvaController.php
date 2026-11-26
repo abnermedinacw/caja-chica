@@ -12,11 +12,13 @@ if (!$puedeGestionarPagos && !$puedeReactivar) {
 }
 
 require_once __DIR__ . '/../Datos/datosReembolso.php';
+require_once __DIR__ . '/../Datos/trabajadores.php';
 require_once __DIR__ . '/../Vistas/pagosView.php';
 
 $empresas = listarEmpresasPagosBbva();
+$cuentasPendientes = $puedeGestionarPagos ? listarCuentasPendientesValidacion() : [];
 $vistaInicial = $puedeReactivar && (!$puedeGestionarPagos || ($_GET['modo'] ?? '') === 'reactivacion')
     ? 'descargadas'
     : 'pendientes';
 
-vistaPagos($empresas, $puedeGestionarPagos, $puedeReactivar, $vistaInicial);
+vistaPagos($empresas, $puedeGestionarPagos, $puedeReactivar, $vistaInicial, $cuentasPendientes);

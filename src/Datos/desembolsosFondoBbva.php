@@ -13,9 +13,16 @@ function listarFondosDesembolsoBbva(int $empresaId): array
             f.estado,
             f.fecha_asignacion,
             f.fecha_desembolso,
+            f.banco_desembolso,
+            t.id AS trabajador_id,
             t.nombres AS trabajador,
             t.dni,
             t.cuenta_bbva,
+            t.cuenta_bcp,
+            t.tipo_cuenta_bcp,
+            t.banco_predeterminado,
+            t.cuenta_bbva_verificada,
+            t.cuenta_bcp_verificada,
             EXISTS (
                 SELECT 1
                 FROM caja_chica cc
@@ -65,9 +72,16 @@ function bloquearFondosDesembolsoBbva(array $fondosIds): array
             f.estado,
             f.fecha_asignacion,
             f.fecha_desembolso,
+            f.banco_desembolso,
+            t.id AS trabajador_id,
             t.nombres AS trabajador,
             t.dni,
             t.cuenta_bbva,
+            t.cuenta_bcp,
+            t.tipo_cuenta_bcp,
+            t.banco_predeterminado,
+            t.cuenta_bbva_verificada,
+            t.cuenta_bcp_verificada,
             EXISTS (
                 SELECT 1
                 FROM caja_chica cc
@@ -83,7 +97,7 @@ function bloquearFondosDesembolsoBbva(array $fondosIds): array
     return $stmt->fetchAll();
 }
 
-function marcarFondosDesembolsados(array $fondosIds): void
+function marcarFondosDesembolsados(array $fondosIds, string $banco = 'BBVA'): void
 {
     $pdo = obtenerConexion();
     $marcadores = implode(',', array_fill(0, count($fondosIds), '?'));
@@ -92,14 +106,15 @@ function marcarFondosDesembolsados(array $fondosIds): void
         "UPDATE fondo
         SET
             estado = 'ACTIVO',
-            fecha_desembolso = NOW()
+            fecha_desembolso = NOW(),
+            banco_desembolso = ?
         WHERE id IN ($marcadores)
             AND estado = 'PENDIENTE_DESEMBOLSO'"
     );
 
-    $stmt->execute($fondosIds);
+    $stmt->execute([$banco, ...$fondosIds]);
 
-    if($stmt->rowCount() !== count($fondosIds)) {
+    if ($stmt->rowCount() !== count($fondosIds)) {
         throw new DomainException('Uno o más fondos ya fueron desembolsados o cambiaron de estado.');
     }
 }
@@ -113,7 +128,8 @@ function reactivarFondosDesembolsoBbva(array $fondosIds): void
         "UPDATE fondo f
         SET
             f.estado = 'PENDIENTE_DESEMBOLSO',
-            f.fecha_desembolso = NULL
+            f.fecha_desembolso = NULL,
+            f.banco_desembolso = NULL
         WHERE f.id IN ($marcadores)
             AND f.estado = 'ACTIVO'
             AND f.fecha_desembolso IS NOT NULL
@@ -123,7 +139,7 @@ function reactivarFondosDesembolsoBbva(array $fondosIds): void
                 WHERE cc.fondo_id = f.id
             )"
     );
-    
+
     $stmt->execute($fondosIds);
     if ($stmt->rowCount() !== count($fondosIds)) {
         throw new DomainException('Solo se pueden reactivar fondos que todavía no tengan resúmenes asociados.');

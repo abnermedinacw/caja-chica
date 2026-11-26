@@ -15,5 +15,8 @@ if ($_SESSION['rol'] !== 'TESORERIA' && !esAdministrador()) {
 
 require_once __DIR__ . '/../Negocio/pagosBbva.php';
 
-$resultado = obtenerEstadoPagosBbva((int)($_GET['empresa_id'] ?? 0));
+$resultado = obtenerEstadoPagosBbva(
+    (int)($_GET['empresa_id'] ?? 0),
+    $_SESSION['rol'] === 'TESORERIA'
+);
 echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
