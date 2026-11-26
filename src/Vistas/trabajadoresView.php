@@ -167,8 +167,8 @@ function vistaTrabajadores(array $trabajadores, array $empresas, array $areas, a
                     <input type="text" :value="form.cargo" disabled>
                 </div>
                 <div class="campo">
-                    <label>Cuenta BBVA</label>
-                    <input type="text" :value="form.cuenta_bbva ? '************' + form.cuenta_bbva.slice(-8) : 'No encontrada'"
+                    <label>Cuenta bancaria (TS)</label>
+                    <input type="text" :value="form.cuenta_resumen || (form.cuenta_bbva ? 'BBVA · ************' + form.cuenta_bbva.slice(-8) : 'No encontrada')"
                     disabled>
                     <small v-if="form.advertencia_cuenta" class="texto-advertencia">{{ form.advertencia_cuenta }}</small>
                 </div>

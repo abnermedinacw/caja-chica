@@ -47,7 +47,7 @@ function prepararDatosTrabajadorTs(string $dni): array
             : '';
 
         $esCliente = trim((string)$ts['cliente_ruc']) !== trim((string)$ts['matriz_ruc']);
-        $cuenta = resolverCuentaBbvaTs($dni);
+        $cuenta = resolverCuentaBancariaTs($dni);
         return ['ok' => true, 'datos' => [
             'dni' => $dni,
             'nombres' => $ts['nombres'],
@@ -60,7 +60,11 @@ function prepararDatosTrabajadorTs(string $dni): array
             'esCliente' => $esCliente,
             'cliente_ruc' => $esCliente ? trim((string)$ts['cliente_ruc']) : null,
             'cliente_razon_social' => $esCliente ? $ts['cliente_razon_social'] : null,
-            'cuenta_bbva' => $cuenta['cuenta'],
+            'cuenta_bbva' => $cuenta['cuenta_bbva'],
+            'cuenta_bcp' => $cuenta['cuenta_bcp'],
+            'tipo_cuenta_bcp' => $cuenta['tipo_cuenta_bcp'],
+            'banco_predeterminado' => $cuenta['banco_predeterminado'],
+            'cuenta_resumen' => $cuenta['cuenta_resumen'],
             'advertencia_cuenta' => $cuenta['advertencia'],
             'jefe_ts' => $jefeDni !== '',
             'jefe_dni' => $jefeDni,
@@ -139,7 +143,10 @@ function sincronizarTrabajador(array $formulario, int $creador): array
             $datos['dni'],
             $datos['nombres'],
             $datos['cuenta_bbva'],
-            $datos['codigo_ts'] !== '' ? $datos['codigo_ts'] : null
+            $datos['codigo_ts'] !== '' ? $datos['codigo_ts'] : null,
+            $datos['cuenta_bcp'],
+            $datos['tipo_cuenta_bcp'],
+            $datos['banco_predeterminado']
         );
 
         $usuarioId = crearUsuario(
@@ -176,15 +183,64 @@ function sincronizarTrabajador(array $formulario, int $creador): array
     }
 }
 
-function resolverCuentaBbvaTs(string $dni): array
+function resolverCuentaBancariaTs(string $dni): array
 {
-    $cuenta = obtenerCuentaBbvaTsPorDni($dni);
+    $filas = obtenerCuentasBancariasTsPorDni($dni);
+    $bbvaValidas = [];
+    $bcpValidas = [];
 
-    // Nos aseguramos de tener una sola válida
-    $cuentaValida = array_values(array_filter($cuenta, fn(string $cuenta): bool => preg_match('/^\d{20}$/', $cuenta) === 1));
+    foreach ($filas as $fila) {
+        $codigo = trim((string)($fila['banco_codigo'] ?? ''));
+        $cuenta = preg_replace('/\D/', '', (string)($fila['cuenta'] ?? '')) ?? '';
 
-    if (count($cuentaValida) === 1) return ['cuenta' => $cuentaValida[0], 'advertencia' => null];
-    if (count($cuentaValida) > 1)  return ['cuenta' => null, 'advertencia' => 'Se encontraron varias cuentas BBVA activas. Revisar.'];
+        if ($codigo === '11' && preg_match('/^\d{20}$/', $cuenta) === 1) {
+            $bbvaValidas[$cuenta] = $cuenta;
+        } elseif ($codigo === '02' && preg_match('/^\d{14}$/', $cuenta) === 1) {
+            $bcpValidas[$cuenta] = ['cuenta' => $cuenta, 'tipo' => 'A'];
+        } elseif ($codigo === '02' && preg_match('/^\d{13}$/', $cuenta) === 1) {
+            $bcpValidas[$cuenta] = ['cuenta' => $cuenta, 'tipo' => 'C'];
+        }
+    }
 
-    return ['cuenta' => null, 'advertencia' => 'No se encontró una cuenta válida.'];
+    $bbvaValidas = array_values($bbvaValidas);
+    $bcpValidas = array_values($bcpValidas);
+
+    $cuentaBbva = count($bbvaValidas) === 1 ? $bbvaValidas[0] : null;
+    $cuentaBcp = count($bcpValidas) === 1 ? $bcpValidas[0]['cuenta'] : null;
+    $tipoCuentaBcp = count($bcpValidas) === 1 ? $bcpValidas[0]['tipo'] : null;
+
+    $advertencias = [];
+    if (count($bbvaValidas) > 1) {
+        $advertencias[] = 'Se encontraron varias cuentas BBVA activas en TS.';
+    }
+    if (count($bcpValidas) > 1) {
+        $advertencias[] = 'Se encontraron varias cuentas BCP activas en TS.';
+    }
+
+    $bancoPredeterminado = null;
+    $resumenPartes = [];
+    if ($cuentaBbva !== null) {
+        $bancoPredeterminado = 'BBVA';
+        $resumenPartes[] = 'BBVA · ************' . substr($cuentaBbva, -8);
+    }
+    if ($cuentaBcp !== null) {
+        if ($bancoPredeterminado === null) {
+            $bancoPredeterminado = 'BCP';
+        }
+        $etiquetaTipo = $tipoCuentaBcp === 'C' ? 'Corriente' : 'Ahorros';
+        $resumenPartes[] = "BCP ({$etiquetaTipo}) · " . str_repeat('*', max(0, strlen($cuentaBcp) - 6)) . substr($cuentaBcp, -6);
+    }
+
+    if ($cuentaBbva === null && $cuentaBcp === null && $advertencias === []) {
+        $advertencias[] = 'No se encontró una cuenta BBVA o BCP válida en TS.';
+    }
+
+    return [
+        'cuenta_bbva' => $cuentaBbva,
+        'cuenta_bcp' => $cuentaBcp,
+        'tipo_cuenta_bcp' => $tipoCuentaBcp,
+        'banco_predeterminado' => $bancoPredeterminado,
+        'cuenta_resumen' => $resumenPartes ? implode(' / ', $resumenPartes) : null,
+        'advertencia' => $advertencias ? implode(' ', $advertencias) : null,
+    ];
 }

@@ -78,21 +78,32 @@ function obtenerGruposDirigidosTs(int $trabajadorTsId): array
 	return $stmt->fetchAll();
 }
 
-function obtenerCuentaBbvaTsPorDni(string $dni): array
+function obtenerCuentasBancariasTsPorDni(string $dni): array
 {
 	$pdoTs = obtenerConexionTs();
 
 	$stmt = $pdoTs->prepare(
 		"SELECT DISTINCT
-			TRIM(pt.platra_vcCuentaBancaria) AS cuenta_bbva
+			TRIM(pt.sunentfin_vcCodigo) AS banco_codigo,
+			TRIM(pt.platra_vcCuentaBancaria) AS cuenta
 		FROM persona per
 		INNER JOIN planilla_trabajador pt ON pt.per_iId = per.per_iId
 		WHERE per.per_vcDocumento = ?
 			AND pt.platra_dRetiro IS NULL
-			AND pt.sunentfin_vcCodigo = '11'
-			AND pt.platra_vcCuentaBancaria IS NOT NULL"
+			AND pt.sunentfin_vcCodigo IN ('02', '11')
+			AND pt.platra_vcCuentaBancaria IS NOT NULL
+			AND TRIM(pt.platra_vcCuentaBancaria) <> ''"
 	);
 
 	$stmt->execute([$dni]);
-	return array_values(array_unique(array_filter(array_column($stmt->fetchAll(), 'cuenta_bbva'))));
+	return $stmt->fetchAll();
+}
+
+function obtenerCuentaBbvaTsPorDni(string $dni): array
+{
+	$cuentas = array_filter(
+		obtenerCuentasBancariasTsPorDni($dni),
+		fn(array $fila): bool => ($fila['banco_codigo'] ?? '') === '11'
+	);
+	return array_values(array_unique(array_column($cuentas, 'cuenta')));
 }
