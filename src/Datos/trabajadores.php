@@ -34,7 +34,7 @@ function listarTrabajadores(string $busqueda = '', int $empresaId = 0, ?int $lim
 {
     $pdo = obtenerConexion();
     [$where, $parametros] = filtrosTrabajadores($busqueda, $empresaId);
-    $sql = 
+    $sql =
         "SELECT 
             t.id,
             t.nombres,
@@ -119,28 +119,189 @@ function listarIdsTrabajadoresDeJefe(int $jefeUsuarioId): array
 }
 
 function crearTrabajador(
-    int $empresaId, 
-    ?int $empresaClienteId, 
-    int $areaId, 
-    ?int $cargoId, 
-    string $dni, 
+    int $empresaId,
+    ?int $empresaClienteId,
+    int $areaId,
+    ?int $cargoId,
+    string $dni,
     string $nombres,
     ?string $cuentaBbva,
-    ?string $codigoTs = null
-): int
-{
+    ?string $codigoTs = null,
+    ?string $cuentaBcp = null,
+    ?string $tipoCuentaBcp = null,
+    ?string $bancoPredeterminado = null
+): int {
     $pdo = obtenerConexion();
     $stmt = $pdo->prepare(
-        "INSERT INTO trabajador (empresa_id, empresa_cliente_id, area_id, cargo_id, codigo_ts, dni, nombres, cuenta_bbva, cuenta_bbva_fecha_sincronizacion)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
+        "INSERT INTO trabajador (
+            empresa_id, empresa_cliente_id, area_id, cargo_id, codigo_ts, dni, nombres,
+            cuenta_bbva, cuenta_bbva_fecha_sincronizacion,
+            cuenta_bcp, tipo_cuenta_bcp, cuenta_bcp_fecha_actualizacion,
+            banco_predeterminado, cuenta_bbva_verificada, cuenta_bcp_verificada
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)"
     );
 
-    $stmt->execute([$empresaId, $empresaClienteId, $areaId, $cargoId, $codigoTs, $dni, $nombres, $cuentaBbva]);
+    $ahora = date('Y-m-d H:i:s');
+    $stmt->execute([
+        $empresaId,
+        $empresaClienteId,
+        $areaId,
+        $cargoId,
+        $codigoTs,
+        $dni,
+        $nombres,
+        $cuentaBbva,
+        $cuentaBbva !== null ? $ahora : null,
+        $cuentaBcp,
+        $cuentaBcp !== null ? $tipoCuentaBcp : null,
+        $cuentaBcp !== null ? $ahora : null,
+        $bancoPredeterminado,
+    ]);
     return (int)$pdo->lastInsertId();
 }
 
-function actualizarCuentaBbvaTrabajador(int $trabajadorId, string $cuentaBbva): void
+function obtenerCuentasTrabajador(int $trabajadorId): ?array
 {
-    $stmt = obtenerConexion()->prepare('UPDATE trabajador SET cuenta_bbva = ? WHERE id = ?');
+    $stmt = obtenerConexion()->prepare(
+        "SELECT
+            id,
+            nombres,
+            dni,
+            cuenta_bbva,
+            cuenta_bcp,
+            tipo_cuenta_bcp,
+            banco_predeterminado,
+            cuenta_bbva_verificada,
+            cuenta_bcp_verificada
+        FROM trabajador
+        WHERE id = ?"
+    );
+    $stmt->execute([$trabajadorId]);
+    return $stmt->fetch() ?: null;
+}
+
+function actualizarCuentaBbvaTrabajador(int $trabajadorId, string $cuentaBbva, bool $fijarPredeterminado = false): void
+{
+    $sql = $fijarPredeterminado
+        ? "UPDATE trabajador
+           SET cuenta_bbva = ?,
+               cuenta_bbva_fecha_sincronizacion = NOW(),
+               cuenta_bbva_verificada = 0,
+               banco_predeterminado = 'BBVA'
+           WHERE id = ?"
+        : "UPDATE trabajador
+           SET cuenta_bbva = ?,
+               cuenta_bbva_fecha_sincronizacion = NOW(),
+               cuenta_bbva_verificada = 0,
+               banco_predeterminado = COALESCE(banco_predeterminado, 'BBVA')
+           WHERE id = ?";
+    $stmt = obtenerConexion()->prepare($sql);
     $stmt->execute([$cuentaBbva, $trabajadorId]);
+}
+
+function actualizarCuentaBcpTrabajador(
+    int $trabajadorId,
+    string $cuentaBcp,
+    string $tipoCuentaBcp,
+    bool $fijarPredeterminado = false
+): void {
+    $sql = $fijarPredeterminado
+        ? "UPDATE trabajador
+           SET cuenta_bcp = ?,
+               tipo_cuenta_bcp = ?,
+               cuenta_bcp_fecha_actualizacion = NOW(),
+               cuenta_bcp_verificada = 0,
+               banco_predeterminado = 'BCP'
+           WHERE id = ?"
+        : "UPDATE trabajador
+           SET cuenta_bcp = ?,
+               tipo_cuenta_bcp = ?,
+               cuenta_bcp_fecha_actualizacion = NOW(),
+               cuenta_bcp_verificada = 0,
+               banco_predeterminado = COALESCE(banco_predeterminado, 'BCP')
+           WHERE id = ?";
+    $stmt = obtenerConexion()->prepare($sql);
+    $stmt->execute([$cuentaBcp, $tipoCuentaBcp, $trabajadorId]);
+}
+
+function actualizarBancoPredeterminadoTrabajador(int $trabajadorId, string $banco): void
+{
+    $stmt = obtenerConexion()->prepare('UPDATE trabajador SET banco_predeterminado = ? WHERE id = ?');
+    $stmt->execute([$banco, $trabajadorId]);
+}
+
+function contarCuentasPendientesValidacion(): int
+{
+    $sql = "SELECT
+        (SELECT COUNT(*) FROM trabajador WHERE cuenta_bbva IS NOT NULL AND TRIM(cuenta_bbva) <> '' AND cuenta_bbva_verificada = 0)
+        +
+        (SELECT COUNT(*) FROM trabajador WHERE cuenta_bcp IS NOT NULL AND TRIM(cuenta_bcp) <> '' AND cuenta_bcp_verificada = 0)";
+    return (int)obtenerConexion()->query($sql)->fetchColumn();
+}
+
+function listarCuentasPendientesValidacion(): array
+{
+    $sql = "SELECT
+            t.id AS trabajador_id,
+            t.nombres AS trabajador,
+            t.dni,
+            e.razon_social AS empresa,
+            'BBVA' AS banco,
+            t.cuenta_bbva AS cuenta,
+            NULL AS tipo_cuenta,
+            t.cuenta_bbva_fecha_sincronizacion AS fecha_registro
+        FROM trabajador t
+        JOIN empresa e ON e.id = t.empresa_id
+        WHERE t.cuenta_bbva IS NOT NULL
+          AND TRIM(t.cuenta_bbva) <> ''
+          AND t.cuenta_bbva_verificada = 0
+
+        UNION ALL
+
+        SELECT
+            t.id AS trabajador_id,
+            t.nombres AS trabajador,
+            t.dni,
+            e.razon_social AS empresa,
+            'BCP' AS banco,
+            t.cuenta_bcp AS cuenta,
+            t.tipo_cuenta_bcp AS tipo_cuenta,
+            t.cuenta_bcp_fecha_actualizacion AS fecha_registro
+        FROM trabajador t
+        JOIN empresa e ON e.id = t.empresa_id
+        WHERE t.cuenta_bcp IS NOT NULL
+          AND TRIM(t.cuenta_bcp) <> ''
+          AND t.cuenta_bcp_verificada = 0
+
+        ORDER BY fecha_registro DESC, trabajador_id DESC";
+    return obtenerConexion()->query($sql)->fetchAll();
+}
+
+function validarCuentaTrabajadorDb(int $trabajadorId, string $banco): bool
+{
+    if ($banco === 'BBVA') {
+        $stmt = obtenerConexion()->prepare(
+            "UPDATE trabajador
+             SET cuenta_bbva_verificada = 1
+             WHERE id = ?
+               AND cuenta_bbva IS NOT NULL
+               AND TRIM(cuenta_bbva) <> ''
+               AND cuenta_bbva_verificada = 0"
+        );
+    } elseif ($banco === 'BCP') {
+        $stmt = obtenerConexion()->prepare(
+            "UPDATE trabajador
+             SET cuenta_bcp_verificada = 1
+             WHERE id = ?
+               AND cuenta_bcp IS NOT NULL
+               AND TRIM(cuenta_bcp) <> ''
+               AND cuenta_bcp_verificada = 0"
+        );
+    } else {
+        return false;
+    }
+
+    $stmt->execute([$trabajadorId]);
+    return $stmt->rowCount() > 0;
 }

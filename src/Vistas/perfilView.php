@@ -3,13 +3,21 @@ require_once __DIR__ . '/layout.php';
 
 function vistaPerfil(array $perfil, ?array $mensaje): void
 {
-    $enmascararCuenta = static function (?string $cuenta): string {
+    $enmascararCuenta = static function (?string $cuenta, int $minLen = 13, int $maxLen = 20): string {
         $cuenta = preg_replace('/\D/', '', (string)$cuenta);
 
-        if (!preg_match('/^\d{20}$/', $cuenta)) return 'No registrada';
+        $len = strlen($cuenta);
+        if ($len < $minLen || $len > $maxLen) return 'No registrada';
 
-        return str_repeat('*', 14) . substr($cuenta, -6);
+        return str_repeat('*', max(0, $len - 6)) . substr($cuenta, -6);
     };
+
+    $tieneBbva = preg_match('/^\d{20}$/', (string)($perfil['cuenta_bbva'] ?? '')) === 1;
+    $tieneBcp = preg_match('/^\d{13,14}$/', (string)($perfil['cuenta_bcp'] ?? '')) === 1;
+    $bancoPredeterminado = $perfil['banco_predeterminado'] ?? null;
+    $bbvaVerificada = (int)($perfil['cuenta_bbva_verificada'] ?? 1) === 1;
+    $bcpVerificada = (int)($perfil['cuenta_bcp_verificada'] ?? 1) === 1;
+    $etiquetaTipoBcp = ($perfil['tipo_cuenta_bcp'] ?? '') === 'C' ? 'Corriente' : (($perfil['tipo_cuenta_bcp'] ?? '') === 'M' ? 'Maestra' : 'Ahorros');
 
     $formatearFecha = static function (?string $fecha): string {
         if (!$fecha) return '-';
@@ -23,7 +31,7 @@ function vistaPerfil(array $perfil, ?array $mensaje): void
             <a href="<?= BASE_URL ?>/home" class="volver"><?= icono('volver') ?> Volver al inicio</a>
             <h1>Mi perfil</h1>
             <p class="texto-vacio">
-                Consulta tus datos y administra tu correo, cuenta BBVA y firma personal.
+                Consulta tus datos y administra tu correo, cuentas bancarias y firma personal.
             </p>
         </div>
     </div>
@@ -93,34 +101,144 @@ function vistaPerfil(array $perfil, ?array $mensaje): void
         <div class="perfil-pago-cabecera">
             <div>
                 <h2>Información de pago</h2>
+                <p class="texto-vacio">
+                    Tesorería procesará tus reembolsos y fondos únicamente en tu banco predeterminado.<?= ($tieneBbva && $tieneBcp) ? ' Haz clic en la otra cuenta si deseas cambiarlo.' : '' ?>
+                </p>
             </div>
-            <strong class="perfil-cuenta-enmascarada">
-                <?= htmlspecialchars($enmascararCuenta($perfil['cuenta_bbva'] ?? null)) ?>
-            </strong>
+            <?php if ($bancoPredeterminado): ?>
+                <span class="estado estado-activo">Predeterminado: <?= htmlspecialchars($bancoPredeterminado) ?></span>
+            <?php else: ?>
+                <span class="estado estado-pendiente">Sin cuenta predeterminada</span>
+            <?php endif; ?>
         </div>
-        <details class="perfil-editor perfil-editar-cuenta" data-editor-cuenta>
-            <summary class="boton boton-secundario">Editar cuenta</summary>
-            <form action="<?= BASE_URL ?>/actualizar-cuenta-bbva" method="POST" class="formulario-perfil">
-                <div class="campo">
-                    <label for="cuenta_bbva">Nueva cuenta BBVA</label>
-                    <input id="cuenta_bbva" name="cuenta_bbva" type="text" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="20 dígitos" data-cuenta-bbva required>
+
+        <div class="perfil-cuentas-grid">
+            <!-- Cuenta BBVA -->
+            <?php
+                $esBbvaPredeterminado = $tieneBbva && $bancoPredeterminado === 'BBVA';
+                $puedeElegirBbva = $tieneBbva && !$esBbvaPredeterminado;
+            ?>
+            <div
+                class="perfil-cuenta-bloque<?= $esBbvaPredeterminado ? ' perfil-cuenta-activa' : '' ?><?= $puedeElegirBbva ? ' perfil-cuenta-seleccionable' : '' ?>"
+                <?= $puedeElegirBbva ? 'data-seleccionar-banco="BBVA" tabindex="0" role="button" aria-label="Usar BBVA como banco predeterminado"' : '' ?>>
+                <div class="perfil-cuenta-titulo">
+                    <div class="perfil-cuenta-cabecera-izq">
+                        <?php if ($tieneBbva): ?>
+                            <span class="perfil-cuenta-radio<?= $esBbvaPredeterminado ? ' activo' : '' ?>" aria-hidden="true"></span>
+                        <?php endif; ?>
+                        <img src="<?= assetUrl('/img/bbva-logo.svg') ?>" alt="BBVA" class="logo-banco-perfil logo-banco-bbva">
+                    </div>
+                    <?php if ($tieneBbva): ?>
+                        <span class="estado <?= $bbvaVerificada ? 'estado-activo' : 'estado-pendiente' ?>">
+                            <?= $bbvaVerificada ? 'Verificada' : 'Pendiente de validación' ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
-                <div class="campo">
-                    <label for="cuenta_bbva_confirmacion">
-                        Confirmar nueva cuenta
-                    </label>
-                    <input id="cuenta_bbva_confirmacion" name="cuenta_bbva_confirmacion" type="text" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="Repite los 20 dígitos" data-cuenta-bbva required>
+                <p class="perfil-cuenta-enmascarada">
+                    <?= htmlspecialchars($enmascararCuenta($perfil['cuenta_bbva'] ?? null, 20, 20)) ?>
+                </p>
+                <details class="perfil-editor perfil-editar-cuenta" data-editor-cuenta>
+                    <summary class="boton boton-secundario boton-chico"><?= $tieneBbva ? 'Cambiar cuenta BBVA' : 'Agregar cuenta BBVA' ?></summary>
+                    <form action="<?= BASE_URL ?>/actualizar-cuenta-bbva" method="POST" class="formulario-perfil">
+                        <div class="campo">
+                            <label for="cuenta_bbva">Nueva cuenta BBVA</label>
+                            <input id="cuenta_bbva" name="cuenta_bbva" type="text" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="20 dígitos" data-solo-digitos required>
+                        </div>
+                        <div class="campo">
+                            <label for="cuenta_bbva_confirmacion">Confirmar cuenta BBVA</label>
+                            <input id="cuenta_bbva_confirmacion" name="cuenta_bbva_confirmacion" type="text" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="Repite los 20 dígitos" data-solo-digitos required>
+                        </div>
+                        <label class="campo-check" style="grid-column: 1 / -1; margin: 2px 0;">
+                            <input type="checkbox" name="marcar_predeterminado" value="1" <?= !$bancoPredeterminado || $bancoPredeterminado === 'BBVA' ? 'checked' : '' ?>>
+                            Usar BBVA como mi banco predeterminado
+                        </label>
+                        <small class="texto-vacio" style="grid-column: 1 / -1;">
+                            Al guardar, Tesorería recibirá un aviso en el sistema para validar la titularidad antes del próximo pago.
+                        </small>
+                        <div class="perfil-editor-acciones">
+                            <button type="button" class="boton boton-secundario" data-cancelar-cuenta>Cancelar</button>
+                            <button type="submit" class="boton boton-primario">Guardar BBVA</button>
+                        </div>
+                    </form>
+                </details>
+            </div>
+
+            <!-- Cuenta BCP -->
+            <?php
+                $esBcpPredeterminado = $tieneBcp && $bancoPredeterminado === 'BCP';
+                $puedeElegirBcp = $tieneBcp && !$esBcpPredeterminado;
+            ?>
+            <div
+                class="perfil-cuenta-bloque<?= $esBcpPredeterminado ? ' perfil-cuenta-activa' : '' ?><?= $puedeElegirBcp ? ' perfil-cuenta-seleccionable' : '' ?>"
+                <?= $puedeElegirBcp ? 'data-seleccionar-banco="BCP" tabindex="0" role="button" aria-label="Usar BCP como banco predeterminado"' : '' ?>>
+                <div class="perfil-cuenta-titulo">
+                    <div class="perfil-cuenta-cabecera-izq">
+                        <?php if ($tieneBcp): ?>
+                            <span class="perfil-cuenta-radio<?= $esBcpPredeterminado ? ' activo' : '' ?>" aria-hidden="true"></span>
+                        <?php endif; ?>
+                        <img src="<?= assetUrl('/img/bcp-logo.svg') ?>" alt="BCP" class="logo-banco-perfil logo-banco-bcp">
+                        <?php if ($tieneBcp): ?>
+                            <span class="perfil-cuenta-tipo-tag"><?= htmlspecialchars($etiquetaTipoBcp) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ($tieneBcp): ?>
+                        <span class="estado <?= $bcpVerificada ? 'estado-activo' : 'estado-pendiente' ?>">
+                            <?= $bcpVerificada ? 'Verificada' : 'Pendiente de validación' ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
-                <div class="perfil-editor-acciones">
-                    <button type="button" class="boton boton-secundario" data-cancelar-cuenta>
-                        Cancelar
-                    </button>
-                    <button type="submit" class="boton boton-primario">
-                        Guardar cuenta
-                    </button>
-                </div>
+                <p class="perfil-cuenta-enmascarada">
+                    <?= htmlspecialchars($enmascararCuenta($perfil['cuenta_bcp'] ?? null, 13, 14)) ?>
+                </p>
+                <details class="perfil-editor perfil-editar-cuenta" data-editor-cuenta-bcp>
+                    <summary class="boton boton-secundario boton-chico"><?= $tieneBcp ? 'Cambiar cuenta BCP' : 'Agregar cuenta BCP' ?></summary>
+                    <form action="<?= BASE_URL ?>/actualizar-cuenta-bcp" method="POST" class="formulario-perfil">
+                        <div class="campo" style="grid-column: 1 / -1;">
+                            <label for="tipo_cuenta_bcp">Tipo de cuenta BCP</label>
+                            <select id="tipo_cuenta_bcp" name="tipo_cuenta_bcp" data-tipo-cuenta-bcp required>
+                                <option value="A" <?= ($perfil['tipo_cuenta_bcp'] ?? 'A') === 'A' ? 'selected' : '' ?>>Cuenta de Ahorros</option>
+                                <option value="C" <?= ($perfil['tipo_cuenta_bcp'] ?? '') === 'C' ? 'selected' : '' ?>>Cuenta Corriente</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label for="cuenta_bcp">Nueva cuenta BCP</label>
+                            <input id="cuenta_bcp" name="cuenta_bcp" type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="14 dígitos" data-solo-digitos data-input-bcp required>
+                        </div>
+                        <div class="campo">
+                            <label for="cuenta_bcp_confirmacion">Confirmar cuenta BCP</label>
+                            <input id="cuenta_bcp_confirmacion" name="cuenta_bcp_confirmacion" type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="Repite la cuenta BCP" data-solo-digitos data-input-bcp required>
+                        </div>
+                        <label class="campo-check" style="grid-column: 1 / -1; margin: 2px 0;">
+                            <input type="checkbox" name="marcar_predeterminado" value="1" <?= !$bancoPredeterminado || $bancoPredeterminado === 'BCP' ? 'checked' : '' ?>>
+                            Usar BCP como mi banco predeterminado
+                        </label>
+                        <small class="texto-vacio" style="grid-column: 1 / -1;">
+                            Al guardar, Tesorería recibirá un aviso en el sistema para validar la titularidad antes del próximo pago.
+                        </small>
+                        <div class="perfil-editor-acciones">
+                            <button type="button" class="boton boton-secundario" data-cancelar-cuenta-bcp>Cancelar</button>
+                            <button type="submit" class="boton boton-primario">Guardar BCP</button>
+                        </div>
+                    </form>
+                </details>
+            </div>
+        </div>
+
+        <dialog id="dialogoCambioBanco" aria-labelledby="tituloCambioBanco">
+            <button type="button" class="dialogo-cerrar" aria-label="Cerrar" data-cerrar-cambio-banco>&times;</button>
+            <h2 id="tituloCambioBanco">Cambiar banco predeterminado</h2>
+            <p>
+                ¿Deseas cambiar tu banco predeterminado a <strong id="textoNuevoBanco"></strong>?
+            </p>
+            <p class="texto-vacio">
+                Tus próximos reembolsos y desembolsos de fondos serán procesados únicamente en esa cuenta.
+            </p>
+            <form action="<?= BASE_URL ?>/actualizar-banco-predeterminado" method="POST" class="acciones-modal">
+                <input type="hidden" name="banco_predeterminado" id="inputNuevoBanco" value="">
+                <button type="button" class="boton boton-secundario" data-cerrar-cambio-banco>Cancelar</button>
+                <button type="submit" class="boton boton-primario">Confirmar cambio</button>
             </form>
-        </details>
+        </dialog>
     </section>
     <section class="ficha perfil-firma">
         <div class="perfil-firma-cabecera">

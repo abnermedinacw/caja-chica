@@ -9,7 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$resultado = actualizarCuentaBbva((int)($_SESSION['trabajador_id'] ?? 0), $_POST['cuenta_bbva'] ?? '', $_POST['cuenta_bbva_confirmacion'] ?? '');
+$resultado = actualizarCuentaBbva(
+    (int)($_SESSION['trabajador_id'] ?? 0),
+    $_POST['cuenta_bbva'] ?? '',
+    $_POST['cuenta_bbva_confirmacion'] ?? '',
+    !empty($_POST['marcar_predeterminado'])
+);
 
 $_SESSION['perfil_mensaje'] = $resultado['ok'] ? ['tipo' => 'exito', 'texto' => $resultado['mensaje']] : ['tipo' => 'error', 'texto' => $resultado['error']];
 

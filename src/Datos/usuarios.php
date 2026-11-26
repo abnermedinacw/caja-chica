@@ -74,6 +74,11 @@ function obtenerPerfilUsuario(int $usuarioId): ?array
                 SELECT 1 FROM trabajador j WHERE j.jefe_usuario_id = u.id
             ) AS es_jefe,
             t.cuenta_bbva,
+            t.cuenta_bcp,
+            t.tipo_cuenta_bcp,
+            t.banco_predeterminado,
+            t.cuenta_bbva_verificada,
+            t.cuenta_bcp_verificada,
 
             e.razon_social AS empresa,
             a.nombre AS area,
