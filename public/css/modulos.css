@@ -1375,7 +1375,7 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px 16px;
+    gap: 14px 18px;
 }
 
 .pagos-contexto-etiqueta {
@@ -1386,47 +1386,26 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     letter-spacing: .05em;
     text-transform: uppercase;
     color: var(--text-muted);
-    line-height: 1.2;
+    line-height: 14px;
 }
 
 .pagos-bloque-empresa {
-    flex: 1 1 200px;
-    min-width: 180px;
-    max-width: 260px;
+    flex: 1 1 210px;
+    min-width: 190px;
+    max-width: 270px;
 }
 
 .pagos-select-empresa {
-    width: 100%;
-    height: 44px;
-    padding: 0 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background-color: #f3f5f8;
-    color: var(--color-navy-900);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: inherit;
-    cursor: pointer;
-    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
-}
-
-.pagos-select-empresa:hover {
-    border-color: var(--color-border-input);
-    background-color: #eef2f6;
-}
-
-.pagos-select-empresa:focus {
-    outline: none;
-    background-color: var(--color-surface);
-    border-color: var(--color-navy-600);
-    box-shadow: 0 0 0 3px rgba(30, 58, 95, .14);
+    margin-bottom: 0;
+    height: 40px;
+    padding: 0 10px;
 }
 
 .pagos-contexto-divisor {
     width: 1px;
     height: 36px;
-    align-self: center;
-    margin-top: 16px;
+    align-self: flex-end;
+    margin-bottom: 2px;
     background: var(--color-border);
     flex-shrink: 0;
 }
@@ -1439,9 +1418,9 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 4px;
-    min-height: 44px;
-    border-radius: 10px;
+    padding: 3px;
+    height: 40px;
+    border-radius: var(--radius-md);
     background: #eef2f6;
     border: 1px solid #e3e8ef;
 }
@@ -1451,15 +1430,15 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     align-items: center;
     justify-content: center;
     gap: 6px;
-    min-height: 34px;
-    padding: 6px 10px;
+    height: 32px;
+    padding: 0 10px;
     border: 0;
-    border-radius: 7px;
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--text-secondary);
     font-family: inherit;
     font-size: 13.5px;
-    line-height: 1.1;
+    line-height: 1;
     white-space: nowrap;
     cursor: pointer;
     transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
@@ -1590,14 +1569,15 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
 .pagos-cuenta-cargo-tarjeta {
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex: 1 1 285px;
+    gap: 12px;
+    flex: 0 1 auto;
     margin-left: auto;
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
     background: #f4f6fa;
     border: 1px solid #e4e9f0;
     min-width: 0;
+    max-width: 100%;
 }
 
 .pagos-cuenta-cargo-tarjeta.sin-cuenta {
@@ -1609,8 +1589,8 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
     flex-shrink: 0;
     border-radius: 50%;
     background: var(--color-navy-50);
@@ -1626,17 +1606,17 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
     display: flex;
     flex-direction: column;
     min-width: 0;
-    flex: 1;
-    gap: 2px;
+    gap: 1px;
 }
 
 .pagos-cuenta-detalle .pagos-contexto-etiqueta {
     margin-bottom: 1px;
-    font-size: 10.5px;
+    font-size: 10px;
+    line-height: 12px;
 }
 
 .pagos-cuenta-tipo {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--color-navy-900);
     line-height: 1.25;
@@ -1650,7 +1630,7 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
 }
 
 .pagos-cuenta-numero {
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
     line-height: 1.25;
@@ -1661,6 +1641,7 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
 
 .pagos-btn-configurar {
     flex-shrink: 0;
+    margin-left: 6px;
 }
 
 .perfil-cuentas-grid {
@@ -1745,8 +1726,12 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
 
 @media (max-width: 1120px) {
     .pagos-cuenta-cargo-tarjeta {
-        flex-basis: 100%;
+        flex: 1 1 100%;
         margin-left: 0;
+    }
+
+    .pagos-cuenta-detalle {
+        flex: 1;
     }
 }
 
@@ -1775,7 +1760,7 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
 
     .pagos-banco-opcion {
         flex: 1;
-        padding: 8px 10px;
+        padding: 0 10px;
     }
 
     .pagos-cuenta-cargo-tarjeta {
@@ -1784,6 +1769,7 @@ tr.fila-documento-abierta.fila-documento-planilla td:first-child { border-left: 
 
     .pagos-btn-configurar {
         width: 100%;
+        margin-left: 0;
     }
 }
 

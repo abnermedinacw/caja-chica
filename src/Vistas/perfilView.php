@@ -152,9 +152,6 @@ function vistaPerfil(array $perfil, ?array $mensaje): void
                             <input type="checkbox" name="marcar_predeterminado" value="1" <?= !$bancoPredeterminado || $bancoPredeterminado === 'BBVA' ? 'checked' : '' ?>>
                             Usar BBVA como mi banco predeterminado
                         </label>
-                        <small class="texto-vacio" style="grid-column: 1 / -1;">
-                            Al guardar, Tesorería recibirá un aviso en el sistema para validar la titularidad antes del próximo pago.
-                        </small>
                         <div class="perfil-editor-acciones">
                             <button type="button" class="boton boton-secundario" data-cancelar-cuenta>Cancelar</button>
                             <button type="submit" class="boton boton-primario">Guardar BBVA</button>
@@ -212,9 +209,6 @@ function vistaPerfil(array $perfil, ?array $mensaje): void
                             <input type="checkbox" name="marcar_predeterminado" value="1" <?= !$bancoPredeterminado || $bancoPredeterminado === 'BCP' ? 'checked' : '' ?>>
                             Usar BCP como mi banco predeterminado
                         </label>
-                        <small class="texto-vacio" style="grid-column: 1 / -1;">
-                            Al guardar, Tesorería recibirá un aviso en el sistema para validar la titularidad antes del próximo pago.
-                        </small>
                         <div class="perfil-editor-acciones">
                             <button type="button" class="boton boton-secundario" data-cancelar-cuenta-bcp>Cancelar</button>
                             <button type="submit" class="boton boton-primario">Guardar BCP</button>
